@@ -1,0 +1,2 @@
+add_executable(VCFX_multiallelic_splitter VCFX_multiallelic_splitter.cpp VCFX_multiallelic_splitter.h)
+target_link_libraries(VCFX_multiallelic_splitter PRIVATE vcfx_core)

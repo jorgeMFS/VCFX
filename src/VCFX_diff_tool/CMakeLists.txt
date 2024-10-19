@@ -1,0 +1,2 @@
+add_executable(VCFX_diff_tool VCFX_diff_tool.cpp VCFX_diff_tool.h)
+target_link_libraries(VCFX_diff_tool PRIVATE vcfx_core)

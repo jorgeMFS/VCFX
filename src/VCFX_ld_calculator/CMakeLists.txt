@@ -1,0 +1,2 @@
+add_executable(VCFX_ld_calculator VCFX_ld_calculator.cpp VCFX_ld_calculator.h)
+target_link_libraries(VCFX_ld_calculator PRIVATE vcfx_core)

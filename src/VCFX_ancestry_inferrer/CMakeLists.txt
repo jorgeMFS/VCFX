@@ -1,0 +1,2 @@
+add_executable(VCFX_ancestry_inferrer VCFX_ancestry_inferrer.cpp VCFX_ancestry_inferrer.h)
+target_link_libraries(VCFX_ancestry_inferrer PRIVATE vcfx_core)

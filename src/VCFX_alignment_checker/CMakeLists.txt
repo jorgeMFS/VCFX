@@ -1,0 +1,2 @@
+add_executable(VCFX_alignment_checker VCFX_alignment_checker.cpp VCFX_alignment_checker.h)
+target_link_libraries(VCFX_alignment_checker PRIVATE vcfx_core)

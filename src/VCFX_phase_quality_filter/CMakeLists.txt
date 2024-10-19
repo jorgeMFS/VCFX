@@ -1,0 +1,2 @@
+add_executable(VCFX_phase_quality_filter VCFX_phase_quality_filter.cpp VCFX_phase_quality_filter.h)
+target_link_libraries(VCFX_phase_quality_filter PRIVATE vcfx_core)

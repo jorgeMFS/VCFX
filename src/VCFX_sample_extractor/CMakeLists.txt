@@ -1,0 +1,2 @@
+add_executable(VCFX_sample_extractor VCFX_sample_extractor.cpp VCFX_sample_extractor.h)
+target_link_libraries(VCFX_sample_extractor PRIVATE vcfx_core)

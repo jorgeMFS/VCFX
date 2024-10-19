@@ -1,0 +1,2 @@
+add_executable(VCFX_distance_calculator VCFX_distance_calculator.cpp VCFX_distance_calculator.h)
+target_link_libraries(VCFX_distance_calculator PRIVATE vcfx_core)

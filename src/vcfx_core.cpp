@@ -1,3 +1,3 @@
 #include "vcfx_core.h"
 
-// Implementation of core functionality
+// Implementation of core functionalities

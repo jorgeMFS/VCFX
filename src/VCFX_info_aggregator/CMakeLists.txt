@@ -1,0 +1,2 @@
+add_executable(VCFX_info_aggregator VCFX_info_aggregator.cpp VCFX_info_aggregator.h)
+target_link_libraries(VCFX_info_aggregator PRIVATE vcfx_core)

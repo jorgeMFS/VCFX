@@ -1,0 +1,2 @@
+add_executable(VCFX_inbreeding_calculator VCFX_inbreeding_calculator.cpp VCFX_inbreeding_calculator.h)
+target_link_libraries(VCFX_inbreeding_calculator PRIVATE vcfx_core)

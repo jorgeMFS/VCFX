@@ -1,0 +1,2 @@
+add_executable(VCFX_record_filter VCFX_record_filter.cpp VCFX_record_filter.h)
+target_link_libraries(VCFX_record_filter PRIVATE vcfx_core)

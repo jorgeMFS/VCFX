@@ -1,0 +1,2 @@
+add_executable(VCFX_subsampler VCFX_subsampler.cpp VCFX_subsampler.h)
+target_link_libraries(VCFX_subsampler PRIVATE vcfx_core)

@@ -1,0 +1,2 @@
+add_executable(VCFX_phase_checker VCFX_phase_checker.cpp VCFX_phase_checker.h)
+target_link_libraries(VCFX_phase_checker PRIVATE vcfx_core)

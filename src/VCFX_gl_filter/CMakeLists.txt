@@ -1,0 +1,2 @@
+add_executable(VCFX_gl_filter VCFX_gl_filter.cpp VCFX_gl_filter.h)
+target_link_libraries(VCFX_gl_filter PRIVATE vcfx_core)

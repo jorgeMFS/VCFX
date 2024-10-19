@@ -1,0 +1,2 @@
+add_executable(VCFX_probability_filter VCFX_probability_filter.cpp VCFX_probability_filter.h)
+target_link_libraries(VCFX_probability_filter PRIVATE vcfx_core)

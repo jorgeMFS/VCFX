@@ -1,0 +1,2 @@
+add_executable(VCFX_haplotype_extractor VCFX_haplotype_extractor.cpp VCFX_haplotype_extractor.h)
+target_link_libraries(VCFX_haplotype_extractor PRIVATE vcfx_core)

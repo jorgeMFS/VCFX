@@ -1,0 +1,2 @@
+add_executable(VCFX_allele_counter VCFX_allele_counter.cpp VCFX_allele_counter.h)
+target_link_libraries(VCFX_allele_counter PRIVATE vcfx_core)

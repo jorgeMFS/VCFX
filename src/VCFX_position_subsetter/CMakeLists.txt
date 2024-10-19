@@ -1,0 +1,2 @@
+add_executable(VCFX_position_subsetter VCFX_position_subsetter.cpp VCFX_position_subsetter.h)
+target_link_libraries(VCFX_position_subsetter PRIVATE vcfx_core)

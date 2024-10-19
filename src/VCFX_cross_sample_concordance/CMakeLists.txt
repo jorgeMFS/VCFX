@@ -1,0 +1,2 @@
+add_executable(VCFX_cross_sample_concordance VCFX_cross_sample_concordance.cpp VCFX_cross_sample_concordance.h)
+target_link_libraries(VCFX_cross_sample_concordance PRIVATE vcfx_core)

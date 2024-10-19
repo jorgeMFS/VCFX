@@ -1,0 +1,2 @@
+add_executable(VCFX_hwe_tester VCFX_hwe_tester.cpp VCFX_hwe_tester.h)
+target_link_libraries(VCFX_hwe_tester PRIVATE vcfx_core)

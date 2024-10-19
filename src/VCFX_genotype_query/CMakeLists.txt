@@ -1,0 +1,2 @@
+add_executable(VCFX_genotype_query VCFX_genotype_query.cpp VCFX_genotype_query.h)
+target_link_libraries(VCFX_genotype_query PRIVATE vcfx_core)

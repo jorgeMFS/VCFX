@@ -1,0 +1,2 @@
+add_executable(VCFX_phred_filter VCFX_phred_filter.cpp VCFX_phred_filter.h)
+target_link_libraries(VCFX_phred_filter PRIVATE vcfx_core)

@@ -1,0 +1,2 @@
+add_executable(VCFX_format_converter VCFX_format_converter.cpp VCFX_format_converter.h)
+target_link_libraries(VCFX_format_converter PRIVATE vcfx_core)

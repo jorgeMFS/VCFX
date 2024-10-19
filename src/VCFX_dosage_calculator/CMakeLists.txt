@@ -1,0 +1,2 @@
+add_executable(VCFX_dosage_calculator VCFX_dosage_calculator.cpp VCFX_dosage_calculator.h)
+target_link_libraries(VCFX_dosage_calculator PRIVATE vcfx_core)

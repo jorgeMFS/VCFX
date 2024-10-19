@@ -1,0 +1,2 @@
+add_executable(VCFX_custom_annotator VCFX_custom_annotator.cpp VCFX_custom_annotator.h)
+target_link_libraries(VCFX_custom_annotator PRIVATE vcfx_core)

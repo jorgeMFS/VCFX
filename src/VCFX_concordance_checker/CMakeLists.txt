@@ -1,0 +1,2 @@
+add_executable(VCFX_concordance_checker VCFX_concordance_checker.cpp VCFX_concordance_checker.h)
+target_link_libraries(VCFX_concordance_checker PRIVATE vcfx_core)

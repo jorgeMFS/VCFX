@@ -1,0 +1,2 @@
+add_executable(VCFX_nonref_filter VCFX_nonref_filter.cpp VCFX_nonref_filter.h)
+target_link_libraries(VCFX_nonref_filter PRIVATE vcfx_core)

@@ -1,0 +1,2 @@
+add_executable(VCFX_allele_balance_calc VCFX_allele_balance_calc.cpp VCFX_allele_balance_calc.h)
+target_link_libraries(VCFX_allele_balance_calc PRIVATE vcfx_core)

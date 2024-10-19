@@ -1,0 +1,2 @@
+add_executable(VCFX_quality_adjuster VCFX_quality_adjuster.cpp VCFX_quality_adjuster.h)
+target_link_libraries(VCFX_quality_adjuster PRIVATE vcfx_core)

@@ -1,0 +1,2 @@
+add_executable(VCFX_outlier_detector VCFX_outlier_detector.cpp VCFX_outlier_detector.h)
+target_link_libraries(VCFX_outlier_detector PRIVATE vcfx_core)

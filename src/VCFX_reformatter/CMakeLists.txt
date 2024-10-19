@@ -1,0 +1,2 @@
+add_executable(VCFX_reformatter VCFX_reformatter.cpp VCFX_reformatter.h)
+target_link_libraries(VCFX_reformatter PRIVATE vcfx_core)

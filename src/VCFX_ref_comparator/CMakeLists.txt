@@ -1,0 +1,2 @@
+add_executable(VCFX_ref_comparator VCFX_ref_comparator.cpp VCFX_ref_comparator.h)
+target_link_libraries(VCFX_ref_comparator PRIVATE vcfx_core)

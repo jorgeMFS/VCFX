@@ -1,0 +1,2 @@
+add_executable(VCFX_af_subsetter VCFX_af_subsetter.cpp VCFX_af_subsetter.h)
+target_link_libraries(VCFX_af_subsetter PRIVATE vcfx_core)

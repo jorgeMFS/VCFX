@@ -1,0 +1,2 @@
+add_executable(VCFX_field_extractor VCFX_field_extractor.cpp VCFX_field_extractor.h)
+target_link_libraries(VCFX_field_extractor PRIVATE vcfx_core)

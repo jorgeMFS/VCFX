@@ -1,0 +1,2 @@
+add_executable(VCFX_indel_normalizer VCFX_indel_normalizer.cpp VCFX_indel_normalizer.h)
+target_link_libraries(VCFX_indel_normalizer PRIVATE vcfx_core)

@@ -1,0 +1,2 @@
+add_executable(VCFX_missing_data_handler VCFX_missing_data_handler.cpp VCFX_missing_data_handler.h)
+target_link_libraries(VCFX_missing_data_handler PRIVATE vcfx_core)

@@ -1,0 +1,2 @@
+add_executable(VCFX_compressor VCFX_compressor.cpp VCFX_compressor.h)
+target_link_libraries(VCFX_compressor PRIVATE vcfx_core)

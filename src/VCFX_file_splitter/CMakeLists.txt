@@ -1,0 +1,2 @@
+add_executable(VCFX_file_splitter VCFX_file_splitter.cpp VCFX_file_splitter.h)
+target_link_libraries(VCFX_file_splitter PRIVATE vcfx_core)

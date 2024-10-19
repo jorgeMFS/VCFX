@@ -1,0 +1,2 @@
+add_executable(VCFX_info_summarizer VCFX_info_summarizer.cpp VCFX_info_summarizer.h)
+target_link_libraries(VCFX_info_summarizer PRIVATE vcfx_core)

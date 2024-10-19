@@ -1,0 +1,2 @@
+add_executable(VCFX_variant_classifier VCFX_variant_classifier.cpp VCFX_variant_classifier.h)
+target_link_libraries(VCFX_variant_classifier PRIVATE vcfx_core)

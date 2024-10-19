@@ -1,0 +1,2 @@
+add_executable(VCFX_duplicate_remover VCFX_duplicate_remover.cpp VCFX_duplicate_remover.h)
+target_link_libraries(VCFX_duplicate_remover PRIVATE vcfx_core)

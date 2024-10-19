@@ -1,0 +1,2 @@
+add_executable(VCFX_ancestry_assigner VCFX_ancestry_assigner.cpp VCFX_ancestry_assigner.h)
+target_link_libraries(VCFX_ancestry_assigner PRIVATE vcfx_core)

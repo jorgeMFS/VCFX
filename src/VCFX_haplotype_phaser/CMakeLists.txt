@@ -1,0 +1,2 @@
+add_executable(VCFX_haplotype_phaser VCFX_haplotype_phaser.cpp VCFX_haplotype_phaser.h)
+target_link_libraries(VCFX_haplotype_phaser PRIVATE vcfx_core)

@@ -1,0 +1,2 @@
+add_executable(VCFX_impact_filter VCFX_impact_filter.cpp VCFX_impact_filter.h)
+target_link_libraries(VCFX_impact_filter PRIVATE vcfx_core)

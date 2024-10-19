@@ -1,0 +1,2 @@
+add_executable(VCFX_population_filter VCFX_population_filter.cpp VCFX_population_filter.h)
+target_link_libraries(VCFX_population_filter PRIVATE vcfx_core)

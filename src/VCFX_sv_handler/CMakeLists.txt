@@ -1,0 +1,2 @@
+add_executable(VCFX_sv_handler VCFX_sv_handler.cpp VCFX_sv_handler.h)
+target_link_libraries(VCFX_sv_handler PRIVATE vcfx_core)
