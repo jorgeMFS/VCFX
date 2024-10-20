@@ -1,26 +1,35 @@
 #include "VCFX_missing_data_handler.h"
 #include <sstream>
 #include <algorithm>
+#include <stdexcept>
 
-// Function to display help message
+/**
+ * @brief Displays the help message for the missing data handler tool.
+ */
 void printHelp() {
     std::cout << "VCFX_missing_data_handler\n"
               << "Usage: VCFX_missing_data_handler [OPTIONS] < input.vcf > output.vcf\n\n"
               << "Options:\n"
-              << "  --fill-missing, -f         Impute missing genotypes with a default value (e.g., ./.).\n"
-              << "  --default-genotype, -d GEN  Specify the default genotype for imputation (default: ./.).\n"
-              << "  --help, -h                  Display this help message and exit.\n\n"
+              << "  --fill-missing, -f           Impute missing genotypes with a default value (e.g., ./.).\n"
+              << "  --default-genotype, -d GEN    Specify the default genotype for imputation (default: ./.).\n"
+              << "  --help, -h                    Display this help message and exit.\n\n"
               << "Description:\n"
               << "  Flags or imputes missing genotype data in a VCF file. By default, missing genotypes are flagged, "
               << "but can be imputed with a specified genotype using the --fill-missing option.\n\n"
               << "Examples:\n"
               << "  Flag missing data:\n"
               << "    ./VCFX_missing_data_handler < input.vcf > flagged_output.vcf\n\n"
-              << "  Impute missing data with ./.;\n"
+              << "  Impute missing data with ./. :\n"
               << "    ./VCFX_missing_data_handler --fill-missing --default-genotype \"./.\" < input.vcf > imputed_output.vcf\n";
 }
 
-// Utility function to split a string by a delimiter
+/**
+ * @brief Splits a string by a given delimiter.
+ *
+ * @param str The input string to split.
+ * @param delimiter The character delimiter.
+ * @return A vector of split substrings.
+ */
 std::vector<std::string> splitString(const std::string& str, char delimiter) {
     std::vector<std::string> tokens;
     std::stringstream ss(str);
@@ -31,11 +40,18 @@ std::vector<std::string> splitString(const std::string& str, char delimiter) {
     return tokens;
 }
 
-// Function to parse command-line arguments
+/**
+ * @brief Parses command-line arguments.
+ *
+ * @param argc Argument count.
+ * @param argv Argument vector.
+ * @param args Reference to Arguments structure to populate.
+ * @return true if parsing is successful, false otherwise.
+ */
 bool parseArguments(int argc, char* argv[], Arguments& args) {
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
-        if ((arg == "--fill-missing" || arg == "-f")) {
+        if (arg == "--fill-missing" || arg == "-f") {
             args.fill_missing = true;
         }
         else if ((arg == "--default-genotype" || arg == "-d") && i + 1 < argc) {
@@ -53,7 +69,14 @@ bool parseArguments(int argc, char* argv[], Arguments& args) {
     return true;
 }
 
-// Function to process VCF and handle missing data
+/**
+ * @brief Processes the VCF file to handle missing genotype data.
+ *
+ * @param in Input stream (VCF file).
+ * @param out Output stream (Modified VCF).
+ * @param args Command-line arguments specifying behavior.
+ * @return true if processing is successful, false otherwise.
+ */
 bool handleMissingData(std::istream& in, std::ostream& out, const Arguments& args) {
     std::string line;
     std::vector<std::string> header_fields;
@@ -89,10 +112,12 @@ bool handleMissingData(std::istream& in, std::ostream& out, const Arguments& arg
             continue;
         }
 
-        // GT column is typically the first in FORMAT
+        // FORMAT column is the 9th field
         std::string format = fields[8];
         std::vector<std::string> format_fields = splitString(format, ':');
         int gt_index = -1;
+
+        // Identify the index of the GT field within the FORMAT
         for (size_t i = 0; i < format_fields.size(); ++i) {
             if (format_fields[i] == "GT") {
                 gt_index = static_cast<int>(i);
@@ -114,16 +139,21 @@ bool handleMissingData(std::istream& in, std::ostream& out, const Arguments& arg
             }
 
             std::string genotype = sample_data[gt_index];
-            // Check for missing genotype
-            if (genotype == "." || genotype == "./." || genotype == ".|.") {
+            bool is_missing = false;
+
+            // Determine if genotype is missing
+            if (genotype.empty() || genotype == "." || genotype == "./." || genotype == ".|.") {
+                is_missing = true;
+            }
+
+            if (is_missing) {
                 if (args.fill_missing) {
                     // Impute with default genotype
                     sample_data[gt_index] = args.default_genotype;
-                }
-                else {
-                    // Flag missing genotype by appending a tag, e.g., adding a flag in INFO or elsewhere
-                    // For simplicity, we'll leave it as is or could add an annotation
-                    // Here, we choose to leave as is
+                } else {
+                    // Flagging missing data can be customized here.
+                    // For simplicity, we leave the genotype as is.
+                    // Alternatively, annotations can be added to the INFO field.
                 }
 
                 // Reconstruct the sample data
@@ -152,12 +182,20 @@ bool handleMissingData(std::istream& in, std::ostream& out, const Arguments& arg
     return true;
 }
 
+/**
+ * @brief Main function for the missing data handler tool.
+ *
+ * @param argc Argument count.
+ * @param argv Argument vector.
+ * @return int Exit status.
+ */
 int main(int argc, char* argv[]) {
     Arguments args;
     parseArguments(argc, argv, args);
 
     if (args.fill_missing) {
-        std::cerr << "Info: Missing genotypes will be imputed with genotype: " << args.default_genotype << "\n";
+        std::cerr << "Info: Missing genotypes will be imputed with genotype: " 
+                  << args.default_genotype << "\n";
     }
     else {
         std::cerr << "Info: Missing genotypes will be flagged.\n";
