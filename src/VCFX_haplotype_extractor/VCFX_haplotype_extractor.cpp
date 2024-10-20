@@ -1,7 +1,11 @@
 #include "VCFX_haplotype_extractor.h"
 #include <sstream>
-#include <vector>
 #include <algorithm>
+#include <cctype>
+#include <stdexcept>
+
+// Constructor
+HaplotypeExtractor::HaplotypeExtractor() {}
 
 // Function to display help message
 void printHelp() {
@@ -10,31 +14,158 @@ void printHelp() {
               << "Options:\n"
               << "  --help, -h                     Display this help message and exit.\n\n"
               << "Description:\n"
-              << "  Extracts haplotype blocks from phased genotype data in a VCF file.\n\n"
-              << "Example:\n"
+              << "  Extracts phased haplotype blocks from genotype data in a VCF file. "
+              << "It reconstructs haplotypes for each sample by analyzing phased genotype information, "
+              << "grouping contiguous variants into haplotype blocks based on consistent phasing and proximity.\n\n"
+              << "Examples:\n"
               << "  ./VCFX_haplotype_extractor < phased.vcf > haplotypes.tsv\n";
 }
 
-// Helper function to split a string by a delimiter
-std::vector<std::string> split(const std::string& s, char delimiter) {
+// Utility function to split a string by a delimiter
+std::vector<std::string> HaplotypeExtractor::splitString(const std::string& str, char delimiter) {
     std::vector<std::string> tokens;
-    std::string token;
-    std::stringstream ss(s);
-    while (std::getline(ss, token, delimiter)) {
-        tokens.push_back(token);
+    std::stringstream ss(str);
+    std::string temp;
+    while (std::getline(ss, temp, delimiter)) {
+        tokens.push_back(temp);
     }
     return tokens;
 }
 
-// Function to extract haplotype blocks from VCF
-bool extractHaplotypeBlocks(std::istream& in, std::ostream& out) {
+// Parses the VCF header to extract sample names
+bool HaplotypeExtractor::parseHeader(const std::string& headerLine) {
+    std::vector<std::string> fields = splitString(headerLine, '\t');
+    if (fields.size() <= 8) {
+        std::cerr << "Error: VCF header does not contain sample columns.\n";
+        return false;
+    }
+
+    // Extract sample names starting from the 9th column
+    sampleNames.assign(fields.begin() + 9, fields.end());
+    numSamples = sampleNames.size();
+    return true;
+}
+
+// Validates if all samples are phased
+bool HaplotypeExtractor::areAllSamplesPhased(const std::vector<std::string>& genotypeFields) {
+    for (const auto& gt : genotypeFields) {
+        // A phased genotype contains '|', e.g., 1
+        if (gt.find('|') == std::string::npos) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Processes a single VCF variant and updates haplotype blocks
+bool HaplotypeExtractor::processVariant(const std::vector<std::string>& fields, std::vector<HaplotypeBlock>& haplotypeBlocks, int currentPos) {
+    if (fields.size() < 9) {
+        std::cerr << "Warning: Skipping invalid VCF line with fewer than 9 fields.\n";
+        return false;
+    }
+
+    std::string chrom = fields[0];
+    int pos = 0;
+    try {
+        pos = std::stoi(fields[1]);
+    } catch (...) {
+        std::cerr << "Warning: Invalid POS value. Skipping line.\n";
+        return false;
+    }
+
+    std::string format = fields[8];
+    std::vector<std::string> formatFields = splitString(format, ':');
+    int gtIndex = -1;
+    for (size_t i = 0; i < formatFields.size(); ++i) {
+        if (formatFields[i] == "GT") {
+            gtIndex = static_cast<int>(i);
+            break;
+        }
+    }
+
+    if (gtIndex == -1) {
+        std::cerr << "Warning: GT field not found in FORMAT column. Skipping line.\n";
+        return false;
+    }
+
+    std::vector<std::string> genotypeFields;
+    bool allPhased = true;
+    for (size_t i = 9; i < fields.size(); ++i) {
+        std::vector<std::string> sampleData = splitString(fields[i], ':');
+        if (static_cast<size_t>(gtIndex) >= sampleData.size()) {
+            genotypeFields.push_back("./.");
+            allPhased = false;
+            continue; // No GT data for this sample
+        }
+        std::string gt = sampleData[gtIndex];
+        genotypeFields.push_back(gt);
+        if (gt.find('|') == std::string::npos) {
+            allPhased = false;
+        }
+    }
+
+    if (!allPhased) {
+        std::cerr << "Warning: Not all samples are phased at position " << pos << " on " << chrom << ". Skipping haplotype extraction for this variant.\n";
+        return false;
+    }
+
+    // Update haplotype blocks
+    updateHaplotypeBlocks(genotypeFields, haplotypeBlocks, pos, chrom);
+
+    return true;
+}
+
+// Updates haplotype blocks with new variant information
+void HaplotypeExtractor::updateHaplotypeBlocks(const std::vector<std::string>& genotypeFields, std::vector<HaplotypeBlock>& haplotypeBlocks, int pos, const std::string& chrom) {
+    if (haplotypeBlocks.empty()) {
+        // Initialize the first haplotype block
+        HaplotypeBlock block;
+        block.chrom = chrom;
+        block.start = pos;
+        block.end = pos;
+        for (const auto& gt : genotypeFields) {
+            block.haplotypes.push_back(gt);
+        }
+        haplotypeBlocks.push_back(block);
+        return;
+    }
+
+    // Get the last haplotype block
+    HaplotypeBlock& lastBlock = haplotypeBlocks.back();
+
+    // Determine if the current variant should be part of the last block
+    // Criteria:
+    // 1. Same chromosome
+    // 2. Distance between variants is below a threshold (e.g., 100 kb)
+    // 3. Phasing is consistent (already ensured)
+
+    const int distanceThreshold = 100000; // 100 kb
+    if (chrom == lastBlock.chrom && (pos - lastBlock.end) <= distanceThreshold) {
+        // Extend the last haplotype block
+        lastBlock.end = pos;
+        for (size_t i = 0; i < genotypeFields.size(); ++i) {
+            lastBlock.haplotypes[i] += "|" + genotypeFields[i];
+        }
+    } else {
+        // Start a new haplotype block
+        HaplotypeBlock newBlock;
+        newBlock.chrom = chrom;
+        newBlock.start = pos;
+        newBlock.end = pos;
+        for (const auto& gt : genotypeFields) {
+            newBlock.haplotypes.push_back(gt);
+        }
+        haplotypeBlocks.push_back(newBlock);
+    }
+}
+
+// Parses the VCF file and extracts haplotype blocks
+bool HaplotypeExtractor::extractHaplotypes(std::istream& in, std::ostream& out) {
     std::string line;
     bool header_found = false;
-    std::vector<std::string> sample_names;
+    std::vector<HaplotypeBlock> haplotypeBlocks;
 
-    // Output header for haplotype blocks
-    out << "CHROM\tSTART\tEND\tHAPLOTYPES\n";
-
+    // Read the VCF file line by line
     while (std::getline(in, line)) {
         if (line.empty()) {
             continue;
@@ -42,10 +173,9 @@ bool extractHaplotypeBlocks(std::istream& in, std::ostream& out) {
 
         if (line[0] == '#') {
             if (line.find("#CHROM") == 0) {
-                // Parse sample names
-                std::vector<std::string> fields = split(line, '\t');
-                if (fields.size() > 9) {
-                    sample_names.assign(fields.begin() + 9, fields.end());
+                // Parse header to extract sample names
+                if (!parseHeader(line)) {
+                    return false;
                 }
                 header_found = true;
             }
@@ -57,59 +187,31 @@ bool extractHaplotypeBlocks(std::istream& in, std::ostream& out) {
             return false;
         }
 
-        std::vector<std::string> fields = split(line, '\t');
-        if (fields.size() < 9) {
-            std::cerr << "Warning: Skipping invalid VCF line with fewer than 9 fields.\n";
-            continue;
-        }
+        // Split the VCF record into fields
+        std::vector<std::string> fields = splitString(line, '\t');
 
-        std::string chrom = fields[0];
-        int pos = 0;
-        try {
-            pos = std::stoi(fields[1]);
-        } catch (...) {
-            std::cerr << "Warning: Invalid POS value. Skipping line.\n";
-            continue;
+        // Process the variant to extract haplotypes
+        if (!processVariant(fields, haplotypeBlocks, 0)) {
+            continue; // Skip variants that couldn't be processed
         }
+    }
 
-        std::string format = fields[8];
-        std::vector<std::string> format_fields = split(format, ':');
-        int gt_index = -1;
-        for (size_t i = 0; i < format_fields.size(); ++i) {
-            if (format_fields[i] == "GT") {
-                gt_index = static_cast<int>(i);
-                break;
+    // Output the haplotype blocks
+    out << "CHROM\tSTART\tEND\t" ;
+    for (const auto& sample : sampleNames) {
+        out << sample << "\t";
+    }
+    out << "\n";
+
+    for (const auto& block : haplotypeBlocks) {
+        out << block.chrom << "\t" << block.start << "\t" << block.end << "\t";
+        for (size_t i = 0; i < block.haplotypes.size(); ++i) {
+            out << block.haplotypes[i];
+            if (i != block.haplotypes.size() - 1) {
+                out << "\t";
             }
         }
-
-        if (gt_index == -1) {
-            std::cerr << "Warning: GT field not found in FORMAT column. Skipping line.\n";
-            continue;
-        }
-
-        std::vector<std::string> haplotypes;
-        for (size_t i = 9; i < fields.size(); ++i) {
-            std::vector<std::string> sample_data = split(fields[i], ':');
-            if (static_cast<size_t>(gt_index) >= sample_data.size()) {
-                haplotypes.push_back(".");
-                continue; // No GT data for this sample
-            }
-            haplotypes.push_back(sample_data[gt_index]);
-        }
-
-        // For simplicity, consider each variant as a separate haplotype block
-        // In practice, you might want to group contiguous variants into blocks
-        out << chrom << "\t" << pos << "\t" << pos << "\t";
-
-        // Concatenate haplotypes separated by commas
-        std::string haplo_str;
-        for (size_t i = 0; i < haplotypes.size(); ++i) {
-            haplo_str += haplotypes[i];
-            if (i != haplotypes.size() - 1) {
-                haplo_str += ",";
-            }
-        }
-        out << haplo_str << "\n";
+        out << "\n";
     }
 
     return true;
@@ -125,7 +227,10 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // Extract haplotype blocks
-    bool success = extractHaplotypeBlocks(std::cin, std::cout);
+    // Instantiate the haplotype extractor
+    HaplotypeExtractor extractor;
+
+    // Extract haplotype blocks from stdin and output to stdout
+    bool success = extractor.extractHaplotypes(std::cin, std::cout);
     return success ? 0 : 1;
 }

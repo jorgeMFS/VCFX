@@ -58,7 +58,7 @@ bool parseVCFLine(const std::string& line, VCFVariant& variant) {
 
 // Function to reconstruct INFO field
 std::string reconstructInfo(const std::string& chrom, int pos, const VCFVariant& variant) {
-    return variant.info; // For simplicity, retain the original INFO field
+    return variant.info; // For icity, retain the original INFO field
 }
 
 // Function to split multi-allelic variants into bi-allelic
