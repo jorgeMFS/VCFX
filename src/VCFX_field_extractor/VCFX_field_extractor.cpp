@@ -1,5 +1,19 @@
 #include "VCFX_field_extractor.h"
 #include <sstream>
+#include <algorithm>
+
+// Function to display help message
+void printHelp() {
+    std::cout << "VCFX_field_extractor\n"
+              << "Usage: VCFX_field_extractor --fields \"FIELD1,FIELD2,...\" [OPTIONS]\n\n"
+              << "Options:\n"
+              << "  --fields, -f          Comma-separated list of fields to extract (e.g., \"CHROM,POS,ID,QUAL\").\n"
+              << "  --help, -h            Display this help message and exit.\n\n"
+              << "Description:\n"
+              << "  Extracts specified fields from VCF records and outputs them in a tab-separated format.\n\n"
+              << "Example:\n"
+              << "  ./VCFX_field_extractor --fields \"CHROM,POS,ID,QUAL\" < input.vcf > extracted_fields.tsv\n";
+}
 
 std::vector<std::string> parseFields(const std::string& record, const std::vector<std::string>& fields) {
     std::vector<std::string> extracted;
@@ -35,6 +49,7 @@ std::vector<std::string> parseFields(const std::string& record, const std::vecto
                     std::string info = vcf_fields[info_index];
                     std::stringstream info_ss(info);
                     std::string info_token;
+                    bool field_found = false;
                     while (std::getline(info_ss, info_token, ';')) {
                         size_t eq = info_token.find('=');
                         if (eq != std::string::npos) {
@@ -42,14 +57,20 @@ std::vector<std::string> parseFields(const std::string& record, const std::vecto
                             std::string value = info_token.substr(eq + 1);
                             if (key == field) {
                                 extracted.push_back(value);
+                                field_found = true;
                                 break;
                             }
                         } else {
-                            if (info_token == field) {
+                            // Handle flags
+                            if (field == info_token) {
                                 extracted.push_back("1");
+                                field_found = true;
                                 break;
                             }
                         }
+                    }
+                    if (!field_found) {
+                        extracted.push_back(".");
                     }
                 } else {
                     extracted.push_back(".");
@@ -90,11 +111,15 @@ void extractFields(std::istream& in, std::ostream& out, const std::vector<std::s
 }
 
 int main(int argc, char* argv[]) {
-    // Simple command-line argument parsing
+    // Argument parsing
     std::vector<std::string> fields;
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
-        if (arg.find("--fields") == 0) {
+        if (arg == "--help" || arg == "-h") {
+            printHelp();
+            return 0;
+        }
+        if (arg.find("--fields") == 0 || arg.find("-f") == 0) {
             size_t eq = arg.find('=');
             if (eq != std::string::npos) {
                 std::string fields_str = arg.substr(eq + 1);
@@ -115,7 +140,8 @@ int main(int argc, char* argv[]) {
     }
 
     if (fields.empty()) {
-        std::cerr << "No fields specified. Usage: " << argv[0] << " --fields \"CHROM,POS,ID,QUAL\"" << std::endl;
+        std::cerr << "No fields specified.\n";
+        std::cerr << "Use --help for usage information.\n";
         return 1;
     }
 

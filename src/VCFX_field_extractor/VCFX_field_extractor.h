@@ -11,4 +11,7 @@ std::vector<std::string> parseFields(const std::string& record, const std::vecto
 // Function to process and extract fields from VCF
 void extractFields(std::istream& in, std::ostream& out, const std::vector<std::string>& fields);
 
+// Function to display help message
+void printHelp();
+
 #endif // VCFX_FIELD_EXTRACTOR_H

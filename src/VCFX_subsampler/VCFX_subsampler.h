@@ -4,6 +4,9 @@
 #include <iostream>
 #include <string>
 
+// Function to display help message
+void printHelp();
+
 // Function to parse command-line arguments
 bool parseArguments(int argc, char* argv[], int& sample_size);
 

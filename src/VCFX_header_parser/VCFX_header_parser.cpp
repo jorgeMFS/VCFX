@@ -2,6 +2,18 @@
 #include <iostream>
 #include <sstream>
 
+void printHelp() {
+    std::cout << "VCFX_header_parser\n"
+              << "Usage: VCFX_header_parser [OPTIONS]\n\n"
+              << "Options:\n"
+              << "  --help, -h            Display this help message and exit.\n"
+              << "\n"
+              << "Description:\n"
+              << "  Extracts and displays the header lines from a VCF file.\n\n"
+              << "Example:\n"
+              << "  ./VCFX_header_parser < input.vcf > header.txt\n";
+}
+
 void processHeader(std::istream& in, std::ostream& out) {
     std::string line;
     while (std::getline(in, line)) {
@@ -14,6 +26,16 @@ void processHeader(std::istream& in, std::ostream& out) {
 }
 
 int main(int argc, char* argv[]) {
+    // Simple argument parsing
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--help" || arg == "-h") {
+            printHelp();
+            return 0;
+        }
+    }
+
+    // Process header
     processHeader(std::cin, std::cout);
     return 0;
 }

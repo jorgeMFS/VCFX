@@ -245,34 +245,48 @@ void processRecords(std::istream& in, std::ostream& out, const std::vector<Filte
     }
 }
 
+void printHelp() {
+    std::cout << "VCFX_record_filter\n"
+              << "Usage: VCFX_record_filter --filter \"CRITERIA\" [OPTIONS]\n\n"
+              << "Options:\n"
+              << "  --filter, -f          Specify filter criteria (e.g., \"QUAL>30;DP<100\").\n"
+              << "  --help, -h            Display this help message and exit.\n\n"
+              << "Description:\n"
+              << "  Filters VCF records based on specified criteria.\n\n"
+              << "Example:\n"
+              << "  ./VCFX_record_filter --filter \"QUAL>30;DP<100\" < input.vcf > filtered.vcf\n";
+}
+
 int main(int argc, char* argv[]) {
-    // Command-line argument parsing
+    // Argument parsing
     std::string criteria_str;
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
+        if (arg == "--help" || arg == "-h") {
+            printHelp();
+            return 0;
+        }
         if (arg == "--filter" || arg == "-f") {
             if (i + 1 < argc) {
                 criteria_str = argv[++i];
-                break;
             } else {
-                std::cerr << "Error: --filter option requires an argument." << std::endl;
+                std::cerr << "Error: --filter option requires an argument.\n";
                 return 1;
             }
         } else if (arg.find("--filter=") == 0) {
             criteria_str = arg.substr(9);
-            break;
         }
     }
 
     if (criteria_str.empty()) {
-        std::cerr << "No filter criteria provided." << std::endl;
-        std::cerr << "Usage: " << argv[0] << " --filter \"QUAL>30;DP<100\"" << std::endl;
+        std::cerr << "No filter criteria provided.\n";
+        std::cerr << "Use --help for usage information.\n";
         return 1;
     }
 
     std::vector<FilterCriterion> criteria;
     if (!parseCriteria(criteria_str, criteria)) {
-        std::cerr << "Failed to parse filter criteria." << std::endl;
+        std::cerr << "Failed to parse filter criteria.\n";
         return 1;
     }
 

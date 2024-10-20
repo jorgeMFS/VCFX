@@ -30,4 +30,7 @@ void sortVCFRecords(std::vector<VCFRecord>& records);
 // Function to print sorted VCF records
 void printSortedVCF(const std::vector<VCFRecord>& records, const std::string& header);
 
+// Function to display help message
+void printHelp();
+
 #endif // VCFX_SORTER_H

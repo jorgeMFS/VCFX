@@ -3,6 +3,18 @@
 #include <vector>
 #include <cctype>
 
+// Function to display help message
+void printHelp() {
+    std::cout << "VCFX_validator\n"
+              << "Usage: VCFX_validator [OPTIONS]\n\n"
+              << "Options:\n"
+              << "  --help, -h            Display this help message and exit.\n\n"
+              << "Description:\n"
+              << "  Validates the integrity and format of a VCF file.\n\n"
+              << "Example:\n"
+              << "  ./VCFX_validator < input.vcf\n";
+}
+
 // Function to trim whitespace from both ends of a string
 static inline std::string trim(const std::string& s) {
     size_t start = s.find_first_not_of(" \t\r\n");
@@ -55,7 +67,7 @@ bool validateVCFRecord(const std::string& line, int line_number) {
             return false;
         }
     } catch (...) {
-        std::cerr << "Error: Line " << line_number << " has non-integer POS value.\n";
+        std::cerr << "Error: Line " << line_number << " has invalid POS value.\n";
         return false;
     }
 
@@ -122,7 +134,7 @@ bool validateVCF(std::istream& in, std::ostream& out) {
     std::string line;
     int line_number = 0;
     bool header_found = false;
-
+   
     while (std::getline(in, line)) {
         line_number++;
         if (line.empty()) {
@@ -165,9 +177,16 @@ bool validateVCF(std::istream& in, std::ostream& out) {
 }
 
 int main(int argc, char* argv[]) {
-    // Usage: VCFX_validator < input.vcf
-    // Optionally, you can extend this with command-line arguments for additional functionalities
+    // Argument parsing for help
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--help" || arg == "-h") {
+            printHelp();
+            return 0;
+        }
+    }
 
+    // Validate VCF
     bool is_valid = validateVCF(std::cin, std::cout);
     return is_valid ? 0 : 1;
 }

@@ -14,6 +14,9 @@ tools=(
     VCFX_sorter
     VCFX_validator
     VCFX_subsampler
+    VCFX_genotype_query
+    VCFX_allele_freq_calc
+    VCFX_indexer
 )
 
 # Output directory for WebAssembly files
@@ -38,4 +41,3 @@ for tool in "${tools[@]}"; do
 done
 
 echo "All tools have been compiled to WebAssembly and are available in the '$output_dir' directory."
-

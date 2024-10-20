@@ -2,6 +2,18 @@
 #include <sstream>
 #include <algorithm>
 
+// Function to display help message
+void printHelp() {
+    std::cout << "VCFX_sorter\n"
+              << "Usage: VCFX_sorter [OPTIONS]\n\n"
+              << "Options:\n"
+              << "  --help, -h            Display this help message and exit.\n\n"
+              << "Description:\n"
+              << "  Sorts VCF records based on chromosome and position.\n\n"
+              << "Example:\n"
+              << "  ./VCFX_sorter < unsorted.vcf > sorted.vcf\n";
+}
+
 // Implement comparator based on chromosome and position
 bool VCFRecord::operator<(const VCFRecord& other) const {
     if (chrom != other.chrom) {
@@ -25,7 +37,11 @@ bool parseVCFLine(const std::string& line, VCFRecord& record) {
     }
 
     record.chrom = fields[0];
-    record.pos = std::stoi(fields[1]);
+    try {
+        record.pos = std::stoi(fields[1]);
+    } catch (...) {
+        return false; // Invalid position
+    }
     record.id = fields[2];
     record.ref = fields[3];
     record.alt = fields[4];
@@ -33,12 +49,9 @@ bool parseVCFLine(const std::string& line, VCFRecord& record) {
     record.filter = fields[6];
     record.info = fields[7];
 
-    // Extract sample columns if present
-    record.samples.clear();
+    // Parse sample fields if present
     if (fields.size() > 8) {
-        for (size_t i = 8; i < fields.size(); ++i) {
-            record.samples.push_back(fields[i]);
-        }
+        record.samples.assign(fields.begin() + 8, fields.end());
     }
 
     return true;
@@ -62,17 +75,29 @@ void printSortedVCF(const std::vector<VCFRecord>& records, const std::string& he
                   << record.filter << "\t"
                   << record.info;
 
-        for (const auto& sample : record.samples) {
-            std::cout << "\t" << sample;
+        // Print sample fields if present
+        if (!record.samples.empty()) {
+            for (const auto& sample : record.samples) {
+                std::cout << "\t" << sample;
+            }
         }
         std::cout << "\n";
     }
 }
 
 int main(int argc, char* argv[]) {
-    std::vector<VCFRecord> records;
+    // Argument parsing for help
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--help" || arg == "-h") {
+            printHelp();
+            return 0;
+        }
+    }
+
     std::string line;
     std::string header;
+    std::vector<VCFRecord> records;
 
     while (std::getline(std::cin, line)) {
         if (line.empty()) {

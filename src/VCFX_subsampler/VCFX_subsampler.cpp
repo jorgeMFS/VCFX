@@ -4,6 +4,19 @@
 #include <random>
 #include <ctime>
 
+// Function to display help message
+void printHelp() {
+    std::cout << "VCFX_subsampler\n"
+              << "Usage: VCFX_subsampler [OPTIONS]\n\n"
+              << "Options:\n"
+              << "  --subsample, -s <number>  Specify the number of variants to sample.\n"
+              << "  --help, -h                Display this help message and exit.\n\n"
+              << "Description:\n"
+              << "  Performs reservoir sampling on a VCF file to extract a subset of variants.\n\n"
+              << "Example:\n"
+              << "  ./VCFX_subsampler --subsample 1000 < input.vcf > sampled.vcf\n";
+}
+
 // Function to parse command-line arguments
 bool parseArguments(int argc, char* argv[], int& sample_size) {
     for (int i = 1; i < argc; ++i) {
@@ -96,9 +109,19 @@ void subsampleVariants(std::istream& in, std::ostream& out, int sample_size) {
 }
 
 int main(int argc, char* argv[]) {
+    // Argument parsing for help and subsample size
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--help" || arg == "-h") {
+            printHelp();
+            return 0;
+        }
+    }
+
     int sample_size = 0;
     if (!parseArguments(argc, argv, sample_size)) {
         std::cerr << "Usage: " << argv[0] << " --subsample <number_of_variants> < input.vcf > output.vcf\n";
+        std::cerr << "Use --help for usage information.\n";
         return 1;
     }
 

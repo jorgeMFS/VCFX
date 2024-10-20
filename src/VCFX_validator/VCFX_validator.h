@@ -4,6 +4,9 @@
 #include <iostream>
 #include <string>
 
+// Function to display help message
+void printHelp();
+
 // Function to validate VCF header
 bool validateVCFHeader(const std::string& line);
 

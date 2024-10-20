@@ -69,7 +69,7 @@ VCFX is a collection of C/C++ tools for processing and analyzing VCF (Variant Ca
 
 To build the project:
 
-```
+``` bash
 mkdir build && cd build
 cmake ..
 make
@@ -79,7 +79,7 @@ make
 
 To run the tests:
 
-```
+``` bash
 cd build
 ctest
 ```

@@ -2,6 +2,19 @@
 #include <sstream>
 #include <algorithm>
 
+// Function to display help message
+void printHelp() {
+    std::cout << "VCFX_sample_extractor\n"
+              << "Usage: VCFX_sample_extractor [OPTIONS]\n\n"
+              << "Options:\n"
+              << "  --sample, -s \"SampleName\"  Specify the sample name to extract data for.\n"
+              << "  --help, -h                  Display this help message and exit.\n\n"
+              << "Description:\n"
+              << "  Extracts genotype and related data for a specified sample from a VCF file.\n\n"
+              << "Example:\n"
+              << "  ./VCFX_sample_extractor --sample \"Sample1\" < input.vcf > sample1_data.tsv\n";
+}
+
 // Function to parse command-line arguments
 bool parseArguments(int argc, char* argv[], std::string& sample_name) {
     for (int i = 1; i < argc; ++i) {
@@ -59,7 +72,7 @@ void extractSampleData(std::istream& in, std::ostream& out, const std::string& s
             fields.push_back(field);
         }
 
-        if (sample_index == -1 || sample_index >= fields.size()) {
+        if (sample_index == -1 || sample_index >= static_cast<int>(fields.size())) {
             // Sample index not set or out of range
             continue;
         }
@@ -79,7 +92,8 @@ void extractSampleData(std::istream& in, std::ostream& out, const std::string& s
 int main(int argc, char* argv[]) {
     std::string sample_name;
     if (!parseArguments(argc, argv, sample_name)) {
-        std::cerr << "Usage: " << argv[0] << " --sample \"SampleName\" < input.vcf" << std::endl;
+        std::cerr << "No sample name specified.\n";
+        std::cerr << "Use --help for usage information.\n";
         return 1;
     }
 

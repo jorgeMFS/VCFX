@@ -2,6 +2,21 @@
 #include <sstream>
 #include <algorithm>
 
+// Function to display help message
+void printHelp() {
+    std::cout << "VCFX_format_converter\n"
+              << "Usage: VCFX_format_converter [OPTIONS]\n\n"
+              << "Options:\n"
+              << "  --to-bed             Convert VCF to BED format.\n"
+              << "  --to-csv             Convert VCF to CSV format.\n"
+              << "  --help, -h           Display this help message and exit.\n\n"
+              << "Description:\n"
+              << "  Converts VCF files to specified formats (BED or CSV).\n\n"
+              << "Example:\n"
+              << "  ./VCFX_format_converter --to-bed < input.vcf > output.bed\n"
+              << "  ./VCFX_format_converter --to-csv < input.vcf > output.csv\n";
+}
+
 // Function to parse command-line arguments
 bool parseArguments(int argc, char* argv[], OutputFormat& format) {
     for (int i = 1; i < argc; ++i) {
@@ -14,6 +29,7 @@ bool parseArguments(int argc, char* argv[], OutputFormat& format) {
             return true;
         }
     }
+    format = OutputFormat::UNKNOWN;
     return false;
 }
 
@@ -50,19 +66,9 @@ void convertVCFtoBED(std::istream& in, std::ostream& out) {
 // Function to convert VCF to CSV
 void convertVCFtoCSV(std::istream& in, std::ostream& out) {
     std::string line;
-    bool header_written = false;
-
     while (std::getline(in, line)) {
-        if (line.empty()) {
-            continue;
-        }
-
-        if (line[0] == '#') {
-            if (!header_written) {
-                // Convert VCF header to CSV header
-                std::cout << line << "\n"; // Optionally, skip or transform header
-            }
-            continue; // Skip header lines
+        if (line.empty() || line[0] == '#') {
+            continue; // Skip header lines or handle accordingly
         }
 
         std::stringstream ss(line);
@@ -90,10 +96,21 @@ void convertVCFtoCSV(std::istream& in, std::ostream& out) {
 }
 
 int main(int argc, char* argv[]) {
+    // Argument parsing
     OutputFormat format;
     if (!parseArguments(argc, argv, format)) {
-        std::cerr << "Usage: " << argv[0] << " --to-bed|--to-csv < input.vcf > output" << std::endl;
+        std::cerr << "No valid output format specified.\n";
+        std::cerr << "Use --help for usage information.\n";
         return 1;
+    }
+
+    // Handle help and invalid formats
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--help" || arg == "-h") {
+            printHelp();
+            return 0;
+        }
     }
 
     switch (format) {
@@ -104,7 +121,8 @@ int main(int argc, char* argv[]) {
             convertVCFtoCSV(std::cin, std::cout);
             break;
         default:
-            std::cerr << "Unsupported output format." << std::endl;
+            std::cerr << "Unsupported output format.\n";
+            std::cerr << "Use --help for usage information.\n";
             return 1;
     }
 

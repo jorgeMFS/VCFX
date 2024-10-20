@@ -8,7 +8,8 @@
 // Enumeration for output formats
 enum class OutputFormat {
     BED,
-    CSV
+    CSV,
+    UNKNOWN
 };
 
 // Function to parse command-line arguments
@@ -19,5 +20,8 @@ void convertVCFtoBED(std::istream& in, std::ostream& out);
 
 // Function to convert VCF to CSV
 void convertVCFtoCSV(std::istream& in, std::ostream& out);
+
+// Function to display help message
+void printHelp();
 
 #endif // VCFX_FORMAT_CONVERTER_H
