@@ -1,6 +1,34 @@
 #ifndef VCFX_INFO_SUMMARIZER_H
 #define VCFX_INFO_SUMMARIZER_H
 
-// Declarations for VCFX_info_summarizer
+#include <iostream>
+#include <string>
+#include <vector>
+#include <unordered_map>
+
+// Function to display help message
+void printHelp();
+
+// Structure to hold statistical summaries
+struct StatSummary {
+    double mean;
+    double median;
+    double mode;
+};
+
+// Function to parse command-line arguments
+bool parseArguments(int argc, char* argv[], std::vector<std::string>& info_fields);
+
+// Function to calculate mean
+double calculateMean(const std::vector<double>& data);
+
+// Function to calculate median
+double calculateMedian(std::vector<double> data);
+
+// Function to calculate mode
+double calculateMode(const std::vector<double>& data);
+
+// Function to parse the INFO field and collect specified fields
+bool summarizeInfoFields(std::istream& in, std::ostream& out, const std::vector<std::string>& info_fields);
 
 #endif // VCFX_INFO_SUMMARIZER_H
