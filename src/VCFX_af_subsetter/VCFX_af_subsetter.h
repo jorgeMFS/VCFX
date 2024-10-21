@@ -1,6 +1,25 @@
 #ifndef VCFX_AF_SUBSETTER_H
 #define VCFX_AF_SUBSETTER_H
 
-// Declarations for VCFX_af_subsetter
+#include <iostream>
+#include <string>
+#include <vector>
+
+// VCFXAfSubsetter: Header file for Alternate Allele Frequency Subsetter Tool
+class VCFXAfSubsetter {
+public:
+    // Entry point for the tool
+    int run(int argc, char* argv[]);
+
+private:
+    // Displays the help message
+    void displayHelp();
+
+    // Subsets VCF input based on alternate allele frequency range
+    void subsetByAlleleFrequency(std::istream& in, std::ostream& out, double minAF, double maxAF);
+
+    // Parses the AF value from the INFO field
+    bool parseAF(const std::string& infoField, double& af);
+};
 
 #endif // VCFX_AF_SUBSETTER_H
