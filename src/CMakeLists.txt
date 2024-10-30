@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 
-# Core library
-add_library(vcfx_core src/vcfx_core.cpp)
+# Core library with ARM optimizations
+add_library(vcfx_core vcfx_core.cpp)
+
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm|aarch")
+    target_compile_options(vcfx_core PRIVATE -mcpu=native -O3)
+endif()
 
 # Add all tool subdirectories
 add_subdirectory(VCFX_header_parser)

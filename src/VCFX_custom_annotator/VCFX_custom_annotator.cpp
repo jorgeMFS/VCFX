@@ -146,3 +146,8 @@ void VCFXCustomAnnotator::addAnnotations(std::istream& in, std::ostream& out, co
             << qual << "\t" << filter << "\t" << info << "\t" << format << rest_of_line << "\n";
     }
 }
+
+int main(int argc, char* argv[]) {
+    VCFXCustomAnnotator customAnnotator;
+    return customAnnotator.run(argc, argv);
+}

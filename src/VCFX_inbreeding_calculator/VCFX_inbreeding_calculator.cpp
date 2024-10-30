@@ -175,3 +175,8 @@ void VCFXInbreedingCalculator::calculateInbreedingCoefficients(std::istream& in,
         out << sample << "\t" << F << "\n";
     }
 }
+
+int main(int argc, char* argv[]) {
+    VCFXInbreedingCalculator inbreedingCalculator;
+    return inbreedingCalculator.run(argc, argv);
+}

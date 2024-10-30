@@ -292,3 +292,8 @@ void VCFXAncestryInferer::inferAncestry(std::istream& vcfInput, std::ostream& an
         ancestryOutput << sample << "\t" << bestPopulation << "\n";
     }
 }
+
+int main(int argc, char* argv[]) {
+    VCFXAncestryInferer ancestryInferer;
+    return ancestryInferer.run(argc, argv);
+}   

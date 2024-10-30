@@ -122,3 +122,8 @@ void VCFXFileSplitter::splitVCFByChromosome(std::istream& in, const std::string&
         delete ofs;
     }
 }
+
+int main(int argc, char* argv[]) {
+    VCFXFileSplitter fileSplitter;
+    return fileSplitter.run(argc, argv);
+}

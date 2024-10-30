@@ -277,3 +277,8 @@ void VCFXAlignmentChecker::checkDiscrepancies(std::istream& vcfIn, std::istream&
         }
     }
 }
+
+int main(int argc, char* argv[]) {
+    VCFXAlignmentChecker alignmentChecker;
+    return alignmentChecker.run(argc, argv);
+}

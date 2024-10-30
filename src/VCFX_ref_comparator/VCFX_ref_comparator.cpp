@@ -245,3 +245,8 @@ void VCFXRefComparator::compareWithReference(std::istream& vcfInput, std::ostrea
         vcfOutput << newLine.str() << "\n";
     }
 }
+
+int main(int argc, char* argv[]) {
+    VCFXRefComparator refComparator;
+    return refComparator.run(argc, argv);
+}

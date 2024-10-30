@@ -333,3 +333,8 @@ std::string VCFXReformatter::reorderFormat(const std::string& formatField, const
 
     return reorderedFormatStr;
 }
+
+int main(int argc, char* argv[]) {
+    VCFXReformatter reformatter;
+    return reformatter.run(argc, argv);
+}

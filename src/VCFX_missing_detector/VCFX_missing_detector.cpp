@@ -96,3 +96,8 @@ void VCFXMissingDetector::detectMissingGenotypes(std::istream& in, std::ostream&
         }
     }
 }
+
+int main(int argc, char* argv[]) {
+    VCFXMissingDetector missingDetector;
+    return missingDetector.run(argc, argv);
+}

@@ -120,3 +120,8 @@ double VCFXAlleleBalanceFilter::calculateAlleleBalance(const std::string& genoty
 
     return static_cast<double>(ref_count) / total;
 }
+
+int main(int argc, char* argv[]) {
+    VCFXAlleleBalanceFilter alleleBalanceFilter;
+    return alleleBalanceFilter.run(argc, argv);
+}

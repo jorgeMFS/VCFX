@@ -126,3 +126,8 @@ bool VCFXDiffTool::loadVariants(const std::string& filePath, std::unordered_set<
 std::string VCFXDiffTool::generateVariantKey(const std::string& chrom, const std::string& pos, const std::string& ref, const std::string& alt) {
     return chrom + ":" + pos + ":" + ref + ":" + alt;
 }
+
+int main(int argc, char* argv[]) {
+    VCFXDiffTool diffTool;
+    return diffTool.run(argc, argv);
+}

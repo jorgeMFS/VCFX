@@ -125,3 +125,8 @@ void VCFXAfSubsetter::subsetByAlleleFrequency(std::istream& in, std::ostream& ou
         }
     }
 }
+
+int main(int argc, char* argv[]) {
+    VCFXAfSubsetter afSubsetter;
+    return afSubsetter.run(argc, argv);
+}

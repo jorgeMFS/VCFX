@@ -106,3 +106,8 @@ double VCFXPhaseQualityFilter::parsePQScore(const std::string& infoField) {
     // If PQ not found, treat as 0
     return 0.0;
 }
+
+int main(int argc, char* argv[]) {
+    VCFXPhaseQualityFilter phaseQualityFilter;
+    return phaseQualityFilter.run(argc, argv);
+} 

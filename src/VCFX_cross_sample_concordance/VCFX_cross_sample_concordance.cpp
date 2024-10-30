@@ -123,3 +123,8 @@ void VCFXCrossSampleConcordance::calculateConcordance(std::istream& in, std::ost
     out << "Concordant Variants (All samples agree): " << concordantVariants << "\n";
     out << "Discordant Variants (Samples differ): " << discordantVariants << "\n";
 }
+
+int main(int argc, char* argv[]) {
+    VCFXCrossSampleConcordance crossSampleConcordance;
+    return crossSampleConcordance.run(argc, argv);
+}

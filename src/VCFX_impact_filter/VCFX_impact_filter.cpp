@@ -160,3 +160,8 @@ void VCFXImpactFilter::filterByImpact(std::istream& in, std::ostream& out, const
         }
     }
 }
+
+int main(int argc, char* argv[]) {
+    VCFXImpactFilter impactFilter;
+    return impactFilter.run(argc, argv);
+}   

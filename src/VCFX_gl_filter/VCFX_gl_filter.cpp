@@ -209,3 +209,8 @@ void VCFXGLFilter::filterByGL(std::istream& in, std::ostream& out, const std::st
         }
     }
 }
+
+int main(int argc, char* argv[]) {
+    VCFXGLFilter glFilter;
+    return glFilter.run(argc, argv);
+}

@@ -358,3 +358,8 @@ void VCFXAncestryAssigner::assignAncestry(std::istream& vcfIn, std::ostream& out
         out << sampleName << "\t" << assignedPop << "\n";
     }
 }
+
+int main(int argc, char* argv[]) {
+    VCFXAncestryAssigner ancestryAssigner;
+    return ancestryAssigner.run(argc, argv);
+}

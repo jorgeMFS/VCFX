@@ -223,3 +223,8 @@ double VCFXHaplotypePhaser::calculateLD(const std::vector<int>& variant1, const 
 
     return r_squared;
 }
+
+int main(int argc, char* argv[]) {
+    VCFXHaplotypePhaser haplotypePhaser;
+    return haplotypePhaser.run(argc, argv);
+}

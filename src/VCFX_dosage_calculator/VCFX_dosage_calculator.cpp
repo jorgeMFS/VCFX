@@ -202,3 +202,8 @@ void VCFXDosageCalculator::calculateDosage(std::istream& in, std::ostream& out) 
             << dosage_ss.str() << "\n";
     }
 }
+
+int main(int argc, char* argv[]) {
+    VCFXDosageCalculator dosageCalculator;
+    return dosageCalculator.run(argc, argv);
+}

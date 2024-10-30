@@ -110,3 +110,8 @@ void VCFXIndelNormalizer::normalizeIndels(std::istream& in, std::ostream& out) {
         out << line << "\n";
     }
 }
+
+int main(int argc, char* argv[]) {
+    VCFXIndelNormalizer indelNormalizer;
+    return indelNormalizer.run(argc, argv);
+}

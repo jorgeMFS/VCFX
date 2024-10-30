@@ -136,3 +136,8 @@ void VCFXNonRefFilter::filterNonRef(std::istream& in, std::ostream& out) {
         }
     }
 }
+
+int main(int argc, char* argv[]) {
+    VCFXNonRefFilter filter;
+    return filter.run(argc, argv);
+}

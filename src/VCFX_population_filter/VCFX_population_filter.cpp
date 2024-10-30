@@ -170,3 +170,8 @@ void VCFXPopulationFilter::filterPopulation(std::istream& in, std::ostream& out,
         std::cerr << "Error: No header line found in VCF input.\n";
     }
 }
+
+int main(int argc, char* argv[]) {
+    VCFXPopulationFilter populationFilter;
+    return populationFilter.run(argc, argv);
+}

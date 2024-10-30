@@ -141,3 +141,8 @@ void VCFXRegionSubsampler::subsampleRegions(std::istream& in, std::ostream& out,
         }
     }
 }
+
+int main(int argc, char* argv[]) {
+    VCFXRegionSubsampler regionSubsampler;
+    return regionSubsampler.run(argc, argv);
+}

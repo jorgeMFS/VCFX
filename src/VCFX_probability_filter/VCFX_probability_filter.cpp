@@ -203,3 +203,8 @@ void VCFXProbabilityFilter::filterByProbability(std::istream& in, std::ostream& 
         }
     }
 }
+
+int main(int argc, char* argv[]) {
+    VCFXProbabilityFilter probabilityFilter;
+    return probabilityFilter.run(argc, argv);
+}
