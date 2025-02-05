@@ -19,16 +19,16 @@ private:
     // Loads the reference genome from a FASTA file
     bool loadReferenceGenome(std::istream& in);
 
-    // Checks discrepancies between VCF variants and the reference genome
-    void checkDiscrepancies(std::istream& vcfIn, std::istream& refIn, std::ostream& out);
+    // Checks discrepancies between VCF variants and the in-memory reference genome
+    void checkDiscrepancies(std::istream& vcfIn, std::ostream& out);
 
     // Retrieves the reference base(s) from the reference genome at a specific position
     std::string getReferenceBases(const std::string& chrom, int pos, int length = 1);
 
-    // Stores the reference genome sequences
+    // Stores the reference genome sequences, keyed by normalized chromosome name
     std::unordered_map<std::string, std::string> referenceGenome;
 
-    // Helper function to convert chromosome names to consistent format
+    // Helper function to convert chromosome names to a consistent format
     std::string normalizeChromosome(const std::string& chrom);
 };
 

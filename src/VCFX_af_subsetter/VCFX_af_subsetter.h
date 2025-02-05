@@ -18,8 +18,8 @@ private:
     // Subsets VCF input based on alternate allele frequency range
     void subsetByAlleleFrequency(std::istream& in, std::ostream& out, double minAF, double maxAF);
 
-    // Parses the AF value from the INFO field
-    bool parseAF(const std::string& infoField, double& af);
+    // Parses the AF values from the INFO field (handles multi-allelic AF as comma-delimited)
+    bool parseAF(const std::string& infoField, std::vector<double>& afValues);
 };
 
 #endif // VCFX_AF_SUBSETTER_H

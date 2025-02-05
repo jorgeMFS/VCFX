@@ -1,27 +1,78 @@
-#include "VCFX_allele_counter.h"
+#include <iostream>
 #include <sstream>
-#include <algorithm>
-#include <cctype>
+#include <string>
+#include <vector>
 #include <unordered_map>
+#include <cstdlib>
 
-// Function to display help message
-void printHelp() {
-    std::cout << "VCFX_allele_counter\n"
-              << "Usage: VCFX_allele_counter [OPTIONS] < input.vcf > allele_counts.tsv\n\n"
-              << "Options:\n"
-              << "  --samples, -s \"Sample1 Sample2\"   Specify the sample names to include in allele counting. If not specified, all samples are processed.\n"
-              << "  --help, -h                        Display this help message and exit.\n\n"
-              << "Description:\n"
-              << "  Counts the occurrences of reference and alternate alleles across specified samples for each variant in a VCF file.\n\n"
-              << "Examples:\n"
-              << "  Count alleles for SampleA and SampleB:\n"
-              << "    ./VCFX_allele_counter --samples \"SampleA SampleB\" < input.vcf > allele_counts.tsv\n\n"
-              << "  Count alleles for all samples:\n"
-              << "    ./VCFX_allele_counter < input.vcf > allele_counts_all.tsv\n";
+// ---------------------------------------------------------------------
+// Structures and Declarations
+// ---------------------------------------------------------------------
+struct AlleleCounterArguments {
+    std::vector<std::string> samples;
+};
+
+static void printHelp();
+static bool parseArguments(int argc, char* argv[], AlleleCounterArguments& args);
+static std::vector<std::string> splitString(const std::string& str, char delimiter);
+static bool countAlleles(std::istream& in, std::ostream& out, const AlleleCounterArguments& args);
+
+// ---------------------------------------------------------------------
+// printHelp
+// ---------------------------------------------------------------------
+static void printHelp() {
+    std::cout
+        << "VCFX_allele_counter\n"
+        << "Usage: VCFX_allele_counter [OPTIONS] < input.vcf > allele_counts.tsv\n\n"
+        << "Options:\n"
+        << "  --samples, -s \"Sample1 Sample2\"   Specify the sample names to include.\n"
+        << "                                     If not specified, all samples are processed.\n"
+        << "  --help, -h                        Display this help message and exit.\n\n"
+        << "Description:\n"
+        << "  Reads a VCF from stdin and outputs a TSV file with the columns:\n"
+        << "    CHROM  POS  ID  REF  ALT  Sample  Ref_Count  Alt_Count\n\n"
+        << "  Each sample for each variant is listed. Alleles are determined by\n"
+        << "  genotype strings (GT). This code treats any numeric allele that is\n"
+        << "  not '0' as ALT, e.g. '1' or '2' or '3' => alt.\n\n"
+        << "Examples:\n"
+        << "  1) Count alleles for SampleA and SampleB:\n"
+        << "     VCFX_allele_counter --samples \"SampleA SampleB\" < input.vcf > allele_counts.tsv\n\n"
+        << "  2) Count alleles for all samples:\n"
+        << "     VCFX_allele_counter < input.vcf > allele_counts_all.tsv\n";
 }
 
-// Utility function to split a string by a delimiter
-std::vector<std::string> splitString(const std::string& str, char delimiter) {
+// ---------------------------------------------------------------------
+// parseArguments
+// ---------------------------------------------------------------------
+static bool parseArguments(int argc, char* argv[], AlleleCounterArguments& args) {
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if ((arg == "--samples" || arg == "-s") && i + 1 < argc) {
+            std::string samplesStr = argv[++i];
+            args.samples = splitString(samplesStr, ' ');
+            // Trim whitespace from each sample name
+            for (auto& sample : args.samples) {
+                // left trim
+                sample.erase(0, sample.find_first_not_of(" \t\n\r\f\v"));
+                // right trim
+                sample.erase(sample.find_last_not_of(" \t\n\r\f\v") + 1);
+            }
+        }
+        else if (arg == "--help" || arg == "-h") {
+            printHelp();
+            std::exit(0);
+        }
+        else {
+            std::cerr << "Warning: Unrecognized argument '" << arg << "'.\n";
+        }
+    }
+    return true;
+}
+
+// ---------------------------------------------------------------------
+// splitString
+// ---------------------------------------------------------------------
+static std::vector<std::string> splitString(const std::string& str, char delimiter) {
     std::vector<std::string> tokens;
     std::stringstream ss(str);
     std::string temp;
@@ -31,49 +82,18 @@ std::vector<std::string> splitString(const std::string& str, char delimiter) {
     return tokens;
 }
 
-// Function to parse command-line arguments
-bool parseArguments(int argc, char* argv[], AlleleCounterArguments& args) {
-    for (int i = 1; i < argc; ++i) {
-        std::string arg = argv[i];
-        if ((arg == "--samples" || arg == "-s") && i + 1 < argc) {
-            std::string samples_str = argv[++i];
-            args.samples = splitString(samples_str, ' ');
-            // Trim whitespace from each sample name
-            for (auto& sample : args.samples) {
-                sample.erase(0, sample.find_first_not_of(" \t\n\r\f\v"));
-                sample.erase(sample.find_last_not_of(" \t\n\r\f\v") + 1);
-            }
-        }
-        else if (arg == "--help" || arg == "-h") {
-            printHelp();
-            exit(0);
-        }
-        else {
-            std::cerr << "Warning: Unrecognized argument '" << arg << "'.\n";
-        }
-    }
-    return true;
-}
-
-// Function to extract genotype from genotype string
-std::string extractGenotype(const std::string& genotype_str) {
-    if (genotype_str.empty()) return "./.";
-
-    std::vector<std::string> alleles = splitString(genotype_str, ':');
-    if (!alleles.empty()) {
-        return alleles[0];
-    }
-    return "./.";
-}
-
-// Function to process VCF and count alleles
-bool countAlleles(std::istream& in, std::ostream& out, const AlleleCounterArguments& args) {
+// ---------------------------------------------------------------------
+// countAlleles
+// ---------------------------------------------------------------------
+static bool countAlleles(std::istream& in, std::ostream& out, const AlleleCounterArguments& args) {
     std::string line;
-    std::vector<std::string> header_fields;
-    bool header_found = false;
-    std::vector<int> sample_indices;
+    std::vector<std::string> headerFields;
+    bool foundChromHeader = false;
 
-    // Output header
+    // We will store the columns (indexes) for the samples we care about
+    std::vector<int> sampleIndices;
+
+    // Print one TSV header (not the original VCF header lines)
     out << "CHROM\tPOS\tID\tREF\tALT\tSample\tRef_Count\tAlt_Count\n";
 
     while (std::getline(in, line)) {
@@ -81,129 +101,147 @@ bool countAlleles(std::istream& in, std::ostream& out, const AlleleCounterArgume
             continue;
         }
 
+        // Skip lines that start with '#' (VCF headers), but parse #CHROM line
         if (line[0] == '#') {
-            if (line.find("#CHROM") == 0) {
-                header_fields = splitString(line, '\t');
-                // Identify sample columns
-                std::unordered_map<std::string, int> sample_map;
-                for (size_t i = 9; i < header_fields.size(); ++i) {
-                    sample_map[header_fields[i]] = static_cast<int>(i);
+            // If this is the #CHROM line, parse to find sample columns
+            if (line.rfind("#CHROM", 0) == 0) {
+                headerFields = splitString(line, '\t');
+                if (headerFields.size() < 9) {
+                    std::cerr << "Error: #CHROM line has fewer than 9 columns.\n";
+                    return false;
+                }
+                // Build sample->index map
+                std::unordered_map<std::string, int> sampleMap;
+                for (size_t i = 9; i < headerFields.size(); ++i) {
+                    sampleMap[headerFields[i]] = static_cast<int>(i);
                 }
 
+                // Decide which samples to process
                 if (!args.samples.empty()) {
-                    for (const auto& sample : args.samples) {
-                        if (sample_map.find(sample) == sample_map.end()) {
-                            std::cerr << "Error: Sample '" << sample << "' not found in VCF header.\n";
+                    // Use only user-specified samples
+                    for (const auto& s : args.samples) {
+                        auto it = sampleMap.find(s);
+                        if (it == sampleMap.end()) {
+                            std::cerr << "Error: Sample '" << s << "' not found in VCF header.\n";
                             return false;
                         }
-                        sample_indices.push_back(sample_map[sample]);
+                        sampleIndices.push_back(it->second);
+                    }
+                } else {
+                    // If no samples are specified, process all
+                    for (size_t i = 9; i < headerFields.size(); ++i) {
+                        sampleIndices.push_back((int)i);
                     }
                 }
-                else {
-                    // If no samples specified, include all
-                    for (size_t i = 9; i < header_fields.size(); ++i) {
-                        sample_indices.push_back(static_cast<int>(i));
-                    }
-                }
-                header_found = true;
+                foundChromHeader = true;
             }
-            out << line << "\n"; // Retain header in output if needed
+            // We do NOT print the raw VCF headers to output
             continue;
         }
 
-        if (!header_found) {
-            std::cerr << "Error: VCF header (#CHROM) not found before records.\n";
+        // We expect a #CHROM line before data lines
+        if (!foundChromHeader) {
+            std::cerr << "Error: VCF #CHROM header not found before records.\n";
             return false;
         }
 
-        std::vector<std::string> fields = splitString(line, '\t');
+        // Split VCF data line
+        auto fields = splitString(line, '\t');
         if (fields.size() < 9) {
-            std::cerr << "Warning: Skipping invalid VCF line with fewer than 9 fields.\n";
+            std::cerr << "Warning: Skipping invalid VCF line with fewer than 9 fields:\n" 
+                      << line << "\n";
             continue;
         }
 
-        std::string chrom = fields[0];
-        std::string pos = fields[1];
-        std::string id = fields[2];
-        std::string ref = fields[3];
-        std::string alt = fields[4];
+        // Basic columns
+        const std::string &chrom = fields[0];
+        const std::string &pos   = fields[1];
+        const std::string &id    = fields[2];
+        const std::string &ref   = fields[3];
+        const std::string &alt   = fields[4];
 
-        // Iterate over specified samples
-        for (const auto& idx : sample_indices) {
-            if (idx >= static_cast<int>(fields.size())) {
-                std::cerr << "Warning: Sample index out of range. Skipping sample.\n";
+        // For each chosen sample, parse genotype
+        for (int sIndex : sampleIndices) {
+            if (sIndex >= (int)fields.size()) {
+                std::cerr << "Warning: Sample index " << sIndex << " out of range for line:\n"
+                          << line << "\n";
+                continue;
+            }
+            const std::string &sampleField = fields[sIndex];
+
+            // genotype is the portion before the first ':'
+            size_t colonPos = sampleField.find(':');
+            std::string gt = (colonPos == std::string::npos)
+                             ? sampleField
+                             : sampleField.substr(0, colonPos);
+
+            // Replace '|' with '/' for a uniform split
+            for (auto &c : gt) {
+                if (c == '|') c = '/';
+            }
+            auto alleles = splitString(gt, '/');
+            if (alleles.empty()) {
+                // e.g. '.' or blank
                 continue;
             }
 
-            std::string sample_data = fields[idx];
-            std::vector<std::string> genotype_fields = splitString(sample_data, ':');
-            if (genotype_fields.empty()) {
-                continue;
-            }
-
-            std::string genotype = extractGenotype(genotype_fields[0]);
-            if (genotype.empty() || genotype == "./." || genotype == ".|.") {
-                // Skip missing genotypes
-                continue;
-            }
-
-            // Split genotype by '/' or '|'
-            char sep = '/';
-            size_t sep_pos = genotype.find('/');
-            if (sep_pos == std::string::npos) {
-                sep = '|';
-                sep_pos = genotype.find('|');
-            }
-
-            std::vector<std::string> alleles;
-            if (sep_pos != std::string::npos) {
-                std::string allele1 = genotype.substr(0, sep_pos);
-                std::string allele2 = genotype.substr(sep_pos + 1);
-                alleles.push_back(allele1);
-                alleles.push_back(allele2);
-            }
-            else {
-                alleles.push_back(genotype);
-            }
-
-            int ref_count = 0;
-            int alt_count = 0;
-
-            for (const auto& allele : alleles) {
+            int refCount = 0;
+            int altCount = 0;
+            for (auto & allele : alleles) {
+                // Skip empty or '.' allele
+                if (allele.empty() || allele == ".") {
+                    continue;
+                }
+                // If numeric & "0" => ref, else alt
+                bool numeric = true;
+                for (char c : allele) {
+                    if (!isdigit(c)) { numeric = false; break; }
+                }
+                if (!numeric) {
+                    // e.g. unknown character => skip
+                    continue;
+                }
+                // If allele == "0" => ref, else alt
                 if (allele == "0") {
-                    ref_count++;
-                }
-                else if (!allele.empty() && allele != ".") {
-                    alt_count++;
+                    refCount++;
+                } else {
+                    altCount++;
                 }
             }
 
-            // Retrieve sample name
-            std::string sample_name = header_fields[idx];
+            // The sample's name
+            std::string sampleName = (sIndex < (int)headerFields.size())
+                                     ? headerFields[sIndex]
+                                     : ("Sample_"+std::to_string(sIndex));
 
+            // Output as TSV row
             out << chrom << "\t"
-                << pos << "\t"
-                << id << "\t"
-                << ref << "\t"
-                << alt << "\t"
-                << sample_name << "\t"
-                << ref_count << "\t"
-                << alt_count << "\n";
+                << pos   << "\t"
+                << id    << "\t"
+                << ref   << "\t"
+                << alt   << "\t"
+                << sampleName << "\t"
+                << refCount   << "\t"
+                << altCount   << "\n";
         }
     }
-
     return true;
 }
 
+// ---------------------------------------------------------------------
+// main()
+// ---------------------------------------------------------------------
 int main(int argc, char* argv[]) {
     AlleleCounterArguments args;
     parseArguments(argc, argv, args);
 
     if (!args.samples.empty()) {
-        std::cerr << "Info: Counting alleles for specified samples.\n";
-    }
-    else {
-        std::cerr << "Info: Counting alleles for all samples.\n";
+        std::cerr << "Info: Counting alleles for these samples:\n";
+        for (auto &s : args.samples) {
+            std::cerr << "  " << s << "\n";
+        }
+    } else {
+        std::cerr << "Info: Counting alleles for ALL samples.\n";
     }
 
     bool success = countAlleles(std::cin, std::cout, args);

@@ -8,18 +8,13 @@
 #include <cstdlib>
 #include <fstream>
 
-// Implementation
-
 int VCFXAlignmentChecker::run(int argc, char* argv[]) {
     // Parse command-line arguments
     int opt;
     bool showHelp = false;
-    std::string vcfFile = "";
-    std::string refFile = "";
-
     static struct option long_options[] = {
         {"help",                 no_argument,       0, 'h'},
-        {"alignment-discrepancy", no_argument,       0, 'a'},
+        {"alignment-discrepancy", no_argument,      0, 'a'},
         {0,                      0,                 0,  0 }
     };
 
@@ -29,7 +24,7 @@ int VCFXAlignmentChecker::run(int argc, char* argv[]) {
                 showHelp = true;
                 break;
             case 'a':
-                // Alignment discrepancy mode
+                // Alignment-discrepancy mode (no extra actions needed here)
                 break;
             default:
                 showHelp = true;
@@ -41,20 +36,22 @@ int VCFXAlignmentChecker::run(int argc, char* argv[]) {
         return 1;
     }
 
-    // Ensure that reference genome is provided via stdin after VCF
-    // Usage: VCFX_alignment_checker --alignment-discrepancy < input.vcf < reference.fasta
-
-    // Open VCF input (first stdin)
-    std::istream& vcfIn = std::cin;
-
-
-    if (optind < argc) {
-        refFile = std::string(argv[optind]);
-    } else {
-        // If no file provided, read from second stdin
-        // This is not straightforward; inform the user to provide reference genome file
-        std::cerr << "Error: Reference genome file must be provided as an argument.\n";
+    // We expect two positional arguments after the options:
+    //   1) VCF file  2) Reference FASTA file
+    if ((argc - optind) < 2) {
+        std::cerr << "Error: Missing required arguments: <vcf_file> <reference.fasta>\n";
         displayHelp();
+        return 1;
+    }
+
+    // Get file paths
+    std::string vcfFile = argv[optind];
+    std::string refFile = argv[optind + 1];
+
+    // Open VCF input
+    std::ifstream vcfStream(vcfFile);
+    if (!vcfStream.is_open()) {
+        std::cerr << "Error: Unable to open VCF file: " << vcfFile << "\n";
         return 1;
     }
 
@@ -65,43 +62,46 @@ int VCFXAlignmentChecker::run(int argc, char* argv[]) {
         return 1;
     }
 
-    // Load reference genome
+    // Load reference genome into memory
     if (!loadReferenceGenome(refStream)) {
         std::cerr << "Error: Failed to load reference genome.\n";
         return 1;
     }
 
-    // Check discrepancies
-    checkDiscrepancies(vcfIn, refStream, std::cout);
+    // Check discrepancies (results to stdout)
+    checkDiscrepancies(vcfStream, std::cout);
 
     return 0;
 }
 
 void VCFXAlignmentChecker::displayHelp() {
-    std::cout << "VCFX_alignment_checker: Identify discrepancies between VCF variants and a reference genome.\n\n";
-    std::cout << "Usage:\n";
-    std::cout << "  VCFX_alignment_checker --alignment-discrepancy <vcf_file> <reference.fasta>\n\n";
-    std::cout << "Options:\n";
-    std::cout << "  -h, --help                        Display this help message and exit\n";
-    std::cout << "  -a, --alignment-discrepancy        Identify alignment discrepancies\n\n";
-    std::cout << "Example:\n";
-    std::cout << "  VCFX_alignment_checker --alignment-discrepancy input.vcf reference.fasta > discrepancies.txt\n";
+    std::cout << "VCFX_alignment_checker: Identify discrepancies between VCF variants and a reference genome.\n\n"
+              << "Usage:\n"
+              << "  VCFX_alignment_checker --alignment-discrepancy <vcf_file> <reference.fasta>\n\n"
+              << "Options:\n"
+              << "  -h, --help                   Display this help message and exit\n"
+              << "  -a, --alignment-discrepancy  Identify alignment discrepancies\n\n"
+              << "Example:\n"
+              << "  VCFX_alignment_checker --alignment-discrepancy input.vcf reference.fasta > discrepancies.txt\n";
 }
 
 bool VCFXAlignmentChecker::loadReferenceGenome(std::istream& in) {
     std::string line;
-    std::string currentChrom = "";
-    std::string seq = "";
+    std::string currentChrom;
+    std::string seq;
 
     while (std::getline(in, line)) {
-        if (line.empty()) continue;
+        if (line.empty()) {
+            continue;
+        }
         if (line[0] == '>') {
+            // If we already had a chromosome loaded, store its sequence
             if (!currentChrom.empty()) {
-                // Store the previous chromosome sequence
                 referenceGenome[normalizeChromosome(currentChrom)] = seq;
-                seq.clear();
             }
-            // Get chromosome name
+            // Start a new chromosome
+            seq.clear();
+            // Grab chromosome name (up to first space)
             size_t pos = line.find(' ');
             if (pos != std::string::npos) {
                 currentChrom = line.substr(1, pos - 1);
@@ -109,13 +109,13 @@ bool VCFXAlignmentChecker::loadReferenceGenome(std::istream& in) {
                 currentChrom = line.substr(1);
             }
         } else {
-            // Append sequence lines
+            // Append this line to the sequence (uppercase)
             std::transform(line.begin(), line.end(), line.begin(), ::toupper);
             seq += line;
         }
     }
 
-    // Store last chromosome
+    // Store the last chromosome read
     if (!currentChrom.empty()) {
         referenceGenome[normalizeChromosome(currentChrom)] = seq;
     }
@@ -124,10 +124,13 @@ bool VCFXAlignmentChecker::loadReferenceGenome(std::istream& in) {
 }
 
 std::string VCFXAlignmentChecker::normalizeChromosome(const std::string& chrom) {
+    // NOTE: This logic may cause mismatches if your reference is named "1" but your VCF says "chr1".
+    // You may want to adjust this to match your actual naming conventions.
     std::string norm = chrom;
     if (norm.find("chr") != 0 && 
-        !(norm == "X" || norm == "Y" || norm == "MT" || 
-          (std::all_of(norm.begin(), norm.end(), ::isdigit)))) {
+        !(norm == "X" || norm == "Y" || norm == "MT" ||
+          std::all_of(norm.begin(), norm.end(), ::isdigit))) 
+    {
         norm = "chr" + norm;
     }
     return norm;
@@ -140,27 +143,33 @@ std::string VCFXAlignmentChecker::getReferenceBases(const std::string& chrom, in
     }
 
     const std::string& seq = it->second;
-    if (pos < 1 || static_cast<size_t>(pos -1 + length) > seq.length()) {
+    // Convert VCF 1-based 'pos' to a 0-based index into the string
+    size_t startIndex = static_cast<size_t>(pos - 1);
+    if (pos < 1 || (startIndex + length) > seq.size()) {
         return "";
     }
-
-    return seq.substr(pos -1, length);
+    return seq.substr(startIndex, length);
 }
 
-void VCFXAlignmentChecker::checkDiscrepancies(std::istream& vcfIn, std::istream& refIn, std::ostream& out) {
+void VCFXAlignmentChecker::checkDiscrepancies(std::istream& vcfIn, std::ostream& out) {
+    // We do not need an extra reference stream parameter; the reference is already loaded in memory.
+
     std::string line;
     bool headerParsed = false;
     int chrIndex = -1, posIndex = -1, refIndex = -1, altIndex = -1;
 
-    // Output header for discrepancies
+    // Print a header for the discrepancies table
     out << "CHROM\tPOS\tID\tREF\tALT\tDiscrepancy_Type\tReference_Value\tVCF_Value\n";
 
     while (std::getline(vcfIn, line)) {
-        if (line.empty()) continue;
+        if (line.empty()) {
+            continue;
+        }
 
+        // Header lines
         if (line[0] == '#') {
-            if (line.substr(0, 6) == "#CHROM") {
-                // Parse header to get column indices
+            // If it's the #CHROM line, parse the column indices
+            if (line.rfind("#CHROM", 0) == 0) {
                 std::stringstream ss(line);
                 std::string field;
                 std::vector<std::string> headers;
@@ -169,42 +178,43 @@ void VCFXAlignmentChecker::checkDiscrepancies(std::istream& vcfIn, std::istream&
                 }
                 for (size_t i = 0; i < headers.size(); ++i) {
                     if (headers[i] == "CHROM") chrIndex = static_cast<int>(i);
-                    else if (headers[i] == "POS") posIndex = static_cast<int>(i);
-                    else if (headers[i] == "REF") refIndex = static_cast<int>(i);
-                    else if (headers[i] == "ALT") altIndex = static_cast<int>(i);
+                    else if (headers[i] == "POS")   posIndex = static_cast<int>(i);
+                    else if (headers[i] == "REF")   refIndex = static_cast<int>(i);
+                    else if (headers[i] == "ALT")   altIndex = static_cast<int>(i);
                 }
                 if (chrIndex == -1 || posIndex == -1 || refIndex == -1 || altIndex == -1) {
-                    std::cerr << "Error: VCF header does not contain required fields.\n";
+                    std::cerr << "Error: VCF header does not contain required CHROM, POS, REF, ALT fields.\n";
                     return;
                 }
                 headerParsed = true;
             }
-            // Continue to next line
             continue;
         }
 
+        // We should have a valid header by now
         if (!headerParsed) {
-            std::cerr << "Error: VCF header line with #CHROM not found.\n";
+            std::cerr << "Error: VCF #CHROM header line not found before data lines.\n";
             return;
         }
 
+        // Split line into fields
         std::stringstream ss(line);
         std::vector<std::string> fields;
         std::string field;
-
         while (std::getline(ss, field, '\t')) {
             fields.push_back(field);
         }
 
-        if (fields.size() < 5) {
-            std::cerr << "Warning: Skipping invalid VCF line (less than 5 fields): " << line << "\n";
+        // Basic sanity check
+        if (fields.size() < static_cast<size_t>(altIndex + 1)) {
+            std::cerr << "Warning: Skipping invalid VCF line (insufficient fields): " << line << "\n";
             continue;
         }
 
         std::string chrom = fields[chrIndex];
-        int pos = 0;
+        int posVal = 0;
         try {
-            pos = std::stoi(fields[posIndex]);
+            posVal = std::stoi(fields[posIndex]);
         } catch (...) {
             std::cerr << "Warning: Invalid POS value. Skipping line: " << line << "\n";
             continue;
@@ -212,50 +222,51 @@ void VCFXAlignmentChecker::checkDiscrepancies(std::istream& vcfIn, std::istream&
 
         std::string ref = fields[refIndex];
         std::string alt = fields[altIndex];
+        std::string id  = (fields.size() > 2) ? fields[2] : ".";
 
-        // Handle multi-allelic ALT fields
+        // Handle multi-allelic ALTs
         std::vector<std::string> alts;
-        std::stringstream altSS(alt);
-        while (std::getline(altSS, field, ',')) {
-            alts.push_back(field);
+        {
+            std::stringstream altSS(alt);
+            while (std::getline(altSS, field, ',')) {
+                alts.push_back(field);
+            }
         }
 
+        // Check each ALT allele
         for (const auto& allele : alts) {
-            if (ref.length() == 1 && allele.length() == 1) {
-                // SNP
-                std::string ref_base = getReferenceBases(chrom, pos, 1);
+            // If both REF and ALT are single bases, treat as SNP
+            if (ref.size() == 1 && allele.size() == 1) {
+                std::string ref_base = getReferenceBases(chrom, posVal, 1);
                 if (ref_base.empty()) {
-                    std::cerr << "Warning: Reference base not found for " << chrom << ":" << pos << "\n";
+                    std::cerr << "Warning: Reference base not found for " << chrom << ":" << posVal << "\n";
                     continue;
                 }
-
+                // Compare REF in VCF vs reference genome
                 if (ref != ref_base) {
-                    out << chrom << "\t" << pos << "\t" << fields[2] << "\t" << ref 
-                        << "\t" << allele << "\t" << "REF_MISMATCH" 
+                    out << chrom << "\t" << posVal << "\t" << id << "\t" << ref
+                        << "\t" << allele << "\t" << "REF_MISMATCH"
                         << "\t" << ref_base << "\t" << ref << "\n";
                 }
-
-                std::string alt_base = getReferenceBases(chrom, pos, 1);
-                if (alt_base.empty()) {
-                    std::cerr << "Warning: Reference base not found for " << chrom << ":" << pos << "\n";
-                    continue;
-                }
-
+                // Compare ALT in VCF vs reference genome's same position
+                // (Often for a standard SNP, the reference base is the only thing in the FASTA.)
+                // This is somewhat conceptual: we're checking if the ALT base is the same as reference at that position.
+                std::string alt_base = ref_base; // The reference at that position
                 if (allele != alt_base) {
-                    out << chrom << "\t" << pos << "\t" << fields[2] << "\t" << ref 
-                        << "\t" << allele << "\t" << "ALT_MISMATCH" 
+                    out << chrom << "\t" << posVal << "\t" << id << "\t" << ref
+                        << "\t" << allele << "\t" << "ALT_MISMATCH"
                         << "\t" << alt_base << "\t" << allele << "\n";
                 }
-
             } else {
-                // Indels or complex variants
-                size_t ref_len = ref.length();
-                size_t alt_len = allele.length();
+                // Indel or complex
+                size_t ref_len = ref.size();
+                size_t alt_len = allele.size();
+                // Compare as many bases as the shorter string has
                 size_t len = std::min(ref_len, alt_len);
 
-                std::string ref_seq = getReferenceBases(chrom, pos, len);
+                std::string ref_seq = getReferenceBases(chrom, posVal, static_cast<int>(len));
                 if (ref_seq.empty()) {
-                    std::cerr << "Warning: Reference sequence not found for " << chrom << ":" << pos << "\n";
+                    std::cerr << "Warning: Reference sequence not found for " << chrom << ":" << posVal << "\n";
                     continue;
                 }
 
@@ -263,14 +274,13 @@ void VCFXAlignmentChecker::checkDiscrepancies(std::istream& vcfIn, std::istream&
                 std::string vcf_alt = allele.substr(0, len);
 
                 if (vcf_ref != ref_seq) {
-                    out << chrom << "\t" << pos << "\t" << fields[2] << "\t" << ref 
-                        << "\t" << allele << "\t" << "REF_DISCREPANCY" 
+                    out << chrom << "\t" << posVal << "\t" << id << "\t" << ref
+                        << "\t" << allele << "\t" << "REF_DISCREPANCY"
                         << "\t" << ref_seq << "\t" << vcf_ref << "\n";
                 }
-
                 if (vcf_alt != ref_seq) {
-                    out << chrom << "\t" << pos << "\t" << fields[2] << "\t" << ref 
-                        << "\t" << allele << "\t" << "ALT_DISCREPANCY" 
+                    out << chrom << "\t" << posVal << "\t" << id << "\t" << ref
+                        << "\t" << allele << "\t" << "ALT_DISCREPANCY"
                         << "\t" << ref_seq << "\t" << vcf_alt << "\n";
                 }
             }
@@ -278,6 +288,7 @@ void VCFXAlignmentChecker::checkDiscrepancies(std::istream& vcfIn, std::istream&
     }
 }
 
+// Typical main(), linking to run()
 int main(int argc, char* argv[]) {
     VCFXAlignmentChecker alignmentChecker;
     return alignmentChecker.run(argc, argv);

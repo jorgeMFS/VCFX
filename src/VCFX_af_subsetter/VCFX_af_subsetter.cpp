@@ -2,6 +2,8 @@
 #include <getopt.h>
 #include <sstream>
 #include <algorithm>
+#include <iostream>
+#include <cstdlib>
 
 int VCFXAfSubsetter::run(int argc, char* argv[]) {
     // Parse command-line arguments
@@ -21,28 +23,27 @@ int VCFXAfSubsetter::run(int argc, char* argv[]) {
             case 'h':
                 showHelp = true;
                 break;
-            case 'a':
-                {
-                    std::string range(optarg);
-                    size_t dashPos = range.find('-');
-                    if (dashPos == std::string::npos) {
-                        std::cerr << "Error: Invalid AF range format. Use <minAF>-<maxAF>.\n";
-                        displayHelp();
-                        return 1;
+            case 'a': {
+                std::string range(optarg);
+                size_t dashPos = range.find('-');
+                if (dashPos == std::string::npos) {
+                    std::cerr << "Error: Invalid AF range format. Use <minAF>-<maxAF>.\n";
+                    displayHelp();
+                    return 1;
+                }
+                try {
+                    minAF = std::stod(range.substr(0, dashPos));
+                    maxAF = std::stod(range.substr(dashPos + 1));
+                    if (minAF < 0.0 || maxAF > 1.0 || minAF > maxAF) {
+                        throw std::invalid_argument("AF values out of range or minAF > maxAF.");
                     }
-                    try {
-                        minAF = std::stod(range.substr(0, dashPos));
-                        maxAF = std::stod(range.substr(dashPos + 1));
-                        if (minAF < 0.0 || maxAF > 1.0 || minAF > maxAF) {
-                            throw std::invalid_argument("AF values out of range or minAF > maxAF.");
-                        }
-                    } catch (const std::invalid_argument&) {
-                        std::cerr << "Error: Invalid AF range values. Ensure they are numbers between 0.0 and 1.0 with minAF <= maxAF.\n";
-                        displayHelp();
-                        return 1;
-                    }
+                } catch (const std::invalid_argument&) {
+                    std::cerr << "Error: Invalid AF range values. Ensure they are numbers between 0.0 and 1.0 with minAF <= maxAF.\n";
+                    displayHelp();
+                    return 1;
                 }
                 break;
+            }
             default:
                 showHelp = true;
         }
@@ -53,37 +54,49 @@ int VCFXAfSubsetter::run(int argc, char* argv[]) {
         return 1;
     }
 
-    // Perform AF-based subsetting
+    // Perform AF-based subsetting from stdin to stdout
     subsetByAlleleFrequency(std::cin, std::cout, minAF, maxAF);
 
     return 0;
 }
 
 void VCFXAfSubsetter::displayHelp() {
-    std::cout << "VCFX_af_subsetter: Subset variants based on alternate allele frequency (AF) ranges.\n\n";
-    std::cout << "Usage:\n";
-    std::cout << "  VCFX_af_subsetter [options]\n\n";
-    std::cout << "Options:\n";
-    std::cout << "  -h, --help            Display this help message and exit\n";
-    std::cout << "  -a, --af-filter <minAF>-<maxAF>  Specify the AF range for filtering (e.g., 0.01-0.05)\n\n";
-    std::cout << "Example:\n";
-    std::cout << "  VCFX_af_subsetter --af-filter 0.01-0.05 < input.vcf > subsetted.vcf\n";
+    std::cout << "VCFX_af_subsetter: Subset variants based on alternate allele frequency (AF) ranges.\n\n"
+              << "Usage:\n"
+              << "  VCFX_af_subsetter [options] < input.vcf > output.vcf\n\n"
+              << "Options:\n"
+              << "  -h, --help                     Display this help message and exit\n"
+              << "  -a, --af-filter <minAF>-<maxAF>  Specify the AF range for filtering (e.g., 0.01-0.05)\n\n"
+              << "Example:\n"
+              << "  VCFX_af_subsetter --af-filter 0.01-0.05 < input.vcf > subsetted.vcf\n";
 }
 
-bool VCFXAfSubsetter::parseAF(const std::string& infoField, double& af) {
+bool VCFXAfSubsetter::parseAF(const std::string& infoField, std::vector<double>& afValues) {
+    // Find "AF=" in the INFO string
     size_t pos = infoField.find("AF=");
     if (pos == std::string::npos) {
         return false;
     }
-    size_t start = pos + 3; // Length of "AF="
+
+    // Extract substring up to the next semicolon or end of string
+    size_t start = pos + 3; // skip 'AF='
     size_t end = infoField.find(';', start);
-    std::string afStr = (end == std::string::npos) ? infoField.substr(start) : infoField.substr(start, end - start);
-    try {
-        af = std::stod(afStr);
-    } catch (...) {
-        return false;
+    std::string afStr = (end == std::string::npos)
+                        ? infoField.substr(start)
+                        : infoField.substr(start, end - start);
+
+    // Split by comma (to handle multi-allelic AF like "0.2,0.8")
+    std::stringstream ss(afStr);
+    std::string token;
+    while (std::getline(ss, token, ',')) {
+        try {
+            double afVal = std::stod(token);
+            afValues.push_back(afVal);
+        } catch (...) {
+            return false; // parsing error
+        }
     }
-    return true;
+    return !afValues.empty();
 }
 
 void VCFXAfSubsetter::subsetByAlleleFrequency(std::istream& in, std::ostream& out, double minAF, double maxAF) {
@@ -93,39 +106,55 @@ void VCFXAfSubsetter::subsetByAlleleFrequency(std::istream& in, std::ostream& ou
             continue;
         }
 
+        // Print header lines (starting with '#') as-is
         if (line[0] == '#') {
-            // Header lines are printed as-is
             out << line << "\n";
             continue;
         }
 
-        // Split the line into fields
+        // Split the VCF line into fields
         std::vector<std::string> fields;
-        std::stringstream ss(line);
-        std::string field;
-        while (std::getline(ss, field, '\t')) {
-            fields.push_back(field);
+        {
+            std::stringstream ss(line);
+            std::string field;
+            while (std::getline(ss, field, '\t')) {
+                fields.push_back(field);
+            }
         }
 
         if (fields.size() < 8) {
-            std::cerr << "Warning: Skipping invalid VCF line (less than 8 fields): " << line << "\n";
+            std::cerr << "Warning: Skipping invalid VCF line (less than 8 fields): "
+                      << line << "\n";
             continue;
         }
 
+        // Parse AF values from the INFO field
         std::string info = fields[7];
-        double af = 0.0;
-        if (!parseAF(info, af)) {
-            std::cerr << "Warning: AF not found or invalid in INFO field. Skipping variant: " << line << "\n";
+        std::vector<double> afValues;
+        if (!parseAF(info, afValues)) {
+            std::cerr << "Warning: AF not found or invalid in INFO field. Skipping variant: "
+                      << line << "\n";
             continue;
         }
 
-        if (af >= minAF && af <= maxAF) {
-            // Variant falls within the specified AF range
+        // If any AF is within [minAF, maxAF], keep this variant
+        bool keepVariant = false;
+        for (double af : afValues) {
+            if (af >= minAF && af <= maxAF) {
+                keepVariant = true;
+                break;
+            }
+        }
+
+        if (keepVariant) {
             out << line << "\n";
         }
     }
 }
 
+//
+// Typical main():
+//
 int main(int argc, char* argv[]) {
     VCFXAfSubsetter afSubsetter;
     return afSubsetter.run(argc, argv);
