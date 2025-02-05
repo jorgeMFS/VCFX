@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-// VCFXFastaConverter: Header file for VCF to FASTA conversion tool
+// VCFXFastaConverter: Tool for converting a "variant-only" VCF into per-sample FASTA sequences
 class VCFXFastaConverter {
 public:
     // Entry point for the tool

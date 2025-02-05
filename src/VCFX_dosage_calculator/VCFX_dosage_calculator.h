@@ -15,7 +15,7 @@ private:
     // Displays the help message
     void displayHelp();
 
-    // Calculates genotype dosage from VCF input
+    // Calculates genotype dosage from VCF input and writes output
     void calculateDosage(std::istream& in, std::ostream& out);
 };
 

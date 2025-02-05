@@ -3,9 +3,8 @@
 
 #include <iostream>
 #include <string>
-#include <vector>
 
-// VCFXFileSplitter: Header file for VCF File Splitter tool
+// VCFXFileSplitter: Splits a VCF file by chromosome into multiple smaller VCFs.
 class VCFXFileSplitter {
 public:
     // Entry point for the tool
@@ -15,7 +14,7 @@ private:
     // Displays the help message
     void displayHelp();
 
-    // Splits VCF input based on chromosome and outputs to separate files
+    // Splits the input VCF by chromosome using the specified prefix
     void splitVCFByChromosome(std::istream& in, const std::string& outputPrefix);
 };
 

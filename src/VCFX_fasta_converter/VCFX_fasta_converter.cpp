@@ -4,8 +4,67 @@
 #include <unordered_map>
 #include <algorithm>
 #include <iomanip>
+#include <cctype>
+#include <map>
 
-// Implementation of VCFXFastaConverter
+// A small map from two distinct bases to an IUPAC ambiguity code
+// e.g. A + G => R, C + T => Y, etc.
+static const std::map<std::string, char> IUPAC_ambiguities = {
+    {"AG", 'R'}, {"GA", 'R'},
+    {"CT", 'Y'}, {"TC", 'Y'},
+    {"AC", 'M'}, {"CA", 'M'},
+    {"GT", 'K'}, {"TG", 'K'},
+    {"AT", 'W'}, {"TA", 'W'},
+    {"CG", 'S'}, {"GC", 'S'}
+};
+
+// Utility to convert a single numeric allele index into the corresponding base
+// returns '\0' on failure
+static char alleleIndexToBase(int alleleIndex,
+                              const std::string& ref,
+                              const std::vector<std::string>& altAlleles)
+{
+    // 0 => ref, 1 => altAlleles[0], 2 => altAlleles[1], etc.
+    if (alleleIndex == 0) {
+        if (ref.size() == 1) {
+            return std::toupper(ref[0]);
+        } else {
+            // multi-base or invalid for a single-locus representation
+            return '\0';
+        }
+    } else {
+        int altPos = alleleIndex - 1;
+        if (altPos < 0 || (size_t)altPos >= altAlleles.size()) {
+            return '\0'; // out of range
+        }
+        // altAlleles[altPos] must be a single base to be representable
+        const std::string &a = altAlleles[altPos];
+        if (a.size() == 1) {
+            return std::toupper(a[0]);
+        } else {
+            // multi-base alt => can't represent as single base
+            return '\0';
+        }
+    }
+}
+
+// If we have exactly two bases, see if there's a standard IUPAC code
+// Otherwise returns 'N'
+static char combineBasesIUPAC(char b1, char b2) {
+    if (b1 == b2) {
+        return b1;  // e.g. A + A => A
+    }
+    // build 2-char string in alphabetical order
+    std::string pair;
+    pair.push_back(std::min(b1, b2));
+    pair.push_back(std::max(b1, b2));
+    auto it = IUPAC_ambiguities.find(pair);
+    if (it != IUPAC_ambiguities.end()) {
+        return it->second;
+    }
+    return 'N'; // unknown combination
+}
+
 int VCFXFastaConverter::run(int argc, char* argv[]) {
     // Parse command-line arguments
     int opt;
@@ -31,39 +90,48 @@ int VCFXFastaConverter::run(int argc, char* argv[]) {
 
     // Convert VCF input from stdin to FASTA output
     convertVCFtoFasta(std::cin, std::cout);
-
     return 0;
 }
 
 void VCFXFastaConverter::displayHelp() {
-    std::cout << "VCFX_fasta_converter: Convert VCF data into FASTA format.\n\n";
-    std::cout << "Usage:\n";
-    std::cout << "  VCFX_fasta_converter [options]\n\n";
-    std::cout << "Options:\n";
-    std::cout << "  -h, --help    Display this help message and exit\n\n";
-    std::cout << "Example:\n";
-    std::cout << "  VCFX_fasta_converter < input.vcf > output.fasta\n";
+    std::cout << "VCFX_fasta_converter: Convert a variant-only VCF into simple per-sample FASTA.\n\n"
+              << "Usage:\n"
+              << "  VCFX_fasta_converter [options] < input.vcf > output.fasta\n\n"
+              << "Description:\n"
+              << "  Reads a VCF with diploid genotypes and writes a FASTA file. Each variant\n"
+              << "  line becomes one position in the FASTA alignment. For multi-allelic sites,\n"
+              << "  each sample's genotype is interpreted to produce a single IUPAC base\n"
+              << "  (if heterozygous with different single-base alleles) or 'N' if ambiguous.\n\n"
+              << "  Indels, multi-base alleles, or complicated genotypes default to 'N'.\n\n"
+              << "Example:\n"
+              << "  VCFX_fasta_converter < input.vcf > output.fasta\n\n";
 }
 
 void VCFXFastaConverter::convertVCFtoFasta(std::istream& in, std::ostream& out) {
     std::string line;
     std::vector<std::string> sampleNames;
+    // Each sampleName -> sequence string
     std::unordered_map<std::string, std::string> sampleSequences;
+
     bool headerParsed = false;
 
     while (std::getline(in, line)) {
-        if (line.empty()) continue;
+        if (line.empty()) {
+            continue;
+        }
 
         if (line[0] == '#') {
-            // Parse header lines
-            if (line.substr(0, 6) == "#CHROM") {
+            // Parse the #CHROM header to get sample columns
+            if (line.rfind("#CHROM", 0) == 0) {
                 std::stringstream ss(line);
                 std::string field;
                 // Skip the first 9 columns
                 for (int i = 0; i < 9; ++i) {
-                    std::getline(ss, field, '\t');
+                    if (!std::getline(ss, field, '\t')) {
+                        break;
+                    }
                 }
-                // The rest are sample names
+                // Remaining fields are sample names
                 while (std::getline(ss, field, '\t')) {
                     sampleNames.push_back(field);
                     sampleSequences[field] = "";
@@ -74,123 +142,179 @@ void VCFXFastaConverter::convertVCFtoFasta(std::istream& in, std::ostream& out) 
         }
 
         if (!headerParsed) {
-            std::cerr << "VCF header line with #CHROM not found.\n";
+            std::cerr << "Error: #CHROM header not found before data lines.\n";
             return;
         }
 
-        // Parse VCF data lines
+        // Parse data line
         std::stringstream ss(line);
-        std::string field;
-        std::vector<std::string> fieldsVec;
-        while (std::getline(ss, field, '\t')) {
-            fieldsVec.push_back(field);
+        std::vector<std::string> fields;
+        {
+            std::string fld;
+            while (std::getline(ss, fld, '\t')) {
+                fields.push_back(fld);
+            }
         }
-
-        if (fieldsVec.size() < 10) {
-            std::cerr << "Invalid VCF line with fewer than 10 fields.\n";
+        // minimal check
+        if (fields.size() < (9 + sampleNames.size())) {
+            // not enough columns
+            std::cerr << "Warning: Skipping malformed VCF line with insufficient columns.\n";
             continue;
         }
 
-        std::string chrom = fieldsVec[0];
-        std::string pos = fieldsVec[1];
-        std::string id = fieldsVec[2];
-        std::string ref = fieldsVec[3];
-        std::string alt = fieldsVec[4];
-        std::string format = fieldsVec[8];
+        // VCF standard columns
+        //  0:CHROM, 1:POS, 2:ID, 3:REF, 4:ALT, 5:QUAL, 6:FILTER, 7:INFO, 8:FORMAT, 9+:samples
+        const std::string &chrom = fields[0];
+        // const std::string &pos = fields[1]; // not strictly needed for the FASTA
+        // const std::string &id  = fields[2];
+        const std::string &ref = fields[3];
+        const std::string &altField = fields[4];
+        const std::string &format   = fields[8];
 
-        // Split FORMAT field to find the index of genotype (GT)
-        std::vector<std::string> formatFields;
-        std::stringstream fmt_ss(format);
-        std::string fmt_field;
-        while (std::getline(fmt_ss, fmt_field, ':')) {
-            formatFields.push_back(fmt_field);
+        // Split alt on commas
+        std::vector<std::string> altAlleles;
+        {
+            std::stringstream altSS(altField);
+            std::string a;
+            while (std::getline(altSS, a, ',')) {
+                altAlleles.push_back(a);
+            }
         }
 
-        int gt_index = -1;
+        // Find GT index in format
+        std::vector<std::string> formatFields;
+        {
+            std::stringstream fmts(format);
+            std::string token;
+            while (std::getline(fmts, token, ':')) {
+                formatFields.push_back(token);
+            }
+        }
+        int gtIndex = -1;
         for (size_t i = 0; i < formatFields.size(); ++i) {
             if (formatFields[i] == "GT") {
-                gt_index = static_cast<int>(i);
+                gtIndex = static_cast<int>(i);
                 break;
             }
         }
+        bool hasGT = (gtIndex >= 0);
 
-        if (gt_index == -1) {
-            std::cerr << "GT field not found in FORMAT column.\n";
-            // Append reference allele if GT is not found
-            for (const auto& sample : sampleNames) {
-                sampleSequences[sample] += ref;
-            }
-            continue;
-        }
-
-        // Iterate over each sample and append nucleotide based on genotype
-        for (size_t i = 0; i < sampleNames.size(); ++i) {
-            std::string sample = fieldsVec[9 + i];
-            std::vector<std::string> sampleFields;
-            std::stringstream samp_ss(sample);
-            std::string samp_field;
-            while (std::getline(samp_ss, samp_field, ':')) {
-                sampleFields.push_back(samp_field);
-            }
-            if (gt_index >= static_cast<int>(sampleFields.size())) {
-                std::cerr << "GT index out of range in sample fields.\n";
-                sampleSequences[sampleNames[i]] += "N"; // Unknown nucleotide
+        // For each sample, figure out their genotype => one base or IUPAC or N
+        for (size_t s = 0; s < sampleNames.size(); ++s) {
+            const std::string &sampleName = sampleNames[s];
+            // sample column is at fields[9 + s]
+            if (9 + s >= fields.size()) {
+                // missing sample column?
+                sampleSequences[sampleName] += "N";
                 continue;
             }
-            std::string genotype = sampleFields[gt_index];
-            // Replace '|' with '/' for consistency
-            std::replace(genotype.begin(), genotype.end(), '|', '/');
+            const std::string &sampleData = fields[9 + s];
+            if (!hasGT) {
+                // no genotype => default to reference? or N?
+                // We'll choose 'N' to avoid assumptions
+                sampleSequences[sampleName] += "N";
+                continue;
+            }
+            // parse sampleData by ':'
+            std::vector<std::string> sampleParts;
+            {
+                std::stringstream sp(sampleData);
+                std::string p;
+                while (std::getline(sp, p, ':')) {
+                    sampleParts.push_back(p);
+                }
+            }
+            if (gtIndex >= (int)sampleParts.size()) {
+                sampleSequences[sampleName] += "N";
+                continue;
+            }
+            // genotype string
+            std::string genotype = sampleParts[gtIndex];
+            // unify separators
+            for (char &c : genotype) {
+                if (c == '|') c = '/';
+            }
+            if (genotype.empty() || genotype == ".") {
+                sampleSequences[sampleName] += "N";
+                continue;
+            }
+            // split genotype by '/'
             std::vector<std::string> alleles;
-            std::stringstream genotype_ss(genotype);
-            std::string allele;
-            while (std::getline(genotype_ss, allele, '/')) {
-                alleles.push_back(allele);
+            {
+                std::stringstream gtSS(genotype);
+                std::string al;
+                while (std::getline(gtSS, al, '/')) {
+                    alleles.push_back(al);
+                }
             }
             if (alleles.size() != 2) {
-                std::cerr << "Non-diploid genotype encountered.\n";
-                sampleSequences[sampleNames[i]] += "N"; // Unknown nucleotide
+                // not diploid => 'N'
+                sampleSequences[sampleName] += "N";
                 continue;
             }
 
-            // Determine nucleotide to append based on genotype
-            // 0 -> reference allele, 1 -> first alternate allele, etc.
-            std::string nucleotide = "N"; // Default unknown
-            try {
+            // Convert each allele to a single base (char), or '\0' on fail
+            char b1 = '\0';
+            char b2 = '\0';
+            {
+                // if either is '.', skip
                 if (alleles[0] == "." || alleles[1] == ".") {
-                    nucleotide = "N"; // Missing genotype
-                } else {
-                    int allele1 = std::stoi(alleles[0]);
-                    int allele2 = std::stoi(alleles[1]);
-                    if (allele1 == 0 && allele2 == 0) {
-                        nucleotide = ref;
-                    } else if ((allele1 == 0 && allele2 == 1) ||
-                               (allele1 == 1 && allele2 == 0) ||
-                               (allele1 == 1 && allele2 == 1)) {
-                        // For homozygous or heterozygous alternate alleles, take first alternate allele
-                        nucleotide = (alt.find(',') != std::string::npos) ? alt.substr(0, 1) : alt;
-                    } else {
-                        nucleotide = "N"; // For multi-allelic or unexpected
-                    }
+                    sampleSequences[sampleName] += "N";
+                    continue;
                 }
-            } catch (...) {
-                nucleotide = "N"; // In case of conversion failure
+                // parse numeric
+                bool okA1 = true, okA2 = true;
+                int a1 = 0, a2 = 0;
+                // parse first allele
+                {
+                    for (char c : alleles[0]) {
+                        if (!std::isdigit(c)) {okA1=false; break;}
+                    }
+                    if (okA1) a1 = std::stoi(alleles[0]);
+                }
+                // parse second allele
+                {
+                    for (char c : alleles[1]) {
+                        if (!std::isdigit(c)) {okA2=false; break;}
+                    }
+                    if (okA2) a2 = std::stoi(alleles[1]);
+                }
+                if (!okA1 || !okA2) {
+                    sampleSequences[sampleName] += "N";
+                    continue;
+                }
+                b1 = alleleIndexToBase(a1, ref, altAlleles);
+                b2 = alleleIndexToBase(a2, ref, altAlleles);
             }
-            sampleSequences[sampleNames[i]] += nucleotide;
+
+            if (b1 == '\0' || b2 == '\0') {
+                // means we couldn't interpret at least one allele
+                sampleSequences[sampleName] += "N";
+                continue;
+            }
+
+            // If same base => that base
+            // If different => try IUPAC
+            char finalBase = '\0';
+            if (b1 == b2) {
+                finalBase = b1;  // e.g. both 'A'
+            } else {
+                finalBase = combineBasesIUPAC(b1, b2); // might yield R, Y, etc., or 'N'
+            }
+            if (finalBase == '\0') finalBase = 'N';
+            sampleSequences[sampleName] += finalBase;
         }
     }
 
-    // Output FASTA sequences
-    for (const auto& sample : sampleNames) {
-        out << ">" << sample << "\n";
-        std::string seq = sampleSequences[sample];
-        // Print sequence in lines of 60 characters
-        for (size_t i = 0; i < seq.length(); i += 60) {
+    // Finally, output the sequences in FASTA format
+    // e.g. >SampleName\n[sequence in 60-char lines]
+    for (auto &kv : sampleSequences) {
+        const std::string &sampleName = kv.first;
+        const std::string &seq = kv.second;
+        out << ">" << sampleName << "\n";
+        // print in 60-char chunks
+        for (size_t i = 0; i < seq.size(); i += 60) {
             out << seq.substr(i, 60) << "\n";
         }
     }
-}
-
-int main(int argc, char* argv[]) {
-    VCFXFastaConverter converter;
-    return converter.run(argc, argv);
 }
