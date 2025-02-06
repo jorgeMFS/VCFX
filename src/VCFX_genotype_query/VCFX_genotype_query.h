@@ -3,15 +3,14 @@
 
 #include <iostream>
 #include <string>
-#include <vector>
 
-// Function to parse command-line arguments
-bool parseArguments(int argc, char* argv[], std::string& genotype_query);
+// Parses command-line arguments to get the desired genotype query and a 'strict' flag
+bool parseArguments(int argc, char* argv[], std::string& genotype_query, bool &strictCompare);
 
-// Function to display help message
+// Prints usage/help
 void printHelp();
 
-// Function to perform genotype query on VCF records
-void genotypeQuery(std::istream& in, std::ostream& out, const std::string& genotype_query);
+// Filters a VCF from 'in', writing only records that contain at least one sample with the requested genotype
+void genotypeQuery(std::istream& in, std::ostream& out, const std::string& genotype_query, bool strictCompare);
 
 #endif // VCFX_GENOTYPE_QUERY_H

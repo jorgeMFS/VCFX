@@ -3,9 +3,8 @@
 
 #include <iostream>
 #include <string>
-#include <vector>
 
-// VCFXGLFilter: Header file for Genotype Likelihood Filter tool
+// VCFXGLFilter: Filters VCF records by a genotype-likelihood field (e.g. "GQ>20").
 class VCFXGLFilter {
 public:
     // Entry point for the tool
@@ -15,8 +14,10 @@ private:
     // Displays the help message
     void displayHelp();
 
-    // Filters VCF input based on genotype likelihood scores (e.g., GQ > threshold)
-    void filterByGL(std::istream& in, std::ostream& out, const std::string& filterCondition);
+    // Filters VCF input based on genotype-likelihood expression
+    void filterByGL(std::istream& in, std::ostream& out, 
+                    const std::string& filterCondition,
+                    bool anyMode);
 };
 
 #endif // VCFX_GL_FILTER_H

@@ -202,6 +202,19 @@ void VCFXDosageCalculator::calculateDosage(std::istream& in, std::ostream& out) 
     }
 }
 
+// ---------------------------------------------------------------------------
+// split: Helper function to split a string by a delimiter
+// ---------------------------------------------------------------------------
+std::vector<std::string> VCFXDosageCalculator::split(const std::string& str, char delimiter) {
+    std::vector<std::string> tokens;
+    std::stringstream ss(str);
+    std::string token;
+    while (std::getline(ss, token, delimiter)) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
 int main(int argc, char* argv[]) {
     VCFXDosageCalculator dosageCalculator;
     return dosageCalculator.run(argc, argv);

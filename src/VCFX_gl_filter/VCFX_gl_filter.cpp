@@ -1,30 +1,45 @@
 #include "VCFX_gl_filter.h"
 #include <getopt.h>
-#include <sstream>
-#include <fstream>
-#include <algorithm>
 #include <regex>
+#include <sstream>
 #include <string>
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <cstdlib>
+
 // Implementation of VCFXGLFilter
 int VCFXGLFilter::run(int argc, char* argv[]) {
     // Parse command-line arguments
     int opt;
     bool showHelp = false;
     std::string filterCondition;
+    bool anyMode = false; // default is 'all' mode
 
     static struct option long_options[] = {
-        {"help",    no_argument,       0, 'h'},
-        {"filter",  required_argument, 0, 'f'},
-        {0,         0,                 0,  0 }
+        {"help",   no_argument,       0, 'h'},
+        {"filter", required_argument, 0, 'f'},
+        {"mode",   required_argument, 0, 'm'},
+        {0,        0,                 0,  0 }
     };
 
-    while ((opt = getopt_long(argc, argv, "hf:", long_options, nullptr)) != -1) {
+    while ((opt = getopt_long(argc, argv, "hf:m:", long_options, nullptr)) != -1) {
         switch (opt) {
             case 'h':
                 showHelp = true;
                 break;
             case 'f':
                 filterCondition = optarg;
+                break;
+            case 'm':
+                if (std::string(optarg) == "any") {
+                    anyMode = true;
+                } else if (std::string(optarg) == "all") {
+                    anyMode = false;
+                } else {
+                    std::cerr << "Error: --mode must be 'any' or 'all'.\n";
+                    showHelp = true;
+                }
                 break;
             default:
                 showHelp = true;
@@ -37,28 +52,39 @@ int VCFXGLFilter::run(int argc, char* argv[]) {
     }
 
     // Filter VCF based on genotype likelihood
-    filterByGL(std::cin, std::cout, filterCondition);
+    filterByGL(std::cin, std::cout, filterCondition, anyMode);
 
     return 0;
 }
 
 void VCFXGLFilter::displayHelp() {
-    std::cout << "VCFX_gl_filter: Filter VCF based on genotype likelihood scores (e.g., GQ > 20).\n\n";
-    std::cout << "Usage:\n";
-    std::cout << "  VCFX_gl_filter --filter \"<CONDITION>\" [options]\n\n";
-    std::cout << "Options:\n";
-    std::cout << "  -h, --help                Display this help message and exit\n";
-    std::cout << "  -f, --filter <CONDITION>  Specify the genotype likelihood filter condition (e.g., GQ>20)\n\n";
-    std::cout << "Example:\n";
-    std::cout << "  VCFX_gl_filter --filter \"GQ>20\" < input.vcf > filtered.vcf\n";
+    std::cout << "VCFX_gl_filter: Filter VCF based on a numeric genotype-likelihood field.\n\n"
+              << "Usage:\n"
+              << "  VCFX_gl_filter --filter \"<CONDITION>\" [--mode <any|all>] < input.vcf > output.vcf\n\n"
+              << "Options:\n"
+              << "  -h, --help                Display this help message and exit\n"
+              << "  -f, --filter <CONDITION>  e.g. \"GQ>20\" or \"DP>=10.5\" or \"PL==50\"\n"
+              << "  -m, --mode <any|all>      'all' => all samples must pass (default), 'any' => at least one sample passes.\n\n"
+              << "Example:\n"
+              << "  VCFX_gl_filter --filter \"GQ>20.5\" --mode any < input.vcf > filtered.vcf\n\n"
+              << "Description:\n"
+              << "  The filter condition is a simple expression: <Field><op><value>,\n"
+              << "  e.g. GQ>20 or DP!=10 or RGQ<=5.2.\n"
+              << "  The 'mode' determines if all samples must satisfy the condition or\n"
+              << "  if at least one sample satisfying is enough to keep the record.\n";
 }
 
-void VCFXGLFilter::filterByGL(std::istream& in, std::ostream& out, const std::string& filterCondition) {
-    // Parse the filter condition using regex (e.g., "GQ>20")
-    std::regex conditionRegex(R"((\w+)\s*(>=|<=|>|<|==|!=)\s*(\d+))");
+void VCFXGLFilter::filterByGL(std::istream& in,
+                              std::ostream& out,
+                              const std::string& filterCondition,
+                              bool anyMode)
+{
+    // Regex that allows field + operator + float or int
+    // e.g. "GQ>20" or "DP>=3.5" etc.
+    std::regex conditionRegex(R"((\w+)\s*(>=|<=|>|<|==|!=)\s*(\d+(\.\d+)?))");
     std::smatch matches;
     if (!std::regex_match(filterCondition, matches, conditionRegex)) {
-        std::cerr << "Error: Invalid filter condition format. Expected format like \"GQ>20\".\n";
+        std::cerr << "Error: Invalid filter condition format. Expected e.g. \"GQ>20\" or \"DP<=3.5\".\n";
         return;
     }
 
@@ -66,151 +92,147 @@ void VCFXGLFilter::filterByGL(std::istream& in, std::ostream& out, const std::st
     std::string op = matches[2];
     double threshold = std::stod(matches[3]);
 
-    // Process VCF
     bool headerParsed = false;
     std::vector<std::string> headerFields;
-    std::vector<int> filterIndices;
     std::string line;
-    while (std::getline(in, line)) {
+
+    while (true) {
+        if (!std::getline(in, line)) {
+            break; // EOF
+        }
         if (line.empty()) {
             out << "\n";
             continue;
         }
 
         if (line[0] == '#') {
-            if (line.substr(0, 6) == "#CHROM") {
-                std::stringstream ss(line);
-                std::string fieldStr;
-                // Extract header fields
-                while (std::getline(ss, fieldStr, '\t')) {
-                    headerFields.push_back(fieldStr);
-                }
-
-                // Write header as-is
-                out << line << "\n";
+            // Output header lines as is
+            out << line << "\n";
+            if (line.rfind("#CHROM", 0) == 0) {
                 headerParsed = true;
-            } else {
-                // Write other header lines as-is
-                out << line << "\n";
             }
             continue;
         }
 
+        // Must have #CHROM
         if (!headerParsed) {
-            std::cerr << "Error: VCF header line with #CHROM not found.\n";
+            std::cerr << "Error: No #CHROM header found before data.\n";
             return;
         }
 
-        // Parse VCF data lines
+        // Parse data line
         std::stringstream ss(line);
-        std::string fieldVal;
         std::vector<std::string> fieldsVec;
-        while (std::getline(ss, fieldVal, '\t')) {
-            fieldsVec.push_back(fieldVal);
+        {
+            std::string f;
+            while (std::getline(ss, f, '\t')) {
+                fieldsVec.push_back(f);
+            }
         }
-
-        if (fieldsVec.size() < 9) {
-            std::cerr << "Warning: Invalid VCF line with fewer than 9 fields: " << line << "\n";
+        if (fieldsVec.size()<9) {
+            std::cerr << "Warning: invalid VCF line (<9 fields): " << line << "\n";
             continue;
         }
-
-        std::string format = fieldsVec[8];
-        std::stringstream fmt_ss(format);
-        std::string fmt_field;
-        std::vector<std::string> formatFields;
-        while (std::getline(fmt_ss, fmt_field, ':')) {
-            formatFields.push_back(fmt_field);
+        // parse the FORMAT field
+        std::string formatStr = fieldsVec[8];
+        std::vector<std::string> formatTokens;
+        {
+            std::stringstream fmts(formatStr);
+            std::string t;
+            while (std::getline(fmts, t, ':')) {
+                formatTokens.push_back(t);
+            }
         }
-
-        // Find the index of the specified field in FORMAT
+        // find field in format
         int fieldIndex = -1;
-        for (size_t i = 0; i < formatFields.size(); ++i) {
-            if (formatFields[i] == field) {
-                fieldIndex = static_cast<int>(i);
+        for (int i=0; i<(int)formatTokens.size(); i++) {
+            if (formatTokens[i] == field) {
+                fieldIndex = i;
                 break;
             }
         }
-
-        if (fieldIndex == -1) {
-            std::cerr << "Warning: Field \"" << field << "\" not found in FORMAT column.\n";
-            // Optionally, skip this variant or include it
-            out << line << "\n";
+        if (fieldIndex<0) {
+            // If not found, do we keep or skip? We skip or keep. Let's skip 
+            // or we might keep, but let's skip by default 
+            // or we can pass if user wants 
+            // We'll just skip
+            // But let's do a note:
+            // out << line << "\n"; // or skip
             continue;
         }
 
-        bool pass = true;
-        // Iterate over each sample to check the condition
-        for (size_t i = 9; i < fieldsVec.size(); ++i) {
-            std::string sample = fieldsVec[i];
-            std::stringstream samp_ss(sample);
-            std::string samp_field;
-            std::vector<std::string> sampleFields;
-            while (std::getline(samp_ss, samp_field, ':')) {
-                sampleFields.push_back(samp_field);
-            }
+        // We'll check sample columns from index=9 onward
+        bool recordPasses = anyMode ? false : true; // in 'any' mode we set false => flip if one sample passes
+                                                   // in 'all' mode we set true => flip to false if one sample fails
 
-            if (fieldIndex >= static_cast<int>(sampleFields.size())) {
-                std::cerr << "Warning: Field index out of range in sample fields.\n";
-                pass = false;
+        for (size_t s=9; s<fieldsVec.size(); s++) {
+            // parse sample by ':'
+            std::stringstream sampSS(fieldsVec[s]);
+            std::vector<std::string> sampleTokens;
+            {
+                std::string x;
+                while (std::getline(sampSS, x, ':')) {
+                    sampleTokens.push_back(x);
+                }
+            }
+            if (fieldIndex >= (int)sampleTokens.size()) {
+                // no data => fail for all mode, or do nothing for any mode
+                if (!anyMode) {
+                    recordPasses = false;
+                }
                 break;
             }
-
-            std::string valueStr = sampleFields[fieldIndex];
-            if (valueStr.empty() || valueStr == ".") {
-                pass = false;
+            std::string valStr = sampleTokens[fieldIndex];
+            if (valStr.empty() || valStr=="." ) {
+                // treat as fail for all mode
+                if (!anyMode) {
+                    recordPasses = false;
+                }
                 break;
             }
-
-            double value;
+            double val=0.0;
             try {
-                value = std::stod(valueStr);
-            } catch (...) {
-                std::cerr << "Warning: Unable to convert value \"" << valueStr << "\" to number.\n";
-                pass = false;
+                val = std::stod(valStr);
+            } catch(...) {
+                // not numeric => fail for all mode
+                if (!anyMode) {
+                    recordPasses = false;
+                }
                 break;
             }
+            // compare
+            bool samplePass = false;
+            if (op==">") {
+                samplePass = (val>threshold);
+            } else if (op=="<") {
+                samplePass = (val<threshold);
+            } else if (op==">=") {
+                samplePass = (val>=threshold);
+            } else if (op=="<=") {
+                samplePass = (val<=threshold);
+            } else if (op=="==") {
+                samplePass = (val==threshold);
+            } else if (op=="!=") {
+                samplePass = (val!=threshold);
+            }
 
-            // Apply the filter condition
-            if (op == ">") {
-                if (!(value > threshold)) {
-                    pass = false;
+            if (anyMode) {
+                // if one sample passes => keep record => break
+                if (samplePass) {
+                    recordPasses = true;
                     break;
                 }
-            } else if (op == "<") {
-                if (!(value < threshold)) {
-                    pass = false;
-                    break;
-                }
-            } else if (op == ">=") {
-                if (!(value >= threshold)) {
-                    pass = false;
-                    break;
-                }
-            } else if (op == "<=") {
-                if (!(value <= threshold)) {
-                    pass = false;
-                    break;
-                }
-            } else if (op == "==") {
-                if (!(value == threshold)) {
-                    pass = false;
-                    break;
-                }
-            } else if (op == "!=") {
-                if (!(value != threshold)) {
-                    pass = false;
+            } else {
+                // all mode => if one fails => skip record => break
+                if (!samplePass) {
+                    recordPasses = false;
                     break;
                 }
             }
         }
 
-        if (pass) {
+        if (recordPasses) {
             out << line << "\n";
         }
     }
-}
-
-int main(int argc, char* argv[]) {
-    VCFXGLFilter glFilter;
-    return glFilter.run(argc, argv);
 }

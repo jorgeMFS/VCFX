@@ -17,6 +17,9 @@ private:
 
     // Calculates genotype dosage from VCF input and writes output
     void calculateDosage(std::istream& in, std::ostream& out);
+
+    // Helper function to split a string by a delimiter
+    std::vector<std::string> split(const std::string& str, char delimiter);
 };
 
 #endif // VCFX_DOSAGE_CALCULATOR_H
