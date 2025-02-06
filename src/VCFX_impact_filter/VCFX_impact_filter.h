@@ -5,14 +5,14 @@
 #include <string>
 #include <vector>
 
-// VCFXImpactFilter: Header file for Variant Impact Filter tool
+// VCFXImpactFilter: A tool for filtering VCF records by predicted "Impact" in the INFO field.
 class VCFXImpactFilter {
 public:
     // Entry point for the tool
     int run(int argc, char* argv[]);
 
 private:
-    // Displays the help message
+    // Displays help
     void displayHelp();
 
     // Filters VCF input based on the specified impact level

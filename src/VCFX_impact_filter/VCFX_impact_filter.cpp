@@ -2,7 +2,56 @@
 #include <getopt.h>
 #include <sstream>
 #include <algorithm>
+#include <cctype>
 #include <regex>
+#include <iostream>
+
+// Helper function: convert string to uppercase
+static std::string toUpper(const std::string &s) {
+    std::string t(s);
+    for (auto &c: t) c = std::toupper((unsigned char)c);
+    return t;
+}
+
+// Simple classification of a (possibly extended) Impact value, e.g. "HIGH_SOMETHING"
+enum class ImpactLevel {
+    UNKNOWN,
+    MODIFIER,
+    LOW,
+    MODERATE,
+    HIGH
+};
+
+static ImpactLevel classifyImpact(const std::string &rawImpact) {
+    std::string u = toUpper(rawImpact);
+    if (u.find("HIGH") != std::string::npos) {
+        return ImpactLevel::HIGH;
+    } else if (u.find("MODERATE") != std::string::npos) {
+        return ImpactLevel::MODERATE;
+    } else if (u.find("LOW") != std::string::npos) {
+        return ImpactLevel::LOW;
+    } else if (u.find("MODIFIER") != std::string::npos) {
+        return ImpactLevel::MODIFIER;
+    } else {
+        return ImpactLevel::UNKNOWN;
+    }
+}
+
+// We define a simple function: variantLevel >= targetLevel?
+// Our hierarchy is: HIGH > MODERATE > LOW > MODIFIER > UNKNOWN
+static bool meetsThreshold(ImpactLevel variantLevel, ImpactLevel targetLevel) {
+    // Convert to int or we can do a switch-based approach
+    auto rank = [](ImpactLevel lv)->int {
+        switch (lv) {
+            case ImpactLevel::HIGH:     return 4;
+            case ImpactLevel::MODERATE: return 3;
+            case ImpactLevel::LOW:      return 2;
+            case ImpactLevel::MODIFIER: return 1;
+            default:                    return 0; // UNKNOWN
+        }
+    };
+    return rank(variantLevel) >= rank(targetLevel);
+}
 
 // Implementation of VCFXImpactFilter
 int VCFXImpactFilter::run(int argc, char* argv[]) {
@@ -12,9 +61,9 @@ int VCFXImpactFilter::run(int argc, char* argv[]) {
     std::string targetImpact;
 
     static struct option long_options[] = {
-        {"help",        no_argument,       0, 'h'},
+        {"help",          no_argument,       0, 'h'},
         {"filter-impact", required_argument, 0, 'i'},
-        {0,             0,                 0,  0 }
+        {0,               0,                 0,  0}
     };
 
     while ((opt = getopt_long(argc, argv, "hi:", long_options, nullptr)) != -1) {
@@ -35,133 +84,122 @@ int VCFXImpactFilter::run(int argc, char* argv[]) {
         return 1;
     }
 
-    // Perform impact filtering on stdin and output to stdout
+    // Filter from stdin to stdout
     filterByImpact(std::cin, std::cout, targetImpact);
-
     return 0;
 }
 
 void VCFXImpactFilter::displayHelp() {
-    std::cout << "VCFX_impact_filter: Filter VCF variants based on predicted impact from annotations.\n\n";
-    std::cout << "Usage:\n";
-    std::cout << "  VCFX_impact_filter --filter-impact \"<IMPACT_LEVEL>\" [options]\n\n";
-    std::cout << "Options:\n";
-    std::cout << "  -h, --help                 Display this help message and exit\n";
-    std::cout << "  -i, --filter-impact <level> Specify the impact level to filter (e.g., HIGH, MODERATE)\n\n";
-    std::cout << "Example:\n";
-    std::cout << "  VCFX_impact_filter --filter-impact \"HIGH\" < input.vcf > filtered.vcf\n";
+    std::cout << "VCFX_impact_filter: Filter VCF variants based on predicted impact from annotations.\n\n"
+              << "Usage:\n"
+              << "  VCFX_impact_filter --filter-impact <LEVEL> < input.vcf > filtered.vcf\n\n"
+              << "Options:\n"
+              << "  -h, --help                   Show this help message\n"
+              << "  -i, --filter-impact <LEVEL>  One of: HIGH, MODERATE, LOW, MODIFIER\n\n"
+              << "Description:\n"
+              << "  Looks in INFO for 'IMPACT=...' (case-insensitive), extracts that string,\n"
+              << "  classifies it by whether it contains 'HIGH', 'MODERATE', 'LOW', or 'MODIFIER'.\n"
+              << "  Then only outputs lines whose classification is >= the requested level.\n"
+              << "  Also appends ';EXTRACTED_IMPACT=Value' to the INFO field.\n\n"
+              << "Example:\n"
+              << "  VCFX_impact_filter --filter-impact HIGH < input.vcf > filtered.vcf\n";
 }
 
-void VCFXImpactFilter::filterByImpact(std::istream& in, std::ostream& out, const std::string& targetImpact) {
-    std::string line;
-    bool headerParsed = false;
-    std::vector<std::string> headerFields;
-    size_t impactIndex = std::string::npos;
-
-    // Define possible impact levels in hierarchy
-    enum ImpactLevel { UNKNOWN, MODIFIER, LOW, MODERATE, HIGH };
-    ImpactLevel targetLevel;
-
-    if (targetImpact == "HIGH") {
-        targetLevel = HIGH;
-    } else if (targetImpact == "MODERATE") {
-        targetLevel = MODERATE;
-    } else if (targetImpact == "LOW") {
-        targetLevel = LOW;
-    } else if (targetImpact == "MODIFIER") {
-        targetLevel = MODIFIER;
-    } else {
-        std::cerr << "Error: Invalid impact level \"" << targetImpact << "\". Choose from HIGH, MODERATE, LOW, MODIFIER.\n";
+void VCFXImpactFilter::filterByImpact(std::istream& in,
+                                      std::ostream& out,
+                                      const std::string& targetImpact)
+{
+    // interpret targetImpact
+    ImpactLevel targetLevel = classifyImpact(targetImpact);
+    if (targetLevel == ImpactLevel::UNKNOWN) {
+        std::cerr << "Error: Unrecognized impact level \"" << targetImpact << "\".\n"
+                  << "Must be one of HIGH, MODERATE, LOW, MODIFIER.\n";
         return;
     }
 
-    // Regex to extract Impact=LEVEL from INFO field
-    std::regex impactRegex(R"(Impact=([A-Z]+))");
+    // We'll store header lines, then insert our new meta-info line for EXTRACTED_IMPACT
+    bool wroteHeader = false;
+    bool wroteInfoMeta = false;
 
+    std::string line;
     while (std::getline(in, line)) {
-        if (line.empty()) continue;
-
+        if (line.empty()) {
+            out << "\n";
+            continue;
+        }
+        // If header
         if (line[0] == '#') {
-            // Handle header lines
-            if (line.substr(0, 6) == "#CHROM") {
-                // Parse header to find the index of 'Impact' in INFO field if necessary
-                out << line << "\tREF_IMPACT\n"; // Add a new INFO field for filtered impact
-                headerParsed = true;
-            } else {
-                // Other header lines
-                out << line << "\n";
+            // If we see #CHROM and haven't inserted our meta line, do so
+            if (!wroteInfoMeta && line.rfind("#CHROM",0)==0) {
+                out << "##INFO=<ID=EXTRACTED_IMPACT,Number=1,Type=String,Description=\"Extracted from IMPACT=... in info.\">\n";
+                wroteInfoMeta = true;
+            }
+            out << line << "\n";
+            if (line.rfind("#CHROM",0)==0) {
+                wroteHeader = true;
             }
             continue;
         }
 
-        if (!headerParsed) {
-            std::cerr << "Error: VCF header line with #CHROM not found.\n";
+        if (!wroteHeader) {
+            // if no #CHROM line yet => error
+            std::cerr << "Error: VCF data encountered before #CHROM line.\n";
             return;
         }
 
-        // Parse VCF data lines
+        // parse columns
         std::stringstream ss(line);
-        std::string field;
-        std::vector<std::string> fieldsVec;
-
-        while (std::getline(ss, field, '\t')) {
-            fieldsVec.push_back(field);
+        std::vector<std::string> fields;
+        {
+            std::string f;
+            while (std::getline(ss, f, '\t')) {
+                fields.push_back(f);
+            }
         }
-
-        if (fieldsVec.size() < 8) {
-            std::cerr << "Warning: Invalid VCF line with fewer than 8 fields: " << line << "\n";
+        if (fields.size()<8) {
+            // invalid line
             continue;
         }
-
-        std::string infoField = fieldsVec[7];
-        std::smatch matches;
-        std::string impactValue = "UNKNOWN";
-
-        if (std::regex_search(infoField, matches, impactRegex)) {
-            impactValue = matches[1];
+        // We want to find "IMPACT=..." ignoring case
+        // We'll do a simple case-insensitive search
+        std::string info = fields[7];
+        // We search for something like "IMPACT="
+        // Then collect up to next ; or end
+        // Alternatively, a case-insensitive regex. Let's do a simpler approach:
+        // We'll do a small approach or a regex
+        static const std::regex reImpact("(?i)IMPACT=([A-Za-z_]+[^;\\s]*)");
+        std::smatch m;
+        std::string extracted = "UNKNOWN";
+        if (std::regex_search(info, m, reImpact)) {
+            // e.g. IMPACT=HIGH_Something
+            extracted = m[1];
         }
 
-        // Determine the impact level
-        ImpactLevel variantLevel;
-        if (impactValue == "HIGH") {
-            variantLevel = HIGH;
-        } else if (impactValue == "MODERATE") {
-            variantLevel = MODERATE;
-        } else if (impactValue == "LOW") {
-            variantLevel = LOW;
-        } else if (impactValue == "MODIFIER") {
-            variantLevel = MODIFIER;
-        } else {
-            variantLevel = UNKNOWN;
-        }
+        // classify
+        ImpactLevel varLevel = classifyImpact(extracted);
 
-        // Define hierarchy: HIGH > MODERATE > LOW > MODIFIER
-        // Include variants >= targetImpact level
-        bool includeVariant = false;
-        switch (targetLevel) {
-            case HIGH:
-                if (variantLevel == HIGH) includeVariant = true;
-                break;
-            case MODERATE:
-                if (variantLevel == HIGH || variantLevel == MODERATE) includeVariant = true;
-                break;
-            case LOW:
-                if (variantLevel == HIGH || variantLevel == MODERATE || variantLevel == LOW) includeVariant = true;
-                break;
-            case MODIFIER:
-                includeVariant = true; // Include all
-                break;
-            default:
-                includeVariant = false;
-        }
-
-        if (includeVariant) {
-            out << line << "\t" << impactValue << "\n";
+        // if meets threshold => keep
+        if (meetsThreshold(varLevel, targetLevel)) {
+            // We append ;EXTRACTED_IMPACT=extracted to the info field
+            // If info=="." => replace it with "EXTRACTED_IMPACT=extracted"
+            if (info=="."||info.empty()) {
+                info = "EXTRACTED_IMPACT=" + extracted;
+            } else {
+                info += ";EXTRACTED_IMPACT=" + extracted;
+            }
+            fields[7] = info;
+            // rejoin line
+            std::ostringstream joined;
+            for (size_t i=0; i<fields.size(); i++) {
+                if (i>0) joined << "\t";
+                joined << fields[i];
+            }
+            out << joined.str() << "\n";
         }
     }
 }
 
 int main(int argc, char* argv[]) {
-    VCFXImpactFilter impactFilter;
-    return impactFilter.run(argc, argv);
-}   
+    VCFXImpactFilter filt;
+    return filt.run(argc, argv);
+}

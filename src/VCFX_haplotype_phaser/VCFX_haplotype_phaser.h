@@ -4,26 +4,31 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <unordered_map>
 
-// VCFXHaplotypePhaser: Header file for Haplotype-based Phasing Tool
+// A small struct to store a variant's key data: chromosome, position, plus the "allele sum" genotype
+struct VariantData {
+    std::string chrom;
+    int pos;
+    std::vector<int> genotype; // one element per sample (the sum of alleles, or -1 if missing)
+};
+
 class VCFXHaplotypePhaser {
 public:
-    // Entry point for the tool
+    // main runner
     int run(int argc, char* argv[]);
 
 private:
-    // Displays the help message
+    // prints usage
     void displayHelp();
 
-    // Phases haplotypes in the VCF input
+    // Main function that does phasing
     void phaseHaplotypes(std::istream& in, std::ostream& out, double ldThreshold);
 
-    // Groups variants into haplotype blocks based on linkage disequilibrium
-    std::vector<std::vector<int>> groupVariants(const std::vector<std::vector<int>>& genotypeMatrix, double ldThreshold);
+    // Groups variants into haplotype blocks by naive r^2 threshold
+    std::vector<std::vector<int>> groupVariants(const std::vector<VariantData>& variants, double ldThreshold);
 
-    // Calculates linkage disequilibrium (r²) between two variants
-    double calculateLD(const std::vector<int>& variant1, const std::vector<int>& variant2);
+    // calculates r^2 between two variants
+    double calculateLD(const VariantData& v1, const VariantData& v2);
 };
 
 #endif // VCFX_HAPLOTYPE_PHASER_H
