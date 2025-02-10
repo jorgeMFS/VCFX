@@ -1,129 +1,151 @@
 #include "VCFX_position_subsetter.h"
+#include <getopt.h>
 #include <sstream>
+#include <iostream>
 #include <vector>
-#include <algorithm>
+#include <string>
+#include <cstdlib>
 
-// Function to display help message
-void printHelp() {
-    std::cout << "VCFX_position_subsetter\n"
-              << "Usage: VCFX_position_subsetter [OPTIONS]\n\n"
-              << "Options:\n"
-              << "  --region, -r \"CHR:START-END\"   Specify the genomic region to subset (e.g., \"chr1:10000-20000\").\n"
-              << "  --help, -h                      Display this help message and exit.\n\n"
-              << "Description:\n"
-              << "  Subsets VCF records based on the specified genomic region.\n\n"
-              << "Examples:\n"
-              << "  ./VCFX_position_subsetter --region \"chr1:10000-20000\" < input.vcf > subset.vcf\n";
-}
-
-// Helper structure to represent a genomic region
-struct GenomicRegion {
-    std::string chrom;
-    int start;
-    int end;
-};
-
-// Function to parse the region string
-bool parseRegion(const std::string& region_str, GenomicRegion& region) {
-    size_t colon = region_str.find(':');
-    size_t dash = region_str.find('-');
-
-    if (colon == std::string::npos || dash == std::string::npos || dash < colon) {
-        std::cerr << "Error: Invalid region format. Expected format \"chrX:start-end\".\n";
-        return false;
+int VCFXPositionSubsetter::run(int argc, char* argv[]){
+    if(argc==1){
+        displayHelp();
+        return 0;
     }
+    bool showHelp=false;
+    std::string regionStr;
 
-    region.chrom = region_str.substr(0, colon);
-    try {
-        region.start = std::stoi(region_str.substr(colon + 1, dash - colon - 1));
-        region.end = std::stoi(region_str.substr(dash + 1));
-    } catch (...) {
-        std::cerr << "Error: Unable to parse start or end positions.\n";
-        return false;
-    }
+    static struct option long_opts[] = {
+        {"region", required_argument, 0, 'r'},
+        {"help", no_argument, 0, 'h'},
+        {0,0,0,0}
+    };
 
-    if (region.start > region.end) {
-        std::cerr << "Error: Start position is greater than end position.\n";
-        return false;
-    }
-
-    return true;
-}
-
-// Function to subset VCF records based on genomic range
-bool subsetVCFByPosition(std::istream& in, std::ostream& out, const std::string& region_str) {
-    GenomicRegion region;
-    if (!parseRegion(region_str, region)) {
-        return false;
-    }
-
-    std::string line;
-    bool header_found = false;
-
-    while (std::getline(in, line)) {
-        if (line.empty()) {
-            continue;
-        }
-
-        if (line[0] == '#') {
-            out << line << "\n"; // Preserve header lines
-            if (line.find("#CHROM") == 0) {
-                header_found = true;
-            }
-            continue;
-        }
-
-        if (!header_found) {
-            std::cerr << "Error: VCF header (#CHROM) not found before records.\n";
-            return false;
-        }
-
-        std::stringstream ss(line);
-        std::string chrom, pos_str;
-        // Extract CHROM and POS fields
-        if (!(ss >> chrom >> pos_str)) {
-            std::cerr << "Warning: Skipping invalid VCF line.\n";
-            continue;
-        }
-
-        int pos = 0;
-        try {
-            pos = std::stoi(pos_str);
-        } catch (...) {
-            std::cerr << "Warning: Invalid POS value. Skipping line.\n";
-            continue;
-        }
-
-        if (chrom == region.chrom && pos >= region.start && pos <= region.end) {
-            out << line << "\n";
+    while(true){
+        int c= ::getopt_long(argc, argv, "r:h", long_opts, nullptr);
+        if(c==-1) break;
+        switch(c){
+            case 'r':
+                regionStr= optarg;
+                break;
+            case 'h':
+            default:
+                showHelp=true;
         }
     }
 
-    return true;
-}
-
-int main(int argc, char* argv[]) {
-    std::string region_str;
-
-    // Argument parsing for help and region
-    for (int i = 1; i < argc; ++i) {
-        std::string arg = argv[i];
-        if ((arg == "--region" || arg == "-r") && i + 1 < argc) {
-            region_str = argv[++i];
-        } else if (arg.find("--region=") == 0) {
-            region_str = arg.substr(9);
-        } else if (arg == "--help" || arg == "-h") {
-            printHelp();
-            return 0;
-        }
+    if(showHelp){
+        displayHelp();
+        return 0;
     }
-
-    if (region_str.empty()) {
-        std::cerr << "Error: Genomic region not specified.\n";
-        std::cerr << "Use --help for usage information.\n";
+    if(regionStr.empty()){
+        std::cerr<<"Error: --region <chrX:start-end> is required.\n";
+        displayHelp();
         return 1;
     }
+    std::string chrom;
+    int start=0, end=0;
+    if(!parseRegion(regionStr, chrom, start, end)){
+        return 1;
+    }
+    bool ok= subsetVCFByPosition(std::cin, std::cout, chrom, start, end);
+    return ok? 0: 1;
+}
 
-    bool success = subsetVCFByPosition(std::cin, std::cout, region_str);
-    return success ? 0 : 1;
+void VCFXPositionSubsetter::displayHelp(){
+    std::cout <<
+"VCFX_position_subsetter: Subset VCF by a single genomic region.\n\n"
+"Usage:\n"
+"  VCFX_position_subsetter --region \"chr1:10000-20000\" < in.vcf > out.vcf\n\n"
+"Options:\n"
+"  -r, --region \"CHR:START-END\"   The region to keep.\n"
+"  -h, --help                     Print this help.\n\n"
+"Description:\n"
+"  Reads lines from VCF input, and only prints data lines where:\n"
+"    1) CHROM matches 'CHR' exactly, and\n"
+"    2) POS is in [START,END].\n"
+"  All header lines (#...) are passed unmodified.\n\n"
+"Example:\n"
+"  VCFX_position_subsetter --region \"chr2:500-1000\" < input.vcf > subset.vcf\n";
+}
+
+bool VCFXPositionSubsetter::parseRegion(const std::string &regionStr,
+                                        std::string &chrom,
+                                        int &start,
+                                        int &end){
+    // find colon, dash
+    auto cpos= regionStr.find(':');
+    auto dpos= regionStr.find('-');
+    if(cpos== std::string::npos || dpos==std::string::npos || dpos<= cpos){
+        std::cerr<<"Error: invalid region: "<< regionStr<<". Expected e.g. chr1:10000-20000.\n";
+        return false;
+    }
+    chrom= regionStr.substr(0, cpos);
+    std::string startStr= regionStr.substr(cpos+1, dpos-(cpos+1));
+    std::string endStr= regionStr.substr(dpos+1);
+    try {
+        start= std::stoi(startStr);
+        end= std::stoi(endStr);
+    } catch(...){
+        std::cerr<<"Error: cannot parse region start/end.\n";
+        return false;
+    }
+    if(start> end){
+        std::cerr<<"Error: region start> end.\n";
+        return false;
+    }
+    return true;
+}
+
+bool VCFXPositionSubsetter::subsetVCFByPosition(std::istream &in,
+                                               std::ostream &out,
+                                               const std::string &regionChrom,
+                                               int regionStart,
+                                               int regionEnd)
+{
+    bool headerFound=false;
+    std::string line;
+    while(true){
+        if(!std::getline(in,line)) break;
+        if(line.empty()){
+            out<<line<<"\n";
+            continue;
+        }
+        if(line[0]=='#'){
+            out<< line <<"\n";
+            if(line.rfind("#CHROM",0)==0) headerFound=true;
+            continue;
+        }
+        if(!headerFound){
+            std::cerr<<"Warning: data line encountered before #CHROM => skipping.\n";
+            continue;
+        }
+        std::vector<std::string> fields;
+        {
+            std::stringstream ss(line);
+            std::string f;
+            while(std::getline(ss,f,'\t')) fields.push_back(f);
+        }
+        if(fields.size()<2){
+            std::cerr<<"Warning: line has <2 columns => skipping.\n";
+            continue;
+        }
+        const std::string &chrom= fields[0];
+        const std::string &posStr= fields[1];
+        int pos=0;
+        try {
+            pos= std::stoi(posStr);
+        } catch(...){
+            std::cerr<<"Warning: invalid POS '"<< posStr<<"'. Skipping.\n";
+            continue;
+        }
+        if(chrom== regionChrom && pos>= regionStart && pos<= regionEnd){
+            out<< line <<"\n";
+        }
+    }
+    return true;
+}
+
+int main(int argc, char* argv[]){
+    VCFXPositionSubsetter subsetter;
+    return subsetter.run(argc, argv);
 }

@@ -3,20 +3,23 @@
 
 #include <iostream>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
-// VCFXPopulationFilter: Header file for Population Subset Filter tool
 class VCFXPopulationFilter {
 public:
-    // Entry point for the tool
     int run(int argc, char* argv[]);
 
 private:
-    // Displays the help message
     void displayHelp();
 
-    // Filters VCF input to include only samples from the specified population
-    void filterPopulation(std::istream& in, std::ostream& out, const std::string& populationTag, const std::string& popMapFile);
+    bool loadPopulationMap(const std::string &popMapFile,
+                           const std::string &popTag,
+                           std::unordered_set<std::string> &samplesToInclude);
+    void filterPopulation(std::istream &in,
+                          std::ostream &out,
+                          const std::unordered_set<std::string> &samplesToInclude,
+                          const std::string &popTag);
 };
 
-#endif // VCFX_POPULATION_FILTER_H
+#endif
