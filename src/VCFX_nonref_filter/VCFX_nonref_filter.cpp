@@ -1,15 +1,14 @@
 #include "VCFX_nonref_filter.h"
 #include <getopt.h>
+#include <iostream>
 #include <sstream>
 #include <algorithm>
-#include <iostream>
+#include <cctype>
 #include <vector>
 #include <string>
-#include <cctype>
-#include <cstdlib>
 
-int VCFXNonRefFilter::run(int argc, char* argv[]) {
-    int opt; bool showHelp=false;
+int VCFXNonRefFilter::run(int argc, char* argv[]){
+    bool showHelp=false;
     static struct option long_opts[]={
         {"help", no_argument, 0, 'h'},
         {0,0,0,0}
@@ -20,7 +19,7 @@ int VCFXNonRefFilter::run(int argc, char* argv[]) {
         switch(c){
             case 'h':
             default:
-                showHelp=true;
+                showHelp= true;
         }
     }
     if(showHelp){
@@ -33,51 +32,40 @@ int VCFXNonRefFilter::run(int argc, char* argv[]) {
 
 void VCFXNonRefFilter::displayHelp(){
     std::cout <<
-"VCFX_nonref_filter: Filter out variants where all samples are homozygous reference.\n\n"
+"VCFX_nonref_filter: Exclude variants if all samples are homozygous reference.\n\n"
 "Usage:\n"
 "  VCFX_nonref_filter [options] < input.vcf > output.vcf\n\n"
 "Description:\n"
-"  Reads a VCF and checks each variant. If in every sample genotype\n"
-"  all alleles are '0' (homozygous reference), that variant is skipped.\n"
-"  Otherwise, the variant is printed.\n"
-"  Missing genotypes or partial calls are considered non-hom-ref.\n\n"
-"Options:\n"
-"  --help, -h   Print this help.\n\n"
+"  Reads VCF lines. For each variant, we check each sample's genotype. If a\n"
+"  genotype is polyploid, all alleles must be '0'. If a genotype is missing\n"
+"  or partial, we consider it not guaranteed hom-ref => keep variant.\n"
+"  If we find at least one sample not hom-ref, we print the variant. Otherwise,\n"
+"  we skip it.\n\n"
 "Example:\n"
-"  VCFX_nonref_filter < input.vcf > nohomref.vcf\n";
+"  VCFX_nonref_filter < input.vcf > filtered.vcf\n\n";
 }
 
-bool VCFXNonRefFilter::isHomRef(const std::string &genotypeString) const {
-    if(genotypeString.empty()|| genotypeString=="."|| genotypeString=="./."|| genotypeString==".|.") return false;
-    std::string g(genotypeString);
-    for(auto &c:g) if(c=='|') c='/';
+bool VCFXNonRefFilter::isDefinitelyHomRef(const std::string &genotypeField) const {
+    if(genotypeField.empty() || genotypeField=="." || genotypeField=="./." || genotypeField==".|.") return false;
+    std::string g= genotypeField;
+    for(char &c:g) if(c=='|') c='/';
     // split by '/'
-    auto slashPos= g.find('/');
-    if(slashPos== std::string::npos){
-        // Could be haploid or partial
-        // if "0" => maybe homRef haploid. If "." => missing => not hom-ref
-        // If "1" => nonRef
-        // We'll do: if g=="0" => homRef, else false
-        return (g=="0");
-    }
-    // if multiple slashes => e.g. polyploid => parse them all
-    // let's do a quick approach: split by '/'
     std::vector<std::string> alleles;
     {
         std::stringstream ss(g);
-        std::string token;
-        while(std::getline(ss, token, '/')){
-            alleles.push_back(token);
-        }
+        std::string tok;
+        while(std::getline(ss, tok, '/')) alleles.push_back(tok);
     }
-    // if any allele is not "0" => not hom-ref
-    for(auto &a: alleles){
-        if(a!="0") return false;
+    if(alleles.empty()) return false;
+    // if any allele is not "0", => not homRef
+    // if allele is "." => missing => not guaranteed homRef => false
+    for(auto &al : alleles){
+        if(al!="0") return false;
     }
     return true;
 }
 
-void VCFXNonRefFilter::filterNonRef(std::istream& in, std::ostream& out) {
+void VCFXNonRefFilter::filterNonRef(std::istream& in, std::ostream& out){
     bool headerFound=false;
     std::string line;
     while(true){
@@ -87,63 +75,55 @@ void VCFXNonRefFilter::filterNonRef(std::istream& in, std::ostream& out) {
             continue;
         }
         if(line[0]=='#'){
-            out<< line <<"\n";
+            out<< line << "\n";
             if(line.rfind("#CHROM",0)==0) headerFound=true;
             continue;
         }
         if(!headerFound){
-            std::cerr<<"Error: data line encountered before #CHROM header.\n";
-            // we can break or skip
-            // We'll just continue
+            std::cerr<<"Warning: VCF data line encountered before #CHROM. Passing line.\n";
+            out<< line <<"\n";
             continue;
         }
         std::stringstream ss(line);
         std::vector<std::string> fields; {
-            std::string t;
-            while(std::getline(ss,t,'\t')) fields.push_back(t);
+            std::string f;
+            while(std::getline(ss,f,'\t')) fields.push_back(f);
         }
         if(fields.size()<10){
-            // fewer than CHROM..INFO,FORMAT + 1 sample => pass or skip?
             out<< line <<"\n";
             continue;
         }
-        std::string &format= fields[8];
-        auto fmtParts= std::vector<std::string>();
+        std::string formatStr= fields[8];
+        std::vector<std::string> fmtParts;
         {
-            std::stringstream fs(format);
-            std::string ff; 
-            while(std::getline(fs, ff, ':')){
-                fmtParts.push_back(ff);
-            }
+            std::stringstream fs(formatStr);
+            std::string ff;
+            while(std::getline(fs,ff,':')) fmtParts.push_back(ff);
         }
         int gtIndex=-1;
         for(size_t i=0;i<fmtParts.size();i++){
             if(fmtParts[i]=="GT"){ gtIndex=(int)i; break;}
         }
         if(gtIndex<0){
-            // No GT => we can't confirm homRef => we keep
+            // no genotype => cannot confirm all hom-ref => we keep
             out<< line <<"\n";
             continue;
         }
         bool allHomRef=true;
         for(size_t s=9; s< fields.size(); s++){
-            // parse genotype
-            auto sampleCol= fields[s];
+            std::string &sampleCol= fields[s];
             std::vector<std::string> subf;
             {
-                std::stringstream st(sampleCol);
-                std::string token; 
-                while(std::getline(st, token, ':')){
-                    subf.push_back(token);
-                }
+                std::stringstream sampleSS(sampleCol);
+                std::string token;
+                while(std::getline(sampleSS, token, ':')) subf.push_back(token);
             }
             if(gtIndex>=(int)subf.size()){
-                // missing => not hom ref
-                allHomRef=false; 
+                allHomRef= false; 
                 break;
             }
-            if(!isHomRef(subf[gtIndex])){
-                allHomRef=false;
+            if(!isDefinitelyHomRef(subf[gtIndex])){
+                allHomRef= false;
                 break;
             }
         }

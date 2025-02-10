@@ -2,125 +2,130 @@
 #include <getopt.h>
 #include <sstream>
 #include <algorithm>
-#include <vector>
-#include <string>
 #include <iostream>
+#include <string>
+#include <vector>
+#include <unordered_map>
 #include <cstdlib>
 
-// Implementation
+static void split(const std::string &s, char d, std::vector<std::string> &tokens) {
+    tokens.clear();
+    std::stringstream ss(s);
+    std::string t;
+    while(std::getline(ss,t,d)) {
+        tokens.push_back(t);
+    }
+}
 
-int VCFXOutlierDetector::run(int argc, char* argv[]) {
-    // Parse command-line arguments
-    int opt;
-    bool showHelp = false;
-    std::string metric = "AF"; // Default metric
-    double threshold = 0.0;
-    bool isVariant = true; // true: variant outliers, false: sample outliers
+int VCFXOutlierDetector::run(int argc, char* argv[]){
+    bool showHelp=false;
+    std::string metric="AF";
+    double threshold= 0.0;
+    bool isVariantMode= true;
 
-    static struct option long_options[] = {
-        {"help",           no_argument,       0, 'h'},
-        {"metric",         required_argument, 0, 'm'},
-        {"threshold",      required_argument, 0, 't'},
-        {"variant",        no_argument,       0, 'v'},
-        {"sample",         no_argument,       0, 's'},
-        {0,                0,                 0,  0 }
+    static struct option long_opts[]={
+        {"help", no_argument, 0, 'h'},
+        {"metric", required_argument, 0, 'm'},
+        {"threshold", required_argument, 0, 't'},
+        {"variant", no_argument, 0, 'v'},
+        {"sample", no_argument, 0, 's'},
+        {0,0,0,0}
     };
-
-    while ((opt = getopt_long(argc, argv, "hm:t:vs", long_options, nullptr)) != -1) {
-        switch (opt) {
+    while(true){
+        int c= getopt_long(argc, argv, "hm:t:vs", long_opts, nullptr);
+        if(c==-1) break;
+        switch(c){
             case 'h':
-                showHelp = true;
+                showHelp=true; 
                 break;
             case 'm':
-                metric = std::string(optarg);
+                metric= optarg; 
                 break;
             case 't':
                 try {
-                    threshold = std::stod(optarg);
-                } catch (const std::invalid_argument&) {
-                    std::cerr << "Error: Invalid threshold value.\n";
-                    displayHelp();
+                    threshold= std::stod(optarg);
+                } catch(...){
+                    std::cerr<< "Error: invalid threshold.\n";
                     return 1;
                 }
                 break;
             case 'v':
-                isVariant = true;
+                isVariantMode= true;
                 break;
             case 's':
-                isVariant = false;
+                isVariantMode= false;
                 break;
             default:
-                showHelp = true;
+                showHelp=true;
         }
     }
-
-    if (showHelp || threshold <= 0.0) {
+    if(showHelp|| threshold<=0.0){
         displayHelp();
-        return 1;
+        return 0;
     }
-
-    if (isVariant) {
-        // Detect variant outliers
-        detectOutliers(std::cin, std::cout, metric, threshold, true);
-    } else {
-        // Detect sample outliers
-        detectOutliers(std::cin, std::cout, metric, threshold, false);
-    }
-
+    detectOutliers(std::cin, std::cout, metric, threshold, isVariantMode);
     return 0;
 }
 
-void VCFXOutlierDetector::displayHelp() {
-    std::cout << "VCFX_outlier_detector: Detect outlier variants or samples based on specified quality metrics or allele frequencies.\n\n";
-    std::cout << "Usage:\n";
-    std::cout << "  VCFX_outlier_detector [options]\n\n";
-    std::cout << "Options:\n";
-    std::cout << "  -h, --help                Display this help message and exit\n";
-    std::cout << "  -m, --metric <METRIC>     Specify the metric to use for outlier detection (e.g., AF, DP, QUAL)\n";
-    std::cout << "  -t, --threshold <VALUE>   Specify the threshold for outlier detection\n";
-    std::cout << "  -v, --variant             Detect outlier variants based on the specified metric\n";
-    std::cout << "  -s, --sample              Detect outlier samples based on the specified metric\n\n";
-    std::cout << "Examples:\n";
-    std::cout << "  VCFX_outlier_detector --metric AF --threshold 0.05 --variant < input.vcf > variant_outliers.txt\n";
-    std::cout << "  VCFX_outlier_detector --metric DP --threshold 200 --sample < input.vcf > sample_outliers.txt\n";
+void VCFXOutlierDetector::displayHelp(){
+    std::cout <<
+"VCFX_outlier_detector: Identify outliers among variants or samples based on a numeric metric.\n\n"
+"Usage:\n"
+"  VCFX_outlier_detector --metric <KEY> --threshold <VAL> [--variant|--sample]\n"
+"  < input.vcf > out\n\n"
+"Options:\n"
+"  --help, -h           Print this help.\n"
+"  --metric, -m <KEY>   Name of the metric to use (e.g. AF, DP, GQ...).\n"
+"  --threshold, -t <VAL> Numeric threshold.\n"
+"  --variant, -v        Evaluate each variant's <KEY> in INFO>threshold => print.\n"
+"  --sample, -s         Evaluate sample averages of <KEY> in genotype subfield => print outliers.\n\n"
+"Examples:\n"
+"  1) Outlier variants with AF>0.05:\n"
+"     VCFX_outlier_detector --metric AF --threshold 0.05 --variant < in.vcf > out.txt\n"
+"  2) Outlier samples if average GQ>30:\n"
+"     VCFX_outlier_detector --metric GQ --threshold 30 --sample < in.vcf > sample_outliers.txt\n";
 }
 
-bool VCFXOutlierDetector::parseMetricFromInfo(const std::string& infoField, const std::string& metric, double& value) {
-    // INFO fields are semicolon-separated key=value pairs
-    std::stringstream ss(infoField);
-    std::string token;
-    while (std::getline(ss, token, ';')) {
-        size_t eqPos = token.find('=');
-        if (eqPos != std::string::npos) {
-            std::string key = token.substr(0, eqPos);
-            std::string valStr = token.substr(eqPos + 1);
-            if (key == metric) {
-                try {
-                    value = std::stod(valStr);
-                    return true;
-                } catch (...) {
-                    return false;
-                }
+bool VCFXOutlierDetector::parseMetricFromInfo(const std::string &info,
+                                              const std::string &key,
+                                              double &val) const
+{
+    if(info.empty()||info=="." ) return false;
+    std::stringstream ss(info);
+    std::string kv;
+    while(std::getline(ss, kv, ';')) {
+        auto eq= kv.find('=');
+        if(eq==std::string::npos) continue;
+        auto k= kv.substr(0,eq);
+        auto v= kv.substr(eq+1);
+        if(k==key) {
+            try {
+                val= std::stod(v);
+                return true;
+            } catch(...){
+                return false;
             }
         }
     }
     return false;
 }
 
-bool VCFXOutlierDetector::parseMetricFromGenotype(const std::string& genotypeField, const std::string& metric, double& value) {
-    // FORMAT fields are colon-separated key=value pairs
+bool VCFXOutlierDetector::parseMetricFromGenotype(const std::string &genotypeField,
+                                                  const std::string &metric,
+                                                  double &value) const
+{
     std::stringstream ss(genotypeField);
     std::string token;
-    while (std::getline(ss, token, ':')) {
-        size_t eqPos = token.find('=');
-        if (eqPos != std::string::npos) {
-            std::string key = token.substr(0, eqPos);
-            std::string valStr = token.substr(eqPos + 1);
-            if (key == metric) {
+    while(std::getline(ss, token, ':')) {
+        auto eq= token.find('=');
+        if(eq!=std::string::npos) {
+            auto left= token.substr(0,eq);
+            auto right= token.substr(eq+1);
+            if(left== metric) {
                 try {
-                    value = std::stod(valStr);
+                    value= std::stod(right);
                     return true;
-                } catch (...) {
+                } catch(...) {
                     return false;
                 }
             }
@@ -129,152 +134,117 @@ bool VCFXOutlierDetector::parseMetricFromGenotype(const std::string& genotypeFie
     return false;
 }
 
-void VCFXOutlierDetector::detectOutliers(std::istream& in, std::ostream& out, const std::string& metric, double threshold, bool isVariant) {
-    std::string line;
-    if (isVariant) {
-        // Detect variant outliers
-        std::cout << "Detecting variant outliers based on metric '" << metric << "' with threshold '" << threshold << "'.\n";
-        out << "Chromosome\tPosition\tID\t" << metric << "\n";
-
-        while (std::getline(in, line)) {
-            if (line.empty()) continue;
-
-            if (line[0] == '#') continue;
-
-            std::stringstream ss(line);
-            std::vector<std::string> fields;
-            std::string field;
-
-            // Split fields by tab
-            while (std::getline(ss, field, '\t')) {
-                fields.push_back(field);
-            }
-
-            if (fields.size() < 8) {
-                std::cerr << "Warning: Skipping invalid VCF line (less than 8 fields): " << line << "\n";
+void VCFXOutlierDetector::detectOutliers(std::istream &in,
+                                         std::ostream &out,
+                                         const std::string &metric,
+                                         double threshold,
+                                         bool isVariantMode)
+{
+    if(isVariantMode) {
+        out<<"#CHROM\tPOS\tID\t"<<metric<<"\n";
+        bool headerFound=false;
+        std::string line;
+        bool anyMetricFound= false;
+        while(true){
+            if(!std::getline(in,line)) break;
+            if(line.empty())continue;
+            if(line[0]=='#'){
+                if(line.rfind("#CHROM",0)==0) headerFound=true;
                 continue;
             }
-
-            std::string chrom = fields[0];
-            std::string pos = fields[1];
-            std::string id = fields[2];
-            std::string info = fields[7];
-
-            double metricValue = 0.0;
-            if (parseMetricFromInfo(info, metric, metricValue)) {
-                if (metricValue > threshold) {
-                    out << chrom << "\t" << pos << "\t" << id << "\t" << metricValue << "\n";
+            if(!headerFound){
+                // skip or pass, but we can't parse columns
+                continue;
+            }
+            std::vector<std::string> fields; {
+                std::stringstream ss(line);
+                std::string f;
+                while(std::getline(ss,f,'\t')) fields.push_back(f);
+            }
+            if(fields.size()<8) continue;
+            std::string &chrom=fields[0];
+            std::string &pos= fields[1];
+            std::string &id= fields[2];
+            std::string &info= fields[7];
+            double val= 0.0;
+            if(parseMetricFromInfo(info, metric, val)) {
+                anyMetricFound= true;
+                if(val> threshold) {
+                    out<< chrom<<"\t"<< pos<<"\t"<< id<<"\t"<< val<<"\n";
                 }
             }
         }
-    }
-    else {
-        // Detect sample outliers
-        std::cout << "Detecting sample outliers based on metric '" << metric << "' with threshold '" << threshold << "'.\n";
-
+        if(!anyMetricFound) {
+            std::cerr<<"Warning: metric '"<<metric<<"' not found in any INFO field.\n";
+        }
+    } else {
+        // sample approach: we read entire file, gather sample names => sum metric => count => compute average => compare threshold
+        bool headerFound=false;
         std::vector<std::string> sampleNames;
-        bool headerParsed = false;
-
-        // Initialize sample-wise metrics
-        std::unordered_map<std::string, double> sampleMetrics;
-        std::unordered_map<std::string, int> sampleCounts;
-
-        while (std::getline(in, line)) {
-            if (line.empty()) continue;
-
-            if (line.substr(0, 6) == "#CHROM") {
-                std::stringstream ss(line);
-                std::string field;
-                // Parse header fields
-                std::vector<std::string> headers;
-                while (std::getline(ss, field, '\t')) {
-                    headers.push_back(field);
-                }
-                // Sample names start from the 10th column
-                for (size_t i = 9; i < headers.size(); ++i) {
-                    sampleNames.push_back(headers[i]);
-                    sampleMetrics[headers[i]] = 0.0;
-                    sampleCounts[headers[i]] = 0;
-                }
-                headerParsed = true;
-                continue;
-            }
-
-            if (!headerParsed) {
-                std::cerr << "Error: VCF header line with #CHROM not found.\n";
-                return;
-            }
-
-            std::stringstream ss(line);
-            std::string chrom, pos, id, ref, alt, qual, filter, info, format;
-            if (!(ss >> chrom >> pos >> id >> ref >> alt >> qual >> filter >> info >> format)) {
-                std::cerr << "Warning: Skipping invalid VCF line: " << line << "\n";
-                continue;
-            }
-
-            // Read genotype fields if present
-            std::vector<std::string> genotypes;
-            std::string genotype;
-            while (ss >> genotype) {
-                genotypes.push_back(genotype);
-            }
-
-            // Split FORMAT field
-            std::vector<std::string> formatFields;
-            std::stringstream formatSS(format);
-            std::string fmt;
-            while (std::getline(formatSS, fmt, ':')) {
-                formatFields.push_back(fmt);
-            }
-
-            // Determine the index of the specified metric
-            int metricIndex = -1;
-            for (size_t i = 0; i < formatFields.size(); ++i) {
-                if (formatFields[i] == metric) {
-                    metricIndex = static_cast<int>(i);
-                    break;
-                }
-            }
-
-            if (metricIndex == -1) continue; // Metric not found
-
-            for (size_t i = 0; i < genotypes.size() && i < sampleNames.size(); ++i) {
-                std::stringstream gtSS(genotypes[i]);
-                std::string gtField;
-                std::vector<std::string> gtValues;
-                while (std::getline(gtSS, gtField, ':')) {
-                    gtValues.push_back(gtField);
-                }
-
-                if (metricIndex >= 0 && metricIndex < static_cast<int>(gtValues.size())) {
-                    try {
-                        double value = std::stod(gtValues[metricIndex]);
-                        sampleMetrics[sampleNames[i]] += value;
-                        sampleCounts[sampleNames[i]] += 1;
-                    } catch (...) {
-                        // Ignore invalid values
-                        continue;
+        std::unordered_map<std::string, double> sums;
+        std::unordered_map<std::string, int> counts;
+        std::string line;
+        bool anyMetricFound= false;
+        while(true){
+            if(!std::getline(in,line)) break;
+            if(line.empty())continue;
+            if(line[0]=='#'){
+                if(line.rfind("#CHROM",0)==0){
+                    headerFound=true;
+                    std::vector<std::string> f; {
+                        std::stringstream ss(line);
+                        std::string x;
+                        while(std::getline(ss,x,'\t')) f.push_back(x);
+                    }
+                    for(size_t i=9;i<f.size();i++){
+                        sampleNames.push_back(f[i]);
+                        sums[f[i]]=0.0;
+                        counts[f[i]]=0;
                     }
                 }
-            }
-        }
-
-        // Calculate average metric per sample and identify outliers
-        out << "Sample\tAverage_" << metric << "\n";
-        for (const auto& sample : sampleNames) {
-            if (sampleCounts[sample] == 0) {
-                out << sample << "\tNA\n";
                 continue;
             }
-            double avg = sampleMetrics[sample] / sampleCounts[sample];
-            if (avg > threshold) {
-                out << sample << "\t" << avg << "\n";
+            if(!headerFound) {
+                continue;
+            }
+            std::vector<std::string> fields; {
+                std::stringstream ss(line);
+                std::string fx;
+                while(std::getline(ss, fx, '\t')) fields.push_back(fx);
+            }
+            if(fields.size()<9) continue;
+            std::string &format= fields[8];
+            // parse format subfields? We'll do a quick parse
+            // If the user is looking for "DP=###" or "GQ=###" => parse parseMetricFromGenotype
+            // We do that for each sample
+            // We do not confirm the 'metric' is in the format header => naive approach
+            // We'll attempt parse
+            std::vector<std::string> sampleColumns;
+            for(size_t i=9;i<fields.size();i++){
+                sampleColumns.push_back(fields[i]);
+            }
+            for(size_t s=0;s<sampleNames.size() && s<sampleColumns.size();s++){
+                double val=0.0;
+                if(parseMetricFromGenotype(sampleColumns[s], metric, val)) {
+                    sums[sampleNames[s]]+= val;
+                    counts[sampleNames[s]]++;
+                    anyMetricFound= true;
+                }
             }
         }
+        out<<"#Sample\tAverage_"<< metric <<"\n";
+        for(auto &nm: sampleNames) {
+            if(counts[nm]==0) {
+                out<< nm<<"\tNA\n";
+            } else {
+                double avg= sums[nm]/ (double)counts[nm];
+                if(avg> threshold) {
+                    out<< nm<<"\t"<< avg<<"\n";
+                }
+            }
+        }
+        if(!anyMetricFound) {
+            std::cerr<<"Warning: metric '"<<metric<<"' was not found in any sample genotype.\n";
+        }
     }
-}
-
-int main(int argc, char* argv[]) {
-    VCFXOutlierDetector outlierDetector;
-    return outlierDetector.run(argc, argv);
 }
