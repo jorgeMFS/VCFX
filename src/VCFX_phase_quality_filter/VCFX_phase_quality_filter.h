@@ -3,23 +3,23 @@
 
 #include <iostream>
 #include <string>
-#include <vector>
 
-// VCFXPhaseQualityFilter: Header file for Variant Phasing Quality Filter Tool
 class VCFXPhaseQualityFilter {
 public:
-    // Entry point for the tool
     int run(int argc, char* argv[]);
 
 private:
-    // Displays the help message
     void displayHelp();
+    // Takes the final operator (>, >=, <, <=, ==, !=) plus threshold, filters lines
+    void filterByPQ(std::istream &in, std::ostream &out,
+                    const std::string &op, double threshold);
 
-    // Filters VCF input based on phasing quality scores
-    void filterByPQ(std::istream& in, std::ostream& out, double threshold);
+    // Extracts the "PQ=" value from INFO or returns 0.0 if missing or invalid
+    double parsePQScore(const std::string &info);
 
-    // Parses the PQ score from the INFO field
-    double parsePQScore(const std::string& infoField);
+    // Internal helper to parse the condition string, e.g. "PQ>=30" => op=">=", thr=30
+    bool parseCondition(const std::string &condition,
+                        std::string &op, double &threshold);
 };
 
 #endif // VCFX_PHASE_QUALITY_FILTER_H

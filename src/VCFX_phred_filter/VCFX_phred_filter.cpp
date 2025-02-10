@@ -1,106 +1,124 @@
 #include "VCFX_phred_filter.h"
 #include <getopt.h>
+#include <iostream>
 #include <sstream>
+#include <vector>
+#include <string>
+#include <cstdlib>
 
-// Implementation of VCFX_phred_filter
-int VCFXPhredFilter::run(int argc, char* argv[]) {
-    // Parse command-line arguments
-    int opt;
-    double threshold = 30.0; // Default threshold
-    bool showHelp = false;
-
-    static struct option long_options[] = {
-        {"phred-filter", required_argument, 0, 'p'},
-        {"help",         no_argument,       0, 'h'},
-        {0,              0,                 0,  0 }
-    };
-
-    while ((opt = getopt_long(argc, argv, "p:h", long_options, nullptr)) != -1) {
-        switch (opt) {
-            case 'p':
-                {
-                    std::stringstream ss(optarg);
-                    if (!(ss >> threshold)) {
-                        std::cerr << "Invalid threshold value: " << optarg << "\n";
-                        return 1;
-                    }
-                }
-                break;
-            case 'h':
-            default:
-                showHelp = true;
-        }
-    }
-
-    if (showHelp) {
+int VCFXPhredFilter::run(int argc, char* argv[]){
+    if(argc==1) {
         displayHelp();
         return 0;
     }
-
-    // Process VCF input from stdin
-    processVCF(std::cin, threshold);
-
+    double threshold= 30.0;
+    bool showHelp=false;
+    bool keepMissingAsPass= false;
+    static struct option long_opts[]={
+        {"phred-filter", required_argument, 0, 'p'},
+        {"keep-missing-qual", no_argument, 0, 'k'},
+        {"help", no_argument, 0, 'h'},
+        {0,0,0,0}
+    };
+    while(true){
+        int c= ::getopt_long(argc, argv, "p:kh", long_opts, nullptr);
+        if(c==-1) break;
+        switch(c){
+            case 'p': {
+                try { threshold= std::stod(optarg); }
+                catch(...){
+                    std::cerr<<"Error: Invalid threshold '"<< optarg<<"'.\n";
+                    return 1;
+                }
+            }break;
+            case 'k':
+                keepMissingAsPass= true;
+                break;
+            case 'h':
+            default:
+                showHelp=true;
+        }
+    }
+    if(showHelp){
+        displayHelp();
+        return 0;
+    }
+    processVCF(std::cin, threshold, keepMissingAsPass);
     return 0;
 }
 
-void VCFXPhredFilter::displayHelp() {
-    std::cout << "VCFX_phred_filter: Filter variants based on Phred quality score.\n\n";
-    std::cout << "Usage:\n";
-    std::cout << "  VCFX_phred_filter --phred-filter <threshold> [options]\n\n";
-    std::cout << "Options:\n";
-    std::cout << "  -p, --phred-filter   Phred quality score threshold (e.g., 30)\n";
-    std::cout << "  -h, --help           Display this help message and exit\n\n";
-    std::cout << "Example:\n";
-    std::cout << "  VCFX_phred_filter --phred-filter 30 < input.vcf > filtered.vcf\n";
+void VCFXPhredFilter::displayHelp(){
+    std::cout <<
+"VCFX_phred_filter: Filter VCF lines by their QUAL field.\n\n"
+"Usage:\n"
+"  VCFX_phred_filter [options] < input.vcf > output.vcf\n\n"
+"Options:\n"
+"  -p, --phred-filter <VAL>      Phred QUAL threshold (default=30)\n"
+"  -k, --keep-missing-qual       Treat '.' (missing QUAL) as pass\n"
+"  -h, --help                    Display this help and exit\n\n"
+"Description:\n"
+"  Reads VCF lines from stdin. For each data line, parse the QUAL field.\n"
+"  If QUAL >= threshold => print line. Otherwise, skip. By default, missing\n"
+"  QUAL ('.') is treated as 0. Use --keep-missing-qual to treat '.' as pass.\n\n"
+"Examples:\n"
+"  1) Keep variants with QUAL>=30:\n"
+"     VCFX_phred_filter -p 30 < in.vcf > out.vcf\n"
+"  2) Keep missing QUAL lines:\n"
+"     VCFX_phred_filter -p 30 --keep-missing-qual < in.vcf > out.vcf\n";
 }
 
-void VCFXPhredFilter::processVCF(std::istream& in, double threshold) {
+void VCFXPhredFilter::processVCF(std::istream &in, double threshold, bool keepMissingAsPass){
     std::string line;
-    while (std::getline(in, line)) {
-        if (line.empty()) continue;
-        if (line[0] == '#') {
-            std::cout << line << "\n"; // Preserve header lines
+    bool foundChrom=false;
+    while(true){
+        if(!std::getline(in, line)) break;
+        if(line.empty()){
+            std::cout<< line <<"\n";
             continue;
         }
-
-        // Split the VCF line into fields
+        if(line[0]=='#'){
+            std::cout<< line <<"\n";
+            if(line.rfind("#CHROM",0)==0) foundChrom=true;
+            continue;
+        }
+        if(!foundChrom) {
+            std::cerr<<"Warning: data line before #CHROM => skipping line.\n";
+            continue;
+        }
         std::vector<std::string> fields;
-        std::string field;
-        size_t pos = 0;
-        while ((pos = line.find('\t')) != std::string::npos) {
-            field = line.substr(0, pos);
-            fields.push_back(field);
-            line.erase(0, pos + 1);
+        {
+            std::stringstream ss(line);
+            std::string f;
+            while(std::getline(ss,f,'\t')) {
+                fields.push_back(f);
+            }
         }
-        fields.push_back(line); // Add the last field
-
-        if (fields.size() < 5) {
-            std::cerr << "Invalid VCF line with fewer than 5 fields.\n";
+        // we need at least CHROM,POS,ID,REF,ALT,QUAL => 6 columns
+        if(fields.size()<6) {
+            std::cerr<<"Warning: line has <6 columns => skipping.\n";
             continue;
         }
-
-        std::string qualStr = fields[5];
-        double qual = parseQUAL(qualStr);
-
-        if (qual >= threshold) {
-            std::cout << line << "\n";
+        double q= parseQUAL(fields[5], keepMissingAsPass);
+        if(q>= threshold) {
+            std::cout<< line <<"\n";
         }
     }
 }
 
-double VCFXPhredFilter::parseQUAL(const std::string& qualStr) {
-    if (qualStr == ".") {
-        return 0.0; // Treat missing QUAL as 0
+double VCFXPhredFilter::parseQUAL(const std::string &qualStr, bool keepMissingAsPass){
+    if(qualStr=="." || qualStr.empty()){
+        if(keepMissingAsPass) return 1e9; 
+        else return 0.0;
     }
     try {
         return std::stod(qualStr);
-    } catch (const std::invalid_argument&) {
-        std::cerr << "Invalid QUAL value: " << qualStr << "\n";
+    } catch(...) {
+        std::cerr<<"Warning: Invalid QUAL '"<<qualStr<<"'. Using 0.\n";
         return 0.0;
     }
 }
 
-int main(int argc, char* argv[]) {
-    VCFXPhredFilter filter;
-    return filter.run(argc, argv);
+int main(int argc, char* argv[]){
+    VCFXPhredFilter pf;
+    return pf.run(argc,argv);
 }
