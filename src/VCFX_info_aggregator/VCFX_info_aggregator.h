@@ -1,21 +1,27 @@
 #ifndef VCFX_INFO_AGGREGATOR_H
 #define VCFX_INFO_AGGREGATOR_H
+
 #include <iostream>
 #include <string>
 #include <vector>
-// VCFXInfoAggregator: Header file for INFO Field Aggregator tool
+#include <map>
+
+// VCFXInfoAggregator: A tool that reads a VCF, prints it unmodified, and at the end
+// produces an aggregated summary of numeric INFO fields (like DP, AF, etc.)
 class VCFXInfoAggregator {
 public:
-
-    // Entry point for the tool
     int run(int argc, char* argv[]);
 
 private:
-
-    // Displays the help message
+    // Print usage
     void displayHelp();
 
-    // Aggregates specified INFO fields across samples
-    void aggregateInfo(std::istream& in, std::ostream& out, const std::vector<std::string>& infoFields);
+    // The main function that scans the VCF from 'in', writes lines unchanged to 'out',
+    // collecting numeric values from specified fields in 'infoFields'.
+    // After reading the entire file, it appends a summary section.
+    void aggregateInfo(std::istream& in,
+                       std::ostream& out,
+                       const std::vector<std::string>& infoFields);
 };
+
 #endif // VCFX_INFO_AGGREGATOR_H

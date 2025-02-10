@@ -4,11 +4,20 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
-// Function to display help message
-void printHelp();
+/* Simple structure describing whether an ID is an INFO or FORMAT field, plus its Number field */
+struct SubfieldMeta {
+    bool isInfo = false, isFormat = false;
+    std::string id, number;
+};
 
-// Structure to hold VCF variant information
+/* We store an ID->SubfieldMeta map for known fields from the header. */
+struct VCFHeaderInfo {
+    std::unordered_map<std::string, SubfieldMeta> meta;
+};
+
+/* A single variant record with possibly multiple ALT alleles. */
 struct VCFVariant {
     std::string chrom;
     int pos;
@@ -18,13 +27,16 @@ struct VCFVariant {
     std::string qual;
     std::string filter;
     std::string info;
-    std::vector<std::string> other_fields; // FORMAT and sample data
+    std::string formatStr;
+    std::vector<std::string> samples; // one element per sample
 };
 
-// Function to parse a VCF line into VCFVariant structure
-bool parseVCFLine(const std::string& line, VCFVariant& variant);
+/* Print minimal help/usage. */
+void printHelp();
 
-// Function to split multi-allelic variants into bi-allelic
-bool splitMultiAllelicVariants(std::istream& in, std::ostream& out);
+/* Reads a VCF from 'in', writes lines to 'out' with multi-allelic sites split,
+ * rewriting subfields (GT, AD, PL) for each splitted line.
+ * Header lines are passed unmodified. */
+bool splitMultiAllelicVariants(std::istream &in, std::ostream &out);
 
-#endif // VCFX_MULTIALLELIC_SPLITTER_H
+#endif

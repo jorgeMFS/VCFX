@@ -9,9 +9,9 @@
  * @brief Structure to hold command-line arguments for the missing data handler tool.
  */
 struct Arguments {
-    bool fill_missing = false;                 ///< Flag indicating whether to impute missing genotypes.
-    std::string default_genotype = "./.";      ///< Default genotype to use for imputation.
-    std::vector<std::string> input_files;      ///< List of input VCF files (if any).
+    bool fill_missing = false;               ///< Flag indicating whether to impute missing genotypes.
+    std::string default_genotype = "./.";    ///< Default genotype to use for imputation.
+    std::vector<std::string> input_files;    ///< List of input VCF files. If empty, read from stdin.
 };
 
 /**
@@ -39,13 +39,15 @@ bool parseArguments(int argc, char* argv[], Arguments& args);
 std::vector<std::string> splitString(const std::string& str, char delimiter);
 
 /**
- * @brief Processes the VCF file to handle missing genotype data.
+ * @brief Processes the VCF file(s) to handle missing genotype data,
+ *        either replacing missing data with a default genotype or leaving them flagged.
  *
- * @param in Input stream (VCF file).
- * @param out Output stream (Modified VCF).
  * @param args Command-line arguments specifying behavior.
  * @return true if processing is successful, false otherwise.
+ *
+ * This function reads from each file in args.input_files, or from stdin if none specified,
+ * and writes the processed lines to stdout.
  */
-bool handleMissingData(std::istream& in, std::ostream& out, const Arguments& args);
+bool handleMissingDataAll(const Arguments& args);
 
 #endif // VCFX_MISSING_DATA_HANDLER_H

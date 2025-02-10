@@ -1,173 +1,210 @@
-
 #include "VCFX_info_aggregator.h"
 #include <getopt.h>
 #include <sstream>
 #include <algorithm>
 #include <iomanip>
+#include <iostream>
+#include <cstdlib>
 #include <map>
 #include <vector>
 
-// Implementation of VCFXInfoAggregator
+// ----------------------------------------------------------------------
+// Displays help
+// ----------------------------------------------------------------------
+void VCFXInfoAggregator::displayHelp() {
+    std::cout 
+        << "VCFX_info_aggregator: Aggregate numeric INFO field values from a VCF.\n\n"
+        << "Usage:\n"
+        << "  VCFX_info_aggregator --aggregate-info \"DP,AF,...\" < input.vcf > output.vcf\n\n"
+        << "Description:\n"
+        << "  Reads a VCF from stdin, prints it unmodified, and at the end, appends a\n"
+        << "  summary section of the form:\n"
+        << "    #AGGREGATION_SUMMARY\n"
+        << "    DP: Sum=..., Average=...\n"
+        << "    AF: Sum=..., Average=...\n"
+        << "  The VCF portion remains fully valid. The final lines start with '#' so most\n"
+        << "  VCF parsers will ignore them.\n\n"
+        << "Options:\n"
+        << "  -h, --help                Print this help message.\n"
+        << "  -a, --aggregate-info <fields>  Comma-separated list of INFO fields to aggregate.\n\n"
+        << "Example:\n"
+        << "  VCFX_info_aggregator --aggregate-info \"DP,AF\" < input.vcf > aggregated.vcf\n";
+}
+
+// ----------------------------------------------------------------------
+// parse command line, call aggregator
+// ----------------------------------------------------------------------
 int VCFXInfoAggregator::run(int argc, char* argv[]) {
-    // Parse command-line arguments
     int opt;
     bool showHelp = false;
     std::string infoFieldsStr;
 
-    static struct option long_options[] = {
+    static struct option longOptions[] = {
         {"help",          no_argument,       0, 'h'},
         {"aggregate-info", required_argument, 0, 'a'},
-        {0,               0,                 0,  0 }
+        {0,0,0,0}
     };
 
-    while ((opt = getopt_long(argc, argv, "ha:", long_options, nullptr)) != -1) {
-        switch (opt) {
+    while((opt = getopt_long(argc, argv, "ha:", longOptions, nullptr)) != -1) {
+        switch(opt) {
             case 'h':
-                showHelp = true;
+                showHelp= true;
                 break;
             case 'a':
-                infoFieldsStr = optarg;
+                infoFieldsStr= optarg;
                 break;
             default:
-                showHelp = true;
+                showHelp= true;
+                break;
         }
     }
 
-    if (showHelp || infoFieldsStr.empty()) {
+    if(showHelp) {
         displayHelp();
+        return 0;
+    }
+    if(infoFieldsStr.empty()) {
+        std::cerr<<"Error: Must specify --aggregate-info with at least one field.\n";
         return 1;
     }
 
-    // Split infoFieldsStr by comma to get individual INFO fields
+    // parse comma separated fields
     std::vector<std::string> infoFields;
-    std::stringstream ss(infoFieldsStr);
-    std::string field;
-    while (std::getline(ss, field, ',')) {
-        // Trim whitespace
-        field.erase(field.find_last_not_of(" \n\r\t")+1);
-        field.erase(0, field.find_first_not_of(" \n\r\t"));
-        if (!field.empty()) {
-            infoFields.push_back(field);
+    {
+        std::stringstream ss(infoFieldsStr);
+        std::string f;
+        while(std::getline(ss,f,',')) {
+            // trim
+            while(!f.empty() && isspace((unsigned char)f.back())) f.pop_back();
+            while(!f.empty() && isspace((unsigned char)f.front())) f.erase(f.begin());
+            if(!f.empty()) {
+                infoFields.push_back(f);
+            }
         }
     }
-
-    if (infoFields.empty()) {
-        std::cerr << "Error: No valid INFO fields specified for aggregation.\n";
+    if(infoFields.empty()) {
+        std::cerr<<"Error: no valid fields in --aggregate-info\n";
         return 1;
     }
 
-    // Perform INFO field aggregation on stdin and output to stdout
     aggregateInfo(std::cin, std::cout, infoFields);
-
     return 0;
 }
 
-void VCFXInfoAggregator::displayHelp() {
-    std::cout << "VCFX_info_aggregator: Aggregate numeric values in the INFO field across samples.\n\n";
-    std::cout << "Usage:\n";
-    std::cout << "  VCFX_info_aggregator --aggregate-info \"<INFO_FIELDS>\" [options]\n\n";
-    std::cout << "Options:\n";
-    std::cout << "  -h, --help                       Display this help message and exit\n";
-    std::cout << "  -a, --aggregate-info <fields>    Comma-separated list of INFO fields to aggregate (e.g., DP,AF)\n\n";
-    std::cout << "Example:\n";
-    std::cout << "  VCFX_info_aggregator --aggregate-info \"DP,AF\" < input.vcf > aggregated_info.txt\n";
-}
+// ----------------------------------------------------------------------
+// aggregator function
+//   1) read lines
+//   2) if line is header or data, print unmodified to out
+//   3) parse data lines => parse 'INFO' col => parse each requested field => if numeric => accumulate
+//   4) after reading entire file, print summary
+// ----------------------------------------------------------------------
+void VCFXInfoAggregator::aggregateInfo(std::istream& in,
+                                       std::ostream& out,
+                                       const std::vector<std::string>& infoFields)
+{
+    // We'll store each field's collected numeric values in a vector
+    std::map<std::string, std::vector<double>> collected;
+    for(auto &fld : infoFields) {
+        collected[fld]= {};
+    }
 
-void VCFXInfoAggregator::aggregateInfo(std::istream& in, std::ostream& out, const std::vector<std::string>& infoFields) {
+    bool foundChromHeader=false;
+
     std::string line;
-    bool headerParsed = false;
-    std::vector<std::string> headerFields;
-    std::map<std::string, std::vector<double>> aggregates; // Key: INFO field, Value: list of numeric values
+    while(true) {
+        if(!std::getline(in,line)) break;
+        if(line.empty()) {
+            out << line << "\n";
+            continue;
+        }
 
-    // Initialize aggregates map
-    for (const auto& field : infoFields) {
-        aggregates[field] = std::vector<double>();
-    }
-
-    while (std::getline(in, line)) {
-        if (line.empty()) continue;
-
-        if (line[0] == '#') {
-            // Handle header lines
-            if (line.substr(0, 6) == "#CHROM") {
-                // Output header with additional aggregated fields
-                out << line;
-                for (const auto& field : infoFields) {
-                    out << "\t" << "AGG_" << field;
-                }
-                out << "\n";
-                headerParsed = true;
-            } else {
-                // Other header lines
-                out << line << "\n";
+        if(line[0]=='#') {
+            // pass it through unmodified
+            out << line << "\n";
+            if(!foundChromHeader && line.rfind("#CHROM",0)==0){
+                foundChromHeader=true;
             }
             continue;
         }
 
-        if (!headerParsed) {
-            std::cerr << "Error: VCF header line with #CHROM not found.\n";
-            return;
+        if(!foundChromHeader) {
+            std::cerr<<"Error: encountered data line before #CHROM header.\n";
+            // We can still proceed or break. We'll break
+            break;
         }
 
-        // Parse VCF data lines
+        // parse columns
+        // minimal vcf => CHROM POS ID REF ALT QUAL FILTER INFO ...
+        // We only need the 8th col => INFO
         std::stringstream ss(line);
-        std::string fieldEntry;
-        std::vector<std::string> fieldsVec;
-
-        while (std::getline(ss, fieldEntry, '\t')) {
-            fieldsVec.push_back(fieldEntry);
-        }
-
-        if (fieldsVec.size() < 8) {
-            std::cerr << "Warning: Invalid VCF line with fewer than 8 fields: " << line << "\n";
-            continue;
-        }
-
-        std::string infoField = fieldsVec[7];
-        std::map<std::string, double> currentVariantAggregates;
-
-        // Extract specified INFO fields
-        for (const auto& aggField : infoFields) {
-            size_t pos = infoField.find(aggField + "=");
-            if (pos != std::string::npos) {
-                size_t start = pos + aggField.length() + 1;
-                size_t end = infoField.find(';', start);
-                std::string valueStr = (end != std::string::npos) ? infoField.substr(start, end - start) : infoField.substr(start);
-                try {
-                    double value = std::stod(valueStr);
-                    aggregates[aggField].push_back(value);
-                    currentVariantAggregates[aggField] = value;
-                } catch (...) {
-                    std::cerr << "Warning: Non-numeric value for INFO field \"" << aggField << "\": " << valueStr << "\n";
-                    currentVariantAggregates[aggField] = 0.0;
-                }
-            } else {
-                // INFO field not present; assign default value
-                aggregates[aggField].push_back(0.0);
-                currentVariantAggregates[aggField] = 0.0;
+        std::vector<std::string> fields;
+        {
+            std::string f;
+            while(std::getline(ss,f,'\t')) {
+                fields.push_back(f);
             }
         }
+        // pass line unmodified
+        out << line << "\n";
 
-        // Append aggregated values to the VCF line
-        out << line;
-        for (const auto& aggField : infoFields) {
-            out << "\t" << currentVariantAggregates[aggField];
+        if(fields.size()<8) {
+            // skip aggregator for this line
+            continue;
         }
-        out << "\n";
+        std::string &info = fields[7];
+
+        // parse info col => find each "key=val" or "key" flag
+        // we only look for key=val with numeric val if the key is in infoFields
+        // We'll do a naive parse: split by ';', then split each part at '='
+        {
+            std::stringstream infoSS(info);
+            std::string item;
+            while(std::getline(infoSS,item,';')) {
+                if(item.empty()) continue;
+                // find '='
+                size_t eqPos= item.find('=');
+                if(eqPos==std::string::npos) {
+                    // no '=' => skip
+                    continue;
+                }
+                std::string key= item.substr(0, eqPos);
+                std::string val= item.substr(eqPos+1);
+                if(key.empty() || val.empty()) continue;
+                // trim spaces
+                while(!key.empty() && isspace((unsigned char)key.back())) key.pop_back();
+                while(!key.empty() && isspace((unsigned char)key.front())) key.erase(key.begin());
+                while(!val.empty() && isspace((unsigned char)val.back())) val.pop_back();
+                while(!val.empty() && isspace((unsigned char)val.front())) val.erase(val.begin());
+
+                auto it= collected.find(key);
+                if(it== collected.end()) {
+                    // not one of requested fields
+                    continue;
+                }
+                // parse numeric
+                try {
+                    double d= std::stod(val);
+                    it->second.push_back(d);
+                } catch(...) {
+                    // skip
+                }
+            }
+        }
     }
 
-    std::cout << "Aggregated INFO Fields:\n";
-    for (const auto& agg : aggregates) {
-        double sum = 0.0;
-        for (const auto& val : agg.second) {
-            sum += val;
+    // now print aggregator summary
+    out << "#AGGREGATION_SUMMARY\n";
+    for(auto &kv : collected) {
+        const std::string &field= kv.first;
+        const auto &vals= kv.second;
+        double sum=0.0;
+        for(auto &v : vals) {
+            sum+= v;
         }
-        double average = (agg.second.empty()) ? 0.0 : sum / agg.second.size();
-        std::cout << agg.first << ": Sum = " << sum << ", Average = " << average << "\n";
+        double mean=0.0;
+        if(!vals.empty()) {
+            mean= sum/ (double)vals.size();
+        }
+        out << field << ": Sum=" << sum << ", Average=" << mean << "\n";
     }
-}
-
-int main(int argc, char* argv[]) {
-    VCFXInfoAggregator infoAggregator;
-    return infoAggregator.run(argc, argv);
 }

@@ -5,17 +5,26 @@
 #include <string>
 #include <vector>
 
-// VCFXMissingDetector: Header file for Missing Sample Detection Tool
+/**
+ * VCFXMissingDetector: A tool to detect variants with any missing sample genotypes
+ * and flag them in the INFO field with MISSING_GENOTYPES=1
+ */
 class VCFXMissingDetector {
 public:
-    // Entry point for the tool
+    /**
+     * Entry point for the tool
+     */
     int run(int argc, char* argv[]);
 
 private:
-    // Displays the help message
+    /**
+     * Displays the help message
+     */
     void displayHelp();
 
-    // Detects missing genotypes in VCF input
+    /**
+     * Detects missing genotypes in VCF input from 'in', writes flagged lines to 'out'
+     */
     void detectMissingGenotypes(std::istream& in, std::ostream& out);
 };
 

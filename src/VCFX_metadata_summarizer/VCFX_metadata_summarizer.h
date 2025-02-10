@@ -5,8 +5,9 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_set>
 
-// VCFX_metadata_summarizer: Header file for VCF metadata summarization tool
+// VCFX_metadata_summarizer: Summarizes key metadata from a VCF file.
 class VCFXMetadataSummarizer {
 public:
     // Entry point for the tool
@@ -19,11 +20,21 @@ private:
     // Processes VCF input and summarizes metadata
     void summarizeMetadata(std::istream& in);
 
-    // Parses the header lines to extract metadata
-    void parseHeader(const std::string& line, std::map<std::string, int>& metadata);
+    // Parses meta-information lines (##...) to extract contig/INFO/FILTER/FORMAT IDs
+    void parseHeader(const std::string& line);
 
     // Prints the metadata summary
-    void printSummary(const std::map<std::string, int>& metadata);
+    void printSummary() const;
+
+    // Data members that store the final results
+    // We'll track unique contig IDs, info IDs, filter IDs, format IDs
+    std::unordered_set<std::string> contigIDs;
+    std::unordered_set<std::string> infoIDs;
+    std::unordered_set<std::string> filterIDs;
+    std::unordered_set<std::string> formatIDs;
+
+    int numSamples = 0;
+    int numVariants = 0;
 };
 
 #endif // VCFX_METADATA_SUMMARIZER_H

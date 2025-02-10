@@ -5,24 +5,28 @@
 #include <string>
 #include <vector>
 
-// VCFXIndelNormalizer: Header file for Indel Normalization Tool
+// A tool for normalizing INDELs (and any variant) to a minimal left-aligned representation
+// without requiring an external reference genome. This includes:
+//   - Splitting multi-ALT lines into separate lines (one ALT each).
+//   - Removing the largest possible shared leading prefix, adjusting POS accordingly.
+//   - Removing the largest possible shared trailing suffix.
 class VCFXIndelNormalizer {
 public:
-    // Entry point for the tool
     int run(int argc, char* argv[]);
 
 private:
-    // Displays the help message
+    // Print usage
     void displayHelp();
 
-    // Normalizes indels in the VCF input
+    // The main function: read VCF from 'in', write normalized lines to 'out'
     void normalizeIndels(std::istream& in, std::ostream& out);
 
-    // Determines if a variant is an indel
-    bool isIndel(const std::string& ref, const std::string& alt);
+    // For each ALT allele, produce a separate line. Then do left+right trim
+    bool normalizeVariant(std::string &chrom, int &posInt,
+                          std::string &ref,
+                          std::string &alt);
 
-    // Normalizes a single indel variant
-    bool normalizeVariant(std::string& chrom, std::string& pos, std::string& ref, std::string& alt);
+    // checks if line is a variant line (#CHROM line => we pass it as header)
 };
 
 #endif // VCFX_INDEL_NORMALIZER_H

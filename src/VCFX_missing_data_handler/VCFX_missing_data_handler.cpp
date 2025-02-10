@@ -1,26 +1,29 @@
 #include "VCFX_missing_data_handler.h"
+#include <getopt.h>
 #include <sstream>
 #include <algorithm>
-#include <stdexcept>
+#include <fstream>
+#include <iostream>
+#include <cstdlib>
 
 /**
  * @brief Displays the help message for the missing data handler tool.
  */
 void printHelp() {
     std::cout << "VCFX_missing_data_handler\n"
-              << "Usage: VCFX_missing_data_handler [OPTIONS] < input.vcf > output.vcf\n\n"
+              << "Usage: VCFX_missing_data_handler [OPTIONS] [files...]\n\n"
               << "Options:\n"
-              << "  --fill-missing, -f           Impute missing genotypes with a default value (e.g., ./.).\n"
+              << "  --fill-missing, -f            Impute missing genotypes with a default value (e.g., ./.).\n"
               << "  --default-genotype, -d GEN    Specify the default genotype for imputation (default: ./.).\n"
               << "  --help, -h                    Display this help message and exit.\n\n"
               << "Description:\n"
-              << "  Flags or imputes missing genotype data in a VCF file. By default, missing genotypes are flagged, "
-              << "but can be imputed with a specified genotype using the --fill-missing option.\n\n"
+              << "  Flags or imputes missing genotype data in one or more VCF files. By default, missing genotypes are\n"
+              << "  left as is (flagged), but can be replaced with a specified genotype using --fill-missing.\n\n"
               << "Examples:\n"
-              << "  Flag missing data:\n"
-              << "    ./VCFX_missing_data_handler < input.vcf > flagged_output.vcf\n\n"
-              << "  Impute missing data with ./. :\n"
-              << "    ./VCFX_missing_data_handler --fill-missing --default-genotype \"./.\" < input.vcf > imputed_output.vcf\n";
+              << "  1) Flag missing data from a single file:\n"
+              << "       ./VCFX_missing_data_handler < input.vcf > flagged_output.vcf\n\n"
+              << "  2) Impute missing data with './.' from multiple files:\n"
+              << "       ./VCFX_missing_data_handler -f --default-genotype \"./.\" file1.vcf file2.vcf > combined_output.vcf\n";
 }
 
 /**
@@ -49,136 +52,202 @@ std::vector<std::string> splitString(const std::string& str, char delimiter) {
  * @return true if parsing is successful, false otherwise.
  */
 bool parseArguments(int argc, char* argv[], Arguments& args) {
-    for (int i = 1; i < argc; ++i) {
-        std::string arg = argv[i];
-        if (arg == "--fill-missing" || arg == "-f") {
-            args.fill_missing = true;
-        }
-        else if ((arg == "--default-genotype" || arg == "-d") && i + 1 < argc) {
-            args.default_genotype = argv[++i];
-        }
-        else if (arg == "--help" || arg == "-h") {
-            printHelp();
-            exit(0);
-        }
-        else {
-            // Handle input files or other arguments if necessary
-            args.input_files.push_back(arg);
+    static struct option long_opts[] = {
+        {"fill-missing", no_argument,       0, 'f'},
+        {"default-genotype", required_argument, 0, 'd'},
+        {"help", no_argument,              0, 'h'},
+        {0,0,0,0}
+    };
+
+    while(true) {
+        int c= getopt_long(argc, argv, "fd:h", long_opts, nullptr);
+        if(c==-1) break;
+        switch(c){
+            case 'f':
+                args.fill_missing= true;
+                break;
+            case 'd':
+                args.default_genotype= optarg;
+                break;
+            case 'h':
+            default:
+                printHelp();
+                exit(0);
         }
     }
+
+    // The remainder arguments are input files
+    // if none => read from stdin
+    while(optind < argc) {
+        args.input_files.push_back(argv[optind++]);
+    }
+
     return true;
 }
 
 /**
- * @brief Processes the VCF file to handle missing genotype data.
+ * @brief Process a single VCF stream. Writes to out.
  *
- * @param in Input stream (VCF file).
- * @param out Output stream (Modified VCF).
- * @param args Command-line arguments specifying behavior.
- * @return true if processing is successful, false otherwise.
+ * If fill_missing is true, we replace missing genotypes with args.default_genotype in the GT field.
  */
-bool handleMissingData(std::istream& in, std::ostream& out, const Arguments& args) {
+static bool processVCF(std::istream& in,
+                       std::ostream& out,
+                       bool fillMissing,
+                       const std::string &defaultGT)
+{
     std::string line;
-    std::vector<std::string> header_fields;
-    bool header_found = false;
+    bool header_found=false;
 
-    while (std::getline(in, line)) {
-        if (line.empty()) {
+    while(std::getline(in, line)) {
+        if(line.empty()) {
             out << "\n";
             continue;
         }
-
-        if (line[0] == '#') {
+        if(line[0]=='#') {
             out << line << "\n";
-            if (line.find("#CHROM") == 0) {
-                // Parse header to identify sample columns
-                header_fields = splitString(line, '\t');
-                if (header_fields.size() > 9) {
-                    // Samples start from the 10th column (index 9)
-                }
-                header_found = true;
+            if(line.rfind("#CHROM",0)==0) {
+                header_found= true;
             }
             continue;
         }
-
-        if (!header_found) {
-            std::cerr << "Error: VCF header (#CHROM) not found before records.\n";
-            return false;
+        if(!header_found) {
+            std::cerr << "Error: VCF data line encountered before #CHROM header.\n";
+            // could continue or skip
+            // we'll just continue
         }
 
-        std::vector<std::string> fields = splitString(line, '\t');
-        if (fields.size() < 9) {
-            std::cerr << "Warning: Skipping invalid VCF line with fewer than 9 fields.\n";
+        // parse columns
+        auto fields= splitString(line, '\t');
+        if(fields.size()<9) {
+            // invalid => pass as is
+            out << line << "\n";
             continue;
         }
-
-        // FORMAT column is the 9th field
-        std::string format = fields[8];
-        std::vector<std::string> format_fields = splitString(format, ':');
-        int gt_index = -1;
-
-        // Identify the index of the GT field within the FORMAT
-        for (size_t i = 0; i < format_fields.size(); ++i) {
-            if (format_fields[i] == "GT") {
-                gt_index = static_cast<int>(i);
+        // the 9th col => format
+        std::string &format= fields[8];
+        auto fmtParts= splitString(format, ':');
+        int gtIndex= -1;
+        for(size_t i=0; i<fmtParts.size(); i++){
+            if(fmtParts[i]=="GT") {
+                gtIndex= i;
                 break;
             }
         }
-
-        if (gt_index == -1) {
-            std::cerr << "Warning: GT field not found in FORMAT column. Skipping line.\n";
+        if(gtIndex<0) {
+            // no GT => just pass line
+            out << line << "\n";
             continue;
         }
-
-        // Process each sample
-        for (size_t i = 9; i < fields.size(); ++i) {
-            std::vector<std::string> sample_data = splitString(fields[i], ':');
-            if (gt_index >= static_cast<int>(sample_data.size())) {
-                // No GT data for this sample
+        // for each sample => fields[9..]
+        for(size_t s=9; s<fields.size(); s++){
+            auto sampleParts= splitString(fields[s], ':');
+            if(gtIndex>= (int)sampleParts.size()) {
+                // missing data for that sample => skip
                 continue;
             }
-
-            std::string genotype = sample_data[gt_index];
-            bool is_missing = false;
-
-            // Determine if genotype is missing
-            if (genotype.empty() || genotype == "." || genotype == "./." || genotype == ".|.") {
-                is_missing = true;
+            std::string &genotype= sampleParts[gtIndex];
+            bool isMissing= false;
+            if(genotype.empty()|| genotype=="."|| genotype=="./."|| genotype==".|.") {
+                isMissing= true;
             }
-
-            if (is_missing) {
-                if (args.fill_missing) {
-                    // Impute with default genotype
-                    sample_data[gt_index] = args.default_genotype;
-                } else {
-                    // Flagging missing data can be customized here.
-                    // For simplicity, we leave the genotype as is.
-                    // Alternatively, annotations can be added to the INFO field.
-                }
-
-                // Reconstruct the sample data
-                std::stringstream ss;
-                for (size_t j = 0; j < sample_data.size(); ++j) {
-                    ss << sample_data[j];
-                    if (j != sample_data.size() - 1) {
-                        ss << ":";
-                    }
-                }
-                fields[i] = ss.str();
+            if(isMissing && fillMissing) {
+                sampleParts[gtIndex]= defaultGT;
             }
+            // rejoin sampleParts
+            std::stringstream sampSS;
+            for(size_t sp=0; sp< sampleParts.size(); sp++){
+                if(sp>0) sampSS<<":";
+                sampSS<< sampleParts[sp];
+            }
+            fields[s]= sampSS.str();
         }
-
-        // Reconstruct the VCF line
-        std::stringstream ss_line;
-        for (size_t i = 0; i < fields.size(); ++i) {
-            ss_line << fields[i];
-            if (i != fields.size() - 1) {
-                ss_line << "\t";
-            }
+        // rejoin entire line
+        std::stringstream lineSS;
+        for(size_t c=0; c<fields.size(); c++){
+            if(c>0) lineSS<<"\t";
+            lineSS<< fields[c];
         }
-        out << ss_line.str() << "\n";
+        out << lineSS.str() << "\n";
     }
 
+    return true;
+}
+
+/**
+ * @brief Processes the VCF file(s) to handle missing genotype data,
+ *        either replacing missing data with a default genotype or leaving them flagged.
+ *
+ * @param args Command-line arguments specifying behavior.
+ * @return true if processing is successful, false otherwise.
+ *
+ * This function reads from each file in args.input_files, or from stdin if none specified,
+ * and writes the processed lines to stdout.
+ */
+bool handleMissingDataAll(const Arguments& args) {
+    if(args.input_files.empty()) {
+        // read from stdin
+        return processVCF(std::cin, std::cout, args.fill_missing, args.default_genotype);
+    } else {
+        // handle multiple files in sequence => we simply process each one, writing to stdout
+        bool firstFile= true;
+        for(size_t i=0; i<args.input_files.size(); i++){
+            std::string &path= (std::string &)args.input_files[i];
+            std::ifstream fin(path);
+            if(!fin.is_open()) {
+                std::cerr<<"Error: cannot open file "<< path << "\n";
+                continue; 
+            }
+            if(!firstFile) {
+                // skip printing the #CHROM header again?
+                // a naive approach: we do a small trick:
+                // read lines until #CHROM => skip them, then pass the rest
+                // or we can pass everything => leads to repeated headers
+                bool foundChrom= false;
+                std::string line;
+                while(std::getline(fin, line)) {
+                    if(line.rfind("#CHROM",0)==0) {
+                        // we've found #CHROM => use processVCF for the remainder
+                        // but we already read one line, so let's put it back in the stream => complicated
+                        // simpler approach: we do a manual approach
+                        // We'll treat that #CHROM line as data for processVCF => but that might produce error
+                        // We'll do: skip header lines
+                        break;
+                    } else if(line.empty()) {
+                        // skip
+                    } else if(line[0]=='#') {
+                        // skip
+                    } else {
+                        // we found data => put it back => complicated
+                        // We'll store it in a buffer
+                        std::stringstream buffer;
+                        buffer<< line << "\n";
+                        // now process the rest
+                        // reinsert?
+                        // We'll do an approach: we store lines in an in-memory stream
+                        std::string nextLine;
+                        while(std::getline(fin,nextLine)) {
+                            buffer<< nextLine<<"\n";
+                        }
+                        // now buffer holds the entire
+                        // pass buffer to processVCF
+                        std::istringstream iss(buffer.str());
+                        processVCF(iss, std::cout, args.fill_missing, args.default_genotype);
+                        fin.close();
+                        goto nextFile;
+                    }
+                }
+                // now we pass the rest
+                processVCF(fin, std::cout, args.fill_missing, args.default_genotype);
+nextFile:
+                fin.close();
+            } else {
+                // first file => pass everything
+                processVCF(fin, std::cout, args.fill_missing, args.default_genotype);
+                fin.close();
+                firstFile= false;
+            }
+        }
+    }
     return true;
 }
 
@@ -194,13 +263,13 @@ int main(int argc, char* argv[]) {
     parseArguments(argc, argv, args);
 
     if (args.fill_missing) {
-        std::cerr << "Info: Missing genotypes will be imputed with genotype: " 
+        std::cerr << "Info: Missing genotypes will be imputed with genotype: "
                   << args.default_genotype << "\n";
     }
     else {
-        std::cerr << "Info: Missing genotypes will be flagged.\n";
+        std::cerr << "Info: Missing genotypes will be left flagged.\n";
     }
 
-    bool success = handleMissingData(std::cin, std::cout, args);
+    bool success = handleMissingDataAll(args);
     return success ? 0 : 1;
 }

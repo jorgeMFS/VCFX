@@ -5,18 +5,26 @@
 #include <string>
 #include <vector>
 
-// VCFXNonRefFilter: Header file for Non-Reference Variant Filter tool
+/*
+ * A fast tool for filtering out any variant whose genotypes are all
+ * homozygous reference in every sample. Multi-ploid aware: a genotype
+ * is considered homozygous reference if all alleles are '0'.
+ */
 class VCFXNonRefFilter {
 public:
-    // Entry point for the tool
+    // entry point with arguments
     int run(int argc, char* argv[]);
 
 private:
-    // Displays the help message
+    // prints usage
     void displayHelp();
 
-    // Filters VCF input to exclude variants with all homozygous reference genotypes
+    // does the actual filter: if every sample is hom-ref => skip
     void filterNonRef(std::istream& in, std::ostream& out);
+
+    // parse genotype subfield; returns true if definitely hom-ref
+    // returns false if any allele is not '0' or if missing
+    bool isHomRef(const std::string &genotypeString) const;
 };
 
 #endif // VCFX_NONREF_FILTER_H
