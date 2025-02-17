@@ -1,43 +1,96 @@
 #include "VCFX_variant_counter.h"
+#include <getopt.h>
 #include <string>
+#include <iostream>
+#include <sstream>
+#include <vector>
 
-// Function to display help message
-void printHelp() {
-    std::cout << "VCFX_variant_counter\n"
-              << "Usage: VCFX_variant_counter [OPTIONS]\n\n"
-              << "Options:\n"
-              << "  --help, -h            Display this help message and exit.\n\n"
-              << "Description:\n"
-              << "  Counts the total number of variants in a VCF file.\n\n"
-              << "Example:\n"
-              << "  ./VCFX_variant_counter < input.vcf > variant_count.txt\n";
+void VCFXVariantCounter::displayHelp(){
+    std::cout <<
+"VCFX_variant_counter: Counts the total number of valid variants in a VCF.\n\n"
+"Usage:\n"
+"  VCFX_variant_counter [options] < input.vcf\n\n"
+"Options:\n"
+"  -h, --help        Show this help.\n"
+"  -s, --strict      Fail on any data line with <8 columns.\n\n"
+"Description:\n"
+"  Reads a VCF from stdin, ignores all header lines (#). For each data line,\n"
+"  we check if it has >=8 columns; if it does, we count it; if fewer columns:\n"
+"   * if --strict => we exit with error,\n"
+"   * otherwise => we skip with a warning.\n"
+"  Finally, we print 'Total Variants: X'.\n\n"
+"Example:\n"
+"  VCFX_variant_counter < input.vcf\n"
+"  VCFX_variant_counter --strict < input.vcf\n";
 }
 
-// Function to count variants in VCF
-int countVariants(std::istream& in) {
-    int count = 0;
-    std::string line;
-    while (std::getline(in, line)) {
-        if (line.empty() || line[0] == '#') {
-            continue; // Skip header lines
+int VCFXVariantCounter::run(int argc, char* argv[]){
+    if(argc==1){
+        displayHelp();
+        return 0;
+    }
+    bool showHelp=false;
+    static struct option long_opts[]={
+        {"help", no_argument, 0,'h'},
+        {"strict", no_argument, 0,'s'},
+        {0,0,0,0}
+    };
+    while(true){
+        int c= ::getopt_long(argc, argv,"hs", long_opts,nullptr);
+        if(c==-1) break;
+        switch(c){
+            case 'h':
+                showHelp=true;
+                break;
+            case 's':
+                strictMode= true;
+                break;
+            default:
+                showHelp=true;
         }
+    }
+    if(showHelp){
+        displayHelp();
+        return 0;
+    }
+    int total= countVariants(std::cin);
+    if(total<0){
+        // indicates an error if strict
+        return 1;
+    }
+    std::cout<<"Total Variants: "<< total <<"\n";
+    return 0;
+}
+
+int VCFXVariantCounter::countVariants(std::istream &in){
+    int count=0;
+    int lineNumber=0;
+    std::string line;
+    while(true){
+        if(!std::getline(in,line)) break;
+        lineNumber++;
+        if(line.empty()) continue;
+        if(line[0]=='#') continue; 
+        // parse columns
+        std::stringstream ss(line);
+        std::vector<std::string> fields;
+        {
+            std::string col;
+            while(std::getline(ss,col,'\t')){
+                fields.push_back(col);
+            }
+        }
+        if(fields.size()<8){
+            if(strictMode){
+                std::cerr<<"Error: line "<< lineNumber <<" has <8 columns.\n";
+                return -1; // indicates error
+            } else {
+                std::cerr<<"Warning: skipping line "<<lineNumber<<" with <8 columns.\n";
+                continue;
+            }
+        }
+        // if we get here => count it
         count++;
     }
     return count;
-}
-
-int main(int argc, char* argv[]) {
-    // Argument parsing for help
-    for (int i = 1; i < argc; ++i) {
-        std::string arg = argv[i];
-        if (arg == "--help" || arg == "-h") {
-            printHelp();
-            return 0;
-        }
-    }
-
-    // Count variants
-    int total_variants = countVariants(std::cin);
-    std::cout << "Total Variants: " << total_variants << std::endl;
-    return 0;
 }

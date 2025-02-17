@@ -4,16 +4,28 @@
 #include <iostream>
 #include <string>
 
-// Function to display help message
-void printHelp();
+class VCFXValidator {
+public:
+    int run(int argc, char* argv[]);
 
-// Function to validate VCF header
-bool validateVCFHeader(const std::string& line);
+private:
+    // If we add advanced checks for e.g. "strict" mode, we store a bool
+    bool strictMode = false;
 
-// Function to validate a single VCF record
-bool validateVCFRecord(const std::string& line, int line_number);
+    // Show usage
+    void displayHelp();
 
-// Function to validate the entire VCF file
-bool validateVCF(std::istream& in, std::ostream& out);
+    // Main function that reads lines from in, does validation
+    bool validateVCF(std::istream &in);
 
-#endif // VCFX_VALIDATOR_H
+    // Validate a meta line "##" and returns true if it’s correct
+    bool validateMetaLine(const std::string &line, int lineNumber);
+
+    // Check #CHROM line
+    bool validateChromHeader(const std::string &line, int lineNumber);
+
+    // Validate a data line with at least 8 columns
+    bool validateDataLine(const std::string &line, int lineNumber);
+};
+
+#endif

@@ -4,10 +4,20 @@
 #include <iostream>
 #include <string>
 
-// Function to count variants in VCF
-int countVariants(std::istream& in);
+class VCFXVariantCounter {
+public:
+    int run(int argc, char* argv[]);
 
-// Function to display help message
-void printHelp();
+private:
+    // If true, any line with <8 columns is a fatal error
+    bool strictMode = false;
 
-#endif // VCFX_VARIANT_COUNTER_H
+    // Show usage
+    void displayHelp();
+
+    // The actual counting function
+    int countVariants(std::istream &in);
+
+};
+
+#endif

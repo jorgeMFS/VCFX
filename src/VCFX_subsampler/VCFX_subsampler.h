@@ -3,14 +3,19 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
-// Function to display help message
-void printHelp();
+class VCFXSubsampler {
+public:
+    int run(int argc, char* argv[]);
 
-// Function to parse command-line arguments
-bool parseArguments(int argc, char* argv[], int& sample_size);
+private:
+    void displayHelp();
 
-// Function to perform reservoir sampling on VCF records
-void subsampleVariants(std::istream& in, std::ostream& out, int sample_size);
+    // Reservoir sampling method
+    void subsampleLines(std::istream &in, std::ostream &out,
+                        int sampleSize, unsigned int seed);
 
-#endif // VCFX_SUBSAMPLER_H
+};
+
+#endif

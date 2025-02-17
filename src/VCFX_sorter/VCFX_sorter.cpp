@@ -1,124 +1,215 @@
 #include "VCFX_sorter.h"
+#include <getopt.h>
+#include <iostream>
 #include <sstream>
 #include <algorithm>
+#include <cctype>
+#include <cstdlib>
 
-// Function to display help message
-void printHelp() {
-    std::cout << "VCFX_sorter\n"
-              << "Usage: VCFX_sorter [OPTIONS]\n\n"
-              << "Options:\n"
-              << "  --help, -h            Display this help message and exit.\n\n"
-              << "Description:\n"
-              << "  Sorts VCF records based on chromosome and position.\n\n"
-              << "Example:\n"
-              << "  ./VCFX_sorter < unsorted.vcf > sorted.vcf\n";
+void VCFXSorter::displayHelp(){
+    std::cout <<
+"VCFX_sorter: Sort a VCF by chromosome and position.\n\n"
+"Usage:\n"
+"  VCFX_sorter [options] < input.vcf > output.vcf\n\n"
+"Options:\n"
+"  -h, --help          Show help.\n"
+"  -n, --natural-chr   Use a natural chromosome sort (chr1 < chr2 < chr10) instead of lexicographic.\n\n"
+"Description:\n"
+"  Reads all data lines into memory, sorts by (CHROM,POS). Preserves all header lines\n"
+"  in original order, and outputs them first, then prints sorted data lines.\n\n"
+"Examples:\n"
+"  1) Lexicographic:\n"
+"     VCFX_sorter < unsorted.vcf > sorted.vcf\n"
+"  2) Natural order:\n"
+"     VCFX_sorter --natural-chr < unsorted.vcf > sorted.vcf\n";
 }
 
-// Implement comparator based on chromosome and position
-bool VCFRecord::operator<(const VCFRecord& other) const {
-    if (chrom != other.chrom) {
-        return chrom < other.chrom;
+// A function to parse chromosome name in a natural manner if possible
+// e.g. "chr10" => (chr,10) so that chr2 < chr10 in numeric sense
+// We'll remove "chr" prefix if present, then parse leading digits
+static bool parseChromNat(const std::string &chrom,
+                          std::string &prefix,
+                          long &num,
+                          std::string &suffix)
+{
+    // e.g. "chr10_gl000" => prefix="chr", then 10, then suffix="_gl000"
+    // We'll do a naive approach: remove leading "chr" or "Chr" or "CHR"
+    std::string c= chrom;
+    // uppercase to check
+    std::string up;
+    up.reserve(c.size());
+    for(char ch: c) up.push_back(std::toupper(ch));
+    if(up.rfind("CHR",0)==0) {
+        // remove "chr" prefix
+        prefix= c.substr(0,3); 
+        c= c.substr(3);
+    } else {
+        prefix="";
     }
-    return pos < other.pos;
-}
-
-// Function to parse a VCF line into a VCFRecord
-bool parseVCFLine(const std::string& line, VCFRecord& record) {
-    std::stringstream ss(line);
-    std::string field;
-    std::vector<std::string> fields;
-
-    while (std::getline(ss, field, '\t')) {
-        fields.push_back(field);
+    // now parse leading digits
+    // e.g. c="10_gl000"
+    // we parse digits until non-digit
+    size_t idx=0;
+    while(idx< c.size() && std::isdigit((unsigned char)c[idx])) idx++;
+    if(idx==0){
+        // means no leading digit
+        num=-1;
+        suffix= c;
+        return true;
     }
-
-    if (fields.size() < 8) {
-        return false; // Invalid VCF line
-    }
-
-    record.chrom = fields[0];
+    // parse c[0..idx-1] as a number
     try {
-        record.pos = std::stoi(fields[1]);
-    } catch (...) {
-        return false; // Invalid position
+        num= std::stol(c.substr(0,idx));
+    } catch(...){
+        return false;
     }
-    record.id = fields[2];
-    record.ref = fields[3];
-    record.alt = fields[4];
-    record.qual = fields[5];
-    record.filter = fields[6];
-    record.info = fields[7];
-
-    // Parse sample fields if present
-    if (fields.size() > 8) {
-        record.samples.assign(fields.begin() + 8, fields.end());
-    }
-
+    suffix= c.substr(idx);
     return true;
 }
 
-// Function to sort VCF records
-void sortVCFRecords(std::vector<VCFRecord>& records) {
-    std::sort(records.begin(), records.end());
+// We'll define the lexCompare
+bool VCFRecord::lexCompare(const VCFRecord &a, const VCFRecord &b){
+    if(a.chrom != b.chrom) return a.chrom < b.chrom;
+    return a.pos < b.pos;
 }
 
-// Function to print sorted VCF records
-void printSortedVCF(const std::vector<VCFRecord>& records, const std::string& header) {
-    std::cout << header << "\n";
-    for (const auto& record : records) {
-        std::cout << record.chrom << "\t"
-                  << record.pos << "\t"
-                  << record.id << "\t"
-                  << record.ref << "\t"
-                  << record.alt << "\t"
-                  << record.qual << "\t"
-                  << record.filter << "\t"
-                  << record.info;
+// We'll define the naturalCompare
+bool VCFRecord::naturalCompare(const VCFRecord &a, const VCFRecord &b){
+    // parse each
+    std::string apfx, asuf, bpfx, bsuf;
+    long anum, bnum;
+    if(!parseChromNat(a.chrom, apfx, anum, asuf) || 
+       !parseChromNat(b.chrom, bpfx, bnum, bsuf)) {
+        // fallback to lex
+        if(a.chrom != b.chrom) return a.chrom < b.chrom;
+        return a.pos< b.pos;
+    }
+    // if prefix differs, lex compare them
+    if(apfx != bpfx) return (apfx< bpfx);
+    // if both have num>=0
+    if(anum>=0 && bnum>=0){
+        if(anum!= bnum) return (anum< bnum);
+        // if suffix differs => lex compare
+        if(asuf!= bsuf) return asuf< bsuf;
+        // else compare pos
+        if(a.pos!= b.pos) return a.pos< b.pos;
+        // all tie
+        return false;
+    } else if(anum>=0 && bnum<0){
+        // numeric < no numeric
+        return true;
+    } else if(anum<0 && bnum>=0){
+        return false;
+    } else {
+        // both have no numeric => fallback to lex compare
+        if(a.chrom!= b.chrom) return a.chrom< b.chrom;
+        return a.pos< b.pos;
+    }
+}
 
-        // Print sample fields if present
-        if (!record.samples.empty()) {
-            for (const auto& sample : record.samples) {
-                std::cout << "\t" << sample;
+int VCFXSorter::run(int argc, char* argv[]){
+    if(argc==1){
+        displayHelp();
+        return 0;
+    }
+    bool showHelp=false;
+    static struct option long_opts[]={
+        {"help", no_argument, 0, 'h'},
+        {"natural-chr", no_argument, 0, 'n'},
+        {0,0,0,0}
+    };
+    while(true){
+        int c= ::getopt_long(argc, argv, "hn", long_opts, nullptr);
+        if(c==-1) break;
+        switch(c){
+            case 'h':
+                showHelp=true;
+                break;
+            case 'n':
+                naturalChromOrder= true;
+                break;
+            default:
+                showHelp=true;
+        }
+    }
+    if(showHelp){
+        displayHelp();
+        return 0;
+    }
+    loadVCF(std::cin);
+    sortRecords();
+    outputVCF(std::cout);
+    return 0;
+}
+
+// loads lines into memory
+void VCFXSorter::loadVCF(std::istream &in){
+    bool foundChrom=false;
+    std::string line;
+    while(true){
+        if(!std::getline(in,line)) break;
+        if(line.empty()){
+            // we keep it in the header or skip? We'll keep it in header
+            headerLines.push_back(line);
+            continue;
+        }
+        if(line[0]=='#'){
+            headerLines.push_back(line);
+            if(line.rfind("#CHROM",0)==0) foundChrom=true;
+            continue;
+        }
+        // parse data
+        std::stringstream ss(line);
+        std::vector<std::string> fields;
+        {
+            std::string col;
+            while(std::getline(ss,col,'\t')){
+                fields.push_back(col);
             }
         }
-        std::cout << "\n";
+        if(fields.size()<8){
+            std::cerr<<"Warning: skipping line with <8 columns.\n";
+            continue;
+        }
+        VCFRecord rec;
+        rec.chrom= fields[0];
+        try {
+            rec.pos= std::stoi(fields[1]);
+        } catch(...){
+            std::cerr<<"Warning: invalid POS => skipping line.\n";
+            continue;
+        }
+        rec.fields= std::move(fields);
+        records.push_back(rec);
+    }
+    if(!foundChrom){
+        std::cerr<<"Warning: no #CHROM line found in input.\n";
     }
 }
 
-int main(int argc, char* argv[]) {
-    // Argument parsing for help
-    for (int i = 1; i < argc; ++i) {
-        std::string arg = argv[i];
-        if (arg == "--help" || arg == "-h") {
-            printHelp();
-            return 0;
-        }
+// sort them in memory
+void VCFXSorter::sortRecords(){
+    if(naturalChromOrder){
+        std::sort(records.begin(), records.end(), VCFRecord::naturalCompare);
+    } else {
+        std::sort(records.begin(), records.end(), VCFRecord::lexCompare);
     }
+}
 
-    std::string line;
-    std::string header;
-    std::vector<VCFRecord> records;
-
-    while (std::getline(std::cin, line)) {
-        if (line.empty()) {
-            continue;
-        }
-
-        if (line[0] == '#') {
-            header = line; // Save header
-            continue;
-        }
-
-        VCFRecord record;
-        if (parseVCFLine(line, record)) {
-            records.push_back(record);
-        } else {
-            std::cerr << "Warning: Skipping invalid VCF line.\n";
-        }
+void VCFXSorter::outputVCF(std::ostream &out){
+    // print all header lines
+    for(auto &l : headerLines){
+        out<< l <<"\n";
     }
-
-    sortVCFRecords(records);
-    printSortedVCF(records, header);
-
-    return 0;
+    // then print sorted data
+    for(auto &rec: records){
+        // rebuild line from rec.fields
+        bool first=true;
+        for(size_t i=0;i< rec.fields.size(); i++){
+            if(!first) out<<"\t";
+            else first=false;
+            out<< rec.fields[i];
+        }
+        out<<"\n";
+    }
 }
