@@ -5,29 +5,47 @@
 #include <string>
 #include <vector>
 
-// Enumeration for comparison operators
-enum class Operator {
-    GREATER_THAN,    // >
-    LESS_THAN,       // <
-    GREATER_EQUAL,   // >=
-    LESS_EQUAL,      // <=
-    EQUAL            // ==
+// Operator kinds
+enum class FilterOp {
+    GT,  // >
+    GE,  // >=
+    LT,  // <
+    LE,  // <=
+    EQ,  // ==
+    NE   // !=
 };
 
-// Structure to hold individual filter criteria
+// We store whether the field is numeric or string, as we do different compares
+enum class FieldType {
+    NUMERIC,
+    STRING
+};
+
+// A single criterion: e.g. "POS > 100", or "FILTER == PASS", or "AF >= 0.1".
 struct FilterCriterion {
-    std::string field;
-    Operator op;
-    double value;
+    std::string fieldName;
+    FilterOp op;
+    double numericValue;    // used if fieldType==NUMERIC
+    std::string stringValue;// used if fieldType==STRING
+    FieldType fieldType;
 };
 
-// Function to parse and populate filter criteria from a string
-bool parseCriteria(const std::string& criteria_str, std::vector<FilterCriterion>& criteria);
+// parse multiple criteria from a single string (separated by semicolon)
+bool parseCriteria(const std::string &criteriaStr,
+                   std::vector<FilterCriterion> &criteria);
 
-// Function to apply all filter criteria to a single VCF record
-bool applyFilters(const std::string& record, const std::vector<FilterCriterion>& criteria);
+// apply the (AND/OR) logic to a single VCF line
+bool recordPasses(const std::string &record,
+                  const std::vector<FilterCriterion> &criteria,
+                  bool useAndLogic);
 
-// Function to process and filter VCF records based on the provided criteria
-void processRecords(std::istream& in, std::ostream& out, const std::vector<FilterCriterion>& criteria);
+// read lines from 'in', filter, write pass lines to 'out'
+void processVCF(std::istream &in,
+                std::ostream &out,
+                const std::vector<FilterCriterion> &criteria,
+                bool useAndLogic);
 
-#endif // VCFX_RECORD_FILTER_H
+// display usage
+void printHelp();
+
+#endif

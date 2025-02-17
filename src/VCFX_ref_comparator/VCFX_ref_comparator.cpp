@@ -1,252 +1,280 @@
 #include "VCFX_ref_comparator.h"
 #include <getopt.h>
-#include <sstream>
 #include <fstream>
+#include <sstream>
 #include <algorithm>
+#include <iostream>
+#include <vector>
+#include <cctype>
 
-// Implementation of VCFXRefComparator
-int VCFXRefComparator::run(int argc, char* argv[]) {
-    // Parse command-line arguments
-    int opt;
-    bool showHelp = false;
+// A small helper to remove whitespace
+static inline void stripSpaces(std::string &s){
+    s.erase(std::remove_if(s.begin(), s.end(),
+        [](unsigned char c){return std::isspace(c);}), s.end());
+}
+
+int VCFXRefComparator::run(int argc, char* argv[]){
+    if(argc==1){
+        displayHelp();
+        return 0;
+    }
+    bool showHelp=false;
     std::string referencePath;
-
-    static struct option long_options[] = {
-        {"help",        no_argument,       0, 'h'},
-        {"reference",   required_argument, 0, 'r'},
-        {0,             0,                 0,  0 }
+    static struct option long_opts[]={
+        {"help", no_argument, 0, 'h'},
+        {"reference", required_argument, 0, 'r'},
+        {0,0,0,0}
     };
-
-    while ((opt = getopt_long(argc, argv, "hr:", long_options, nullptr)) != -1) {
-        switch (opt) {
+    while(true){
+        int c= ::getopt_long(argc, argv,"hr:", long_opts, nullptr);
+        if(c==-1) break;
+        switch(c){
             case 'h':
-                showHelp = true;
+                showHelp=true;
                 break;
             case 'r':
-                referencePath = optarg;
+                referencePath= optarg;
                 break;
             default:
-                showHelp = true;
+                showHelp=true;
         }
     }
-
-    if (showHelp || referencePath.empty()) {
+    if(showHelp){
+        displayHelp();
+        return 0;
+    }
+    if(referencePath.empty()){
+        std::cerr<<"Error: must specify --reference <FASTA>.\n";
         displayHelp();
         return 1;
     }
-
-    // Load the reference genome
-    if (!loadReference(referencePath)) {
-        std::cerr << "Error: Failed to load reference genome from " << referencePath << "\n";
+    if(!loadReference(referencePath)){
+        std::cerr<<"Error: failed to load reference from "<< referencePath<<"\n";
         return 1;
     }
-
-    // Compare VCF variants against the reference genome
-    compareWithReference(std::cin, std::cout);
-
+    compareVCF(std::cin, std::cout);
     return 0;
 }
 
-void VCFXRefComparator::displayHelp() {
-    std::cout << "VCFX_ref_comparator: Compare VCF variants against a reference genome.\n\n";
-    std::cout << "Usage:\n";
-    std::cout << "  VCFX_ref_comparator --reference <reference.fasta> [options]\n\n";
-    std::cout << "Options:\n";
-    std::cout << "  -h, --help                  Display this help message and exit\n";
-    std::cout << "  -r, --reference <file>      Path to the reference genome FASTA file\n\n";
-    std::cout << "Example:\n";
-    std::cout << "  VCFX_ref_comparator --reference reference.fasta < input.vcf > comparison_output.vcf\n";
+void VCFXRefComparator::displayHelp(){
+    std::cout <<
+"VCFX_ref_comparator: Compare VCF REF/ALT with a reference genome.\n\n"
+"Usage:\n"
+"  VCFX_ref_comparator --reference ref.fasta < input.vcf > output.vcf\n\n"
+"Description:\n"
+"  Reads a reference FASTA into memory. Then reads each variant line:\n"
+"   - If chromosome or position is invalid, logs a warning and sets REF_COMPARISON=UNKNOWN_CHROM or INVALID_POS.\n"
+"   - Otherwise, compares the VCF's REF vs the reference substring. Then for each ALT, indicates 'REF_MATCH' if ALT= reference substring or 'NOVEL'.\n"
+"  The result is appended to the 'INFO' field as REF_COMPARISON=...\n\n"
+"Example:\n"
+"  VCFX_ref_comparator --reference genome.fa < in.vcf > out.vcf\n";
 }
 
-bool VCFXRefComparator::loadReference(const std::string& referencePath) {
-    std::ifstream refFile(referencePath);
-    if (!refFile.is_open()) {
-        std::cerr << "Error: Cannot open reference genome file: " << referencePath << "\n";
+bool VCFXRefComparator::loadReference(const std::string &referenceFastaPath){
+    std::ifstream in(referenceFastaPath);
+    if(!in.is_open()){
+        std::cerr<<"Error: cannot open reference "<< referenceFastaPath<<"\n";
         return false;
     }
-
-    std::string line;
-    std::string currentChrom;
-    std::ostringstream sequenceStream;
-
-    while (std::getline(refFile, line)) {
-        if (line.empty()) continue;
-
-        if (line[0] == '>') {
-            // Save the previous chromosome sequence
-            if (!currentChrom.empty()) {
-                referenceGenome[currentChrom] = sequenceStream.str();
-                sequenceStream.str("");
-                sequenceStream.clear();
+    referenceGenome.clear();
+    std::string line, currentChrom;
+    std::ostringstream seq;
+    while(true){
+        if(!std::getline(in, line)) break;
+        if(line.empty()) continue;
+        if(line[0]=='>'){
+            // store old chrom
+            if(!currentChrom.empty()){
+                referenceGenome[currentChrom] = seq.str();
             }
-            // Extract chromosome name
-            std::stringstream ss(line.substr(1));
-            ss >> currentChrom;
+            seq.str("");
+            seq.clear();
+            // parse new chrom
+            currentChrom= line.substr(1);
+            // if there's whitespace, strip it after first token
+            {
+                std::istringstream iss(currentChrom);
+                iss >> currentChrom;
+            }
+            // uppercase
+            std::transform(currentChrom.begin(), currentChrom.end(), currentChrom.begin(), ::toupper);
         } else {
-            // Append sequence lines, removing any whitespace and converting to uppercase
-            line.erase(std::remove_if(line.begin(), line.end(), ::isspace), line.end());
+            stripSpaces(line);
             std::transform(line.begin(), line.end(), line.begin(), ::toupper);
-            sequenceStream << line;
+            seq<< line;
         }
     }
-
-    // Save the last chromosome sequence
-    if (!currentChrom.empty()) {
-        referenceGenome[currentChrom] = sequenceStream.str();
+    if(!currentChrom.empty()){
+        referenceGenome[currentChrom]= seq.str();
     }
-
-    refFile.close();
     return true;
 }
 
-void VCFXRefComparator::compareWithReference(std::istream& vcfInput, std::ostream& vcfOutput) {
+void VCFXRefComparator::compareVCF(std::istream &vcfIn, std::ostream &vcfOut){
+    bool foundChromHeader=false;
+    infoHeaderInserted= false;
     std::string line;
-    bool headerParsed = false;
-    std::vector<std::string> headerFields;
-    int infoIndex = -1;
-
-    while (std::getline(vcfInput, line)) {
-        if (line.empty()) {
-            vcfOutput << "\n";
+    while(true){
+        if(!std::getline(vcfIn, line)) break;
+        if(line.empty()){
+            vcfOut<< line <<"\n";
             continue;
         }
-
-        if (line[0] == '#') {
-            if (line.substr(0, 6) == "#CHROM") {
-                // Parse header line
-                std::stringstream ss(line);
-                std::string field;
-                headerFields.clear();
-                while (std::getline(ss, field, '\t')) {
-                    headerFields.push_back(field);
+        if(line[0]=='#'){
+            // check if #CHROM
+            if(line.rfind("#CHROM",0)==0){
+                foundChromHeader= true;
+                // Insert new INFO line BEFORE we write #CHROM
+                if(!infoHeaderInserted){
+                    vcfOut<<"##INFO=<ID=REF_COMPARISON,Number=1,Type=String,Description=\"Comparison of REF/ALT vs reference genome substring\">\n";
+                    infoHeaderInserted=true;
                 }
-
-                // Add new INFO field for comparison result
-                std::cout << "##INFO=<ID=REF_COMPARISON,Number=1,Type=String,Description=\"Comparison of variant alleles against the reference genome\">\n";
-                
-                // Write modified header
-                std::stringstream newHeader;
-                for (size_t i = 0; i < headerFields.size(); ++i) {
-                    newHeader << headerFields[i];
-                    if (i != headerFields.size() - 1) {
-                        newHeader << "\t";
-                    }
-                }
-                newHeader << "\tREF_COMPARISON\n";
-                vcfOutput << newHeader.str() << "\n";
-                headerParsed = true;
+                vcfOut<< line<<"\n";
             } else {
-                // Write other header lines as-is
-                vcfOutput << line << "\n";
+                vcfOut<< line<<"\n";
             }
             continue;
         }
-
-        if (!headerParsed) {
-            std::cerr << "Error: VCF header line with #CHROM not found.\n";
-            return;
+        if(!foundChromHeader){
+            std::cerr<<"Warning: data line encountered before #CHROM => skipping.\n";
+            continue;
         }
-
-        // Parse VCF data line
+        // parse fields
         std::stringstream ss(line);
-        std::string field;
-        std::vector<std::string> fieldsVec;
-
-        while (std::getline(ss, field, '\t')) {
-            fieldsVec.push_back(field);
+        std::vector<std::string> fields;
+        {
+            std::string col;
+            while(std::getline(ss,col,'\t')){
+                fields.push_back(col);
+            }
         }
-
-        if (fieldsVec.size() < 8) {
-            std::cerr << "Warning: Invalid VCF line with fewer than 8 fields: " << line << "\n";
+        if(fields.size()<8){
+            std::cerr<<"Warning: VCF line has <8 columns => skipping.\n";
             continue;
         }
+        // fields: 0=CHROM,1=POS,2=ID,3=REF,4=ALT,5=QUAL,6=FILTER,7=INFO,...
+        std::string &chrom= fields[0];
+        std::string &posStr= fields[1];
+        std::string &ref= fields[3];
+        std::string &alt= fields[4];
+        std::string &info= fields[7];
 
-        std::string chrom = fieldsVec[0];
-        int pos = std::stoi(fieldsVec[1]);
-        std::string id = fieldsVec[2];
-        std::string ref = fieldsVec[3];
-        std::string alt = fieldsVec[4];
-        std::string qual = fieldsVec[5];
-        std::string filter = fieldsVec[6];
-        std::string info = fieldsVec[7];
+        // uppercase chrom
+        std::transform(chrom.begin(), chrom.end(), chrom.begin(), ::toupper);
 
-        // Retrieve reference allele from the reference genome
-        if (referenceGenome.find(chrom) == referenceGenome.end()) {
-            std::cerr << "Warning: Chromosome " << chrom << " not found in reference genome.\n";
-            info += ";REF_COMPARISON=UNKNOWN_CHROM";
-            vcfOutput << line << "\t" << "UNKNOWN_CHROM" << "\n";
+        int pos=0;
+        try{
+            pos= std::stoi(posStr);
+        }catch(...){
+            // out of range
+            if(!info.empty() && info.back()!=';') info+=';';
+            info+= "REF_COMPARISON=INVALID_POS";
+            // rewrite line
+            std::ostringstream newLine;
+            for(size_t i=0; i<8; i++){
+                newLine<< fields[i];
+                if(i<7) newLine<<"\t";
+            }
+            // update info field
+            newLine<<"\t"<< info;
+            // any other columns
+            for(size_t i=8; i<fields.size(); i++){
+                newLine<<"\t"<< fields[i];
+            }
+            vcfOut<< newLine.str()<<"\n";
             continue;
         }
-
-        const std::string& refSeq = referenceGenome[chrom];
-        if (pos < 1 || pos > static_cast<int>(refSeq.size())) {
-            std::cerr << "Warning: Position " << pos << " out of bounds for chromosome " << chrom << ".\n";
-            info += ";REF_COMPARISON=INVALID_POS";
-            vcfOutput << line << "\t" << "INVALID_POS" << "\n";
+        // find reference
+        auto it= referenceGenome.find(chrom);
+        if(it== referenceGenome.end()){
+            // unknown chrom
+            if(!info.empty() && info.back()!=';') info+=';';
+            info+= "REF_COMPARISON=UNKNOWN_CHROM";
+            // rewrite line
+            std::ostringstream newLine;
+            for(size_t i=0; i<8; i++){
+                newLine<< fields[i];
+                if(i<7) newLine<<"\t";
+            }
+            newLine<<"\t"<< info;
+            for(size_t i=8; i<fields.size(); i++){
+                newLine<<"\t"<< fields[i];
+            }
+            vcfOut<< newLine.str()<<"\n";
             continue;
         }
+        const std::string &seq= it->second;
+        if(pos<1 || pos>(int)seq.size()){
+            // invalid pos
+            if(!info.empty() && info.back()!=';') info+=';';
+            info+= "REF_COMPARISON=INVALID_POS";
+            // rewrite
+            std::ostringstream newLine;
+            for(size_t i=0; i<8; i++){
+                newLine<< fields[i];
+                if(i<7) newLine<<"\t";
+            }
+            newLine<<"\t"<< info;
+            for(size_t i=8; i<fields.size(); i++){
+                newLine<<"\t"<< fields[i];
+            }
+            vcfOut<< newLine.str()<<"\n";
+            continue;
+        }
+        // ref from genome
+        std::string genomeRef= seq.substr(pos-1, ref.size()); // 1-based
+        // uppercase
+        std::transform(ref.begin(), ref.end(), ref.begin(), ::toupper);
 
-        // Extract reference allele from the reference genome
-        std::string refFromGenome = refSeq.substr(pos - 1, ref.size());
+        // compare ref vs genomeRef
+        bool refMatch= (ref== genomeRef);
 
-        // Compare VCF ref allele with reference genome
-        bool refMatch = (ref == refFromGenome);
-
-        // Compare alternate alleles with reference genome
+        // split alt by comma
         std::vector<std::string> altAlleles;
-        std::stringstream alt_ss(alt);
-        std::string alt_allele;
-        while (std::getline(alt_ss, alt_allele, ',')) {
-            altAlleles.push_back(alt_allele);
-        }
-
-        std::vector<std::string> comparisonResults;
-        for (const auto& altA : altAlleles) {
-            if (altA == refFromGenome) {
-                comparisonResults.push_back("REF_MATCH");
-            } else {
-                comparisonResults.push_back("NOVEL");
+        {
+            std::stringstream as(alt);
+            std::string a;
+            while(std::getline(as,a,',')){
+                std::transform(a.begin(), a.end(), a.begin(), ::toupper);
+                altAlleles.push_back(a);
             }
         }
-
-        // Prepare comparison result string
+        // for each alt, see if alt== genomeRef => "REF_MATCH" else "NOVEL"
+        std::vector<std::string> comparisons;
+        for(auto &a: altAlleles){
+            if(a== genomeRef) comparisons.push_back("REF_MATCH");
+            else comparisons.push_back("NOVEL");
+        }
+        // build comparisonStr
         std::string comparisonStr;
-        for (size_t i = 0; i < comparisonResults.size(); ++i) {
-            comparisonStr += comparisonResults[i];
-            if (i != comparisonResults.size() - 1) {
-                comparisonStr += ",";
-            }
+        for(size_t i=0; i< comparisons.size(); i++){
+            if(i>0) comparisonStr+=",";
+            comparisonStr+= comparisons[i];
         }
-
-        // Append to INFO field
-        if (info.back() != ';') {
-            info += ";";
+        if(!info.empty() && info.back()!=';') info+=';';
+        // e.g. "REF_COMPARISON=REF_MATCH,REF_MATCH" or "NOVEL" etc.
+        if(!refMatch){
+            // optionally label mismatch => we won't specifically do that
+            // the alt status is in the comparisons
         }
-        info += "REF_COMPARISON=" + comparisonStr;
+        info+= "REF_COMPARISON=" + comparisonStr;
 
-        // Reconstruct VCF line with updated INFO field
-        std::stringstream newLine;
-        for (size_t i = 0; i < 8; ++i) {
-            newLine << fieldsVec[i] << "\t";
+        // rebuild line
+        std::ostringstream outLine;
+        for(int i=0;i<8;i++){
+            outLine<< fields[i];
+            if(i<7) outLine<<"\t";
         }
-        newLine << info << "\t";
-
-        // Append any additional fields (e.g., FORMAT and samples)
-        for (size_t i = 8; i < fieldsVec.size(); ++i) {
-            newLine << fieldsVec[i];
-            if (i != fieldsVec.size() - 1) {
-                newLine << "\t";
-            }
+        outLine<<"\t"<< info;
+        // any other columns
+        for(size_t i=8; i< fields.size(); i++){
+            outLine<<"\t"<< fields[i];
         }
-
-        // Append the comparison result
-        newLine << "\t" << comparisonStr;
-
-        vcfOutput << newLine.str() << "\n";
+        vcfOut<< outLine.str()<<"\n";
     }
 }
 
-int main(int argc, char* argv[]) {
-    VCFXRefComparator refComparator;
-    return refComparator.run(argc, argv);
+int main(int argc, char* argv[]){
+    VCFXRefComparator refComp;
+    return refComp.run(argc, argv);
 }

@@ -3,27 +3,36 @@
 
 #include <iostream>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
-// VCFXRegionSubsampler: Header file for Region-based Subsampling Tool
+// Each region is (start, end), inclusive, 1-based
+struct Region {
+    int start;
+    int end;
+};
+
+// VCFXRegionSubsampler: 
+// Reads a BED file with multiple lines => chromosome -> sorted intervals
+// Then reads a VCF and keeps lines whose POS is within any interval for that CHROM.
 class VCFXRegionSubsampler {
 public:
-    // Entry point for the tool
     int run(int argc, char* argv[]);
 
 private:
-    // Displays the help message
     void displayHelp();
+    bool loadRegions(const std::string &bedFile,
+                     std::unordered_map<std::string, std::vector<Region>> &chromRegions);
+    // after loading, we sort the intervals for each chromosome, possibly merge them
+    void sortAndMergeIntervals(std::unordered_map<std::string, std::vector<Region>> &chromRegions);
 
-    // Loads regions from a BED file into a map
-    bool loadRegions(const std::string& bedFilePath, std::unordered_map<std::string, std::vector<std::pair<int, int>>>& regions);
+    bool isInAnyRegion(const std::string &chrom, int pos) const;
 
-    // Checks if a variant falls within any of the specified regions
-    bool isVariantInRegions(const std::string& chrom, int pos, const std::unordered_map<std::string, std::vector<std::pair<int, int>>>& regions);
+    // The map from chrom => sorted intervals
+    std::unordered_map<std::string, std::vector<Region>> regions;
 
-    // Subsamples variants from the VCF input based on regions
-    void subsampleRegions(std::istream& in, std::ostream& out, const std::unordered_map<std::string, std::vector<std::pair<int, int>>>& regions);
+    void processVCF(std::istream &in, std::ostream &out);
+
 };
 
-#endif // VCFX_REGION_SUBSAMPLER_H
+#endif
