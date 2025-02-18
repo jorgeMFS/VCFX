@@ -1,29 +1,34 @@
-cmake_minimum_required(VERSION 3.10)
-project(VCFX)
+cmake_minimum_required(VERSION 3.14)
+project(VCFX CXX)
+
+# Option to build WebAssembly with Emscripten
+option(BUILD_WASM "Build with emscripten toolchain" OFF)
+
+if(BUILD_WASM)
+    # Adjust this path for your Emscripten installation:
+    set(CMAKE_TOOLCHAIN_FILE "/path/to/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" CACHE FILEPATH "Emscripten toolchain" FORCE)
+    message(STATUS "Building for WebAssembly using Emscripten toolchain.")
+endif()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Help find zlib on macOS with Homebrew
-if(APPLE)
-    list(APPEND CMAKE_PREFIX_PATH "/usr/local/opt/zlib")
-    # For Apple Silicon (M1/M2)
-    list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/zlib")
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
 endif()
 
-find_package(ZLIB REQUIRED)
+# If needed, find zlib or other libs
+# find_package(ZLIB REQUIRED)
 
-# ARM-specific optimizations
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm|aarch")
+# If building natively on ARM
+if((NOT BUILD_WASM) AND (CMAKE_SYSTEM_PROCESSOR MATCHES "arm|aarch64"))
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcpu=native -O3")
 endif()
 
-# Add clean target
-add_custom_target(clean-all
-    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_clean.cmake
-)
+enable_testing()
 
-include_directories(include)
-
+# We keep a top-level 'src' folder that has all subfolders for each tool
 add_subdirectory(src)
+
+# A separate directory for unit tests
 add_subdirectory(tests)
