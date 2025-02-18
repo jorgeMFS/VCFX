@@ -166,3 +166,9 @@ void VCFXQualityAdjuster::adjustQualityScores(std::istream &in, std::ostream &ou
         out<< oss.str()<<"\n";
     }
 }
+
+
+int main(int argc, char* argv[]){
+    VCFXQualityAdjuster app;
+    return app.run(argc, argv);
+}

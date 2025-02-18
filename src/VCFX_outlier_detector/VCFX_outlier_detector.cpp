@@ -248,3 +248,8 @@ void VCFXOutlierDetector::detectOutliers(std::istream &in,
         }
     }
 }
+
+int main(int argc, char* argv[]){
+    VCFXOutlierDetector app;
+    return app.run(argc, argv);
+}

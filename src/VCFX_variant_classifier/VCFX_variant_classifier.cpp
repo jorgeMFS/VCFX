@@ -246,3 +246,8 @@ void VCFXVariantClassifier::classifyStream(std::istream &in, std::ostream &out){
         }
     }
 }
+
+int main(int argc, char* argv[]){
+    VCFXVariantClassifier app;
+    return app.run(argc, argv);
+}

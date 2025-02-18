@@ -149,3 +149,9 @@ void VCFXSubsampler::subsampleLines(std::istream &in, std::ostream &out,
         out<< r<<"\n";
     }
 }
+
+
+int main(int argc, char* argv[]){
+    VCFXSubsampler app;
+    return app.run(argc, argv);
+}

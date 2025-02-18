@@ -318,3 +318,8 @@ void VCFXFastaConverter::convertVCFtoFasta(std::istream& in, std::ostream& out) 
         }
     }
 }
+
+int main(int argc, char* argv[]){
+    VCFXFastaConverter app;
+    return app.run(argc, argv);
+}

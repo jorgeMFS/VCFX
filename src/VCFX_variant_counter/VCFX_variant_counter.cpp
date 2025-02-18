@@ -94,3 +94,8 @@ int VCFXVariantCounter::countVariants(std::istream &in){
     }
     return count;
 }
+
+int main(int argc, char* argv[]) {
+    VCFXVariantCounter app;
+    return app.run(argc, argv);
+}

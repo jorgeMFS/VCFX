@@ -130,3 +130,8 @@ void VCFXNonRefFilter::filterNonRef(std::istream& in, std::ostream& out){
         if(!allHomRef) out<< line <<"\n";
     }
 }
+
+int main(int argc, char* argv[]){
+    VCFXNonRefFilter app;
+    return app.run(argc, argv);
+}

@@ -203,3 +203,8 @@ void VCFXSvHandler::handleStructuralVariants(std::istream &in, std::ostream &out
         }
     }
 }
+
+int main(int argc, char* argv[]){
+    VCFXSvHandler app;
+    return app.run(argc, argv);
+}

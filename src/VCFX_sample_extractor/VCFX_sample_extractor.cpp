@@ -213,3 +213,8 @@ void VCFXSampleExtractor::extractSamples(std::istream &in, std::ostream &out,
         out<< newLine.str()<<"\n";
     }
 }
+
+int main(int argc, char* argv[]){
+    VCFXSampleExtractor app;
+    return app.run(argc, argv);
+}

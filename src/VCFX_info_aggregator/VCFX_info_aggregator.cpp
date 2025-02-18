@@ -208,3 +208,9 @@ void VCFXInfoAggregator::aggregateInfo(std::istream& in,
         out << field << ": Sum=" << sum << ", Average=" << mean << "\n";
     }
 }
+
+
+int main(int argc, char* argv[]){
+    VCFXInfoAggregator app;
+    return app.run(argc, argv);
+}

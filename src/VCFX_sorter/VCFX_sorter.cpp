@@ -213,3 +213,8 @@ void VCFXSorter::outputVCF(std::ostream &out){
         out<<"\n";
     }
 }
+
+int main(int argc, char* argv[]){
+    VCFXSorter app;
+    return app.run(argc, argv);
+}
