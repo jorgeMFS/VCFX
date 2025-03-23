@@ -1,0 +1,11 @@
+##fileformat=VCFv4.2
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
+##INFO=<ID=MISSING_GENOTYPES,Number=0,Type=Flag,Description="Flag indicating at least one sample has missing genotype data">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE1	SAMPLE2	SAMPLE3
+1	100	.	A	G	50	PASS	DP=30	GT:AD	0/0:20,0	0/1:10,10	1/1:0,20
+1	200	.	C	T	60	PASS	DP=25;MISSING_GENOTYPES=1	GT:AD	0/1:15,10	./.:.	1/1:0,25
+1	300	.	G	A	70	PASS	DP=40;MISSING_GENOTYPES=1	GT:AD	0/1:20,20	0/1:18,22	.
+1	400	.	T	C	80	PASS	DP=35;MISSING_GENOTYPES=1	GT:AD	0|1:15,20	./1:.	.|.:.
+1	500	.	A	G	90	PASS	DP=45	GT:AD	0/0:45,0	0/0:40,0	0/0:42,0 

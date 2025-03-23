@@ -1,0 +1,15 @@
+VCFX_missing_detector: Detect variants with missing sample genotypes.
+
+Usage:
+  VCFX_missing_detector [options] < input.vcf > flagged.vcf
+
+Options:
+  -h, --help    Display this help message and exit
+
+Description:
+  Reads a VCF from stdin, checks each sample's genotype for missing data,
+  and if any sample has a missing genotype, appends 'MISSING_GENOTYPES=1'
+  in the INFO field.
+
+Example:
+  VCFX_missing_detector < input.vcf > flagged_output.vcf 

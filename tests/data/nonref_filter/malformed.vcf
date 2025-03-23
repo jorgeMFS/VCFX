@@ -1,0 +1,8 @@
+##fileformat=VCFv4.2
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE1
+1	100	.	A	G	50	PASS	DP=30	GT:AD	0/0:20,0
+A malformed line with no tabs
+1	200	.	C	T	60	PASS	DP=35
+1	300	.	G	A	70	PASS	DP=40	DP	0/0
+1	400	.	T	C	80	PASS	DP=45	GT	XXX 

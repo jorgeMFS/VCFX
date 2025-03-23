@@ -30,5 +30,12 @@ bash test_multiallelic_splitter.sh
 bash test_sv_handler.sh
 bash test_sorter.sh
 bash test_position_subsetter.sh
+bash test_haplotype_extractor.sh
+bash test_ref_comparator.sh
+bash test_phred_filter.sh
+bash test_missing_detector.sh
+bash test_nonref_filter.sh
+bash test_outlier_detector.sh
+bash test_population_filter.sh
 
 echo "All tests completed successfully!"

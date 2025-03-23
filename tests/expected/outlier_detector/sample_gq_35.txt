@@ -1,0 +1,4 @@
+#Sample	Average_GQ
+SAMPLE1	50
+SAMPLE2	NA
+SAMPLE3	NA 

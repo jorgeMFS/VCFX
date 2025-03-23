@@ -114,9 +114,14 @@ bool VCFXOutlierDetector::parseMetricFromGenotype(const std::string &genotypeFie
                                                   const std::string &metric,
                                                   double &value) const
 {
-    std::stringstream ss(genotypeField);
+    if (genotypeField.empty() || genotypeField == ".") {
+        return false;
+    }
+
+    // First, try the equals-sign based approach for non-standard formats
+    std::stringstream ss1(genotypeField);
     std::string token;
-    while(std::getline(ss, token, ':')) {
+    while(std::getline(ss1, token, ':')) {
         auto eq= token.find('=');
         if(eq!=std::string::npos) {
             auto left= token.substr(0,eq);
@@ -131,6 +136,17 @@ bool VCFXOutlierDetector::parseMetricFromGenotype(const std::string &genotypeFie
             }
         }
     }
+
+    // If that didn't work, check if we're looking for a standard field in the FORMAT column
+    // Need to find the corresponding FORMAT field and extract the value at that position
+    std::vector<std::string> fieldValues;
+    std::stringstream ss2(genotypeField);
+    while(std::getline(ss2, token, ':')) {
+        fieldValues.push_back(token);
+    }
+
+    // We need to check the FORMAT column, which we don't have here
+    // Return false and handle FORMAT fields at the variant level in detectOutliers
     return false;
 }
 
@@ -214,21 +230,57 @@ void VCFXOutlierDetector::detectOutliers(std::istream &in,
             }
             if(fields.size()<9) continue;
             std::string &format= fields[8];
-            // parse format subfields? We'll do a quick parse
-            // If the user is looking for "DP=###" or "GQ=###" => parse parseMetricFromGenotype
-            // We do that for each sample
-            // We do not confirm the 'metric' is in the format header => naive approach
-            // We'll attempt parse
+            
+            // Parse the FORMAT field to find the index of our metric
+            int metricIndex = -1;
+            std::vector<std::string> formatFields;
+            {
+                std::stringstream fmt(format);
+                std::string token;
+                int idx = 0;
+                while(std::getline(fmt, token, ':')) {
+                    if(token == metric) {
+                        metricIndex = idx;
+                    }
+                    formatFields.push_back(token);
+                    idx++;
+                }
+            }
+            
+            // Get sample columns
             std::vector<std::string> sampleColumns;
             for(size_t i=9;i<fields.size();i++){
                 sampleColumns.push_back(fields[i]);
             }
+            
+            // Process each sample
             for(size_t s=0;s<sampleNames.size() && s<sampleColumns.size();s++){
                 double val=0.0;
+                // First, try parsing with the custom equals-sign based approach
                 if(parseMetricFromGenotype(sampleColumns[s], metric, val)) {
-                    sums[sampleNames[s]]+= val;
+                    sums[sampleNames[s]] += val;
                     counts[sampleNames[s]]++;
-                    anyMetricFound= true;
+                    anyMetricFound = true;
+                }
+                // If that didn't work and we found the metric in FORMAT, try standard approach
+                else if(metricIndex >= 0) {
+                    std::vector<std::string> sampleValues;
+                    std::stringstream sampleStream(sampleColumns[s]);
+                    std::string sampleToken;
+                    while(std::getline(sampleStream, sampleToken, ':')) {
+                        sampleValues.push_back(sampleToken);
+                    }
+                    
+                    if(metricIndex < (int)sampleValues.size() && sampleValues[metricIndex] != "." && !sampleValues[metricIndex].empty()) {
+                        try {
+                            val = std::stod(sampleValues[metricIndex]);
+                            sums[sampleNames[s]] += val;
+                            counts[sampleNames[s]]++;
+                            anyMetricFound = true;
+                        } catch(...) {
+                            // Invalid numeric value, skip
+                        }
+                    }
                 }
             }
         }
@@ -240,6 +292,8 @@ void VCFXOutlierDetector::detectOutliers(std::istream &in,
                 double avg= sums[nm]/ (double)counts[nm];
                 if(avg> threshold) {
                     out<< nm<<"\t"<< avg<<"\n";
+                } else {
+                    out<< nm<<"\tNA\n";
                 }
             }
         }

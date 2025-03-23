@@ -85,18 +85,34 @@ bool HaplotypeExtractor::phaseIsConsistent(const HaplotypeBlock& block,
         // mismatch in #samples => inconsistent
         return false;
     }
+    
+    // Debug the whole process
+    std::cerr << "Checking phase consistency\n";
 
     for (size_t s=0; s<block.haplotypes.size(); s++) {
         // block's haplotypes[s] is a big string with variants separated by '|', e.g. "0|1|0|1"
         // let's get the last chunk after the last '|'
         const std::string &allVar = block.haplotypes[s];
-        size_t lastPos = allVar.rfind('|');
+        
+        // The haplotype string is stored like: "0|1|1|0|0|1" where each pair is one genotype
+        // We need to extract the last genotype, which is the last 3 characters
         std::string lastGT;
-        if (lastPos == std::string::npos) {
-            lastGT = allVar; 
+        if (allVar.size() < 3) {
+            lastGT = allVar;
         } else {
-            lastGT = allVar.substr(lastPos+1);
+            // Get the last genotype (3 characters: allele|allele)
+            size_t lastPipePos = allVar.rfind('|', allVar.size() - 2);
+            if (lastPipePos == std::string::npos) {
+                // No pipe found in position except the last one, so this is the first genotype
+                lastGT = allVar;
+            } else {
+                // Extract the last genotype (e.g., "0|1" from "0|1|1|0")
+                lastGT = allVar.substr(lastPipePos - 1);
+            }
         }
+        
+        std::cerr << "Sample " << s << " last GT: " << lastGT << " new GT: " << newGenotypes[s] << "\n";
+
         // compare lastGT with newGenotypes[s]
         // if they differ in a 2-allele reversed manner, we might call it inconsistent
         // e.g. lastGT="0|1", new="1|0"
@@ -105,15 +121,26 @@ bool HaplotypeExtractor::phaseIsConsistent(const HaplotypeBlock& block,
         if (lastGT.size()<3 || newGenotypes[s].size()<3) {
             continue;
         }
+        
+        // Get the first and second alleles for comparison
+        char lastAllele1 = (lastGT.size() >= 1) ? lastGT[lastGT.size() - 3] : '.';
+        char lastAllele2 = (lastGT.size() >= 1) ? lastGT[lastGT.size() - 1] : '.';
+        char newAllele1 = newGenotypes[s][0];
+        char newAllele2 = newGenotypes[s][2];
+        
+        std::cerr << "Comparing alleles: " << lastAllele1 << "|" << lastAllele2 
+                  << " vs " << newAllele1 << "|" << newAllele2 << "\n";
+        
         // If e.g. lastGT=="0|1", newGenotypes=="1|0" => inconsistent
-        // We do a naive check
-        if (lastGT[0]!= newGenotypes[s][0] && lastGT[2]!=newGenotypes[s][2]) {
-            // 0|1 vs 1|0 => might consider that a flip => for real phasing we'd want a consistent
-            // approach. We'll just call it inconsistent for demonstration
+        // Check for phase flips - when both alleles flip positions
+        if (lastAllele1 != newAllele1 && lastAllele2 != newAllele2 && 
+            lastAllele1 == newAllele2 && lastAllele2 == newAllele1) {
+            std::cerr << "Phase flip detected in sample " << s << "\n";
             return false;
         }
     }
 
+    std::cerr << "All phases consistent\n";
     return true;
 }
 

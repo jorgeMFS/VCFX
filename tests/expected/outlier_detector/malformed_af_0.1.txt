@@ -1,0 +1,2 @@
+#CHROM	POS	ID	AF
+1	400	.	0.2 

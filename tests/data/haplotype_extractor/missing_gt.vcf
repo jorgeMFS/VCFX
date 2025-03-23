@@ -1,0 +1,8 @@
+##fileformat=VCFv4.2
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
+##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE1	SAMPLE2
+1	100	.	A	G	60	PASS	DP=20	GQ:DP	30:15	35:18
+1	150	.	C	T	70	PASS	DP=25	GQ:DP	40:20	45:22
+1	200	.	G	A	80	PASS	DP=30	GQ:DP	50:25	55:28 

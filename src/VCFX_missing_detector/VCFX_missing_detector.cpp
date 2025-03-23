@@ -63,9 +63,18 @@ void VCFXMissingDetector::displayHelp() {
  *   - The entire string is '.' or './.' or '.|.'
  *   - Either allele is '.' => e.g. '0/.', './1'
  */
-static bool genotypeIsMissing(const std::string &gt) {
-    if(gt.empty()) return true;
+static bool genotypeIsMissing(const std::string &gt_field) {
+    if(gt_field.empty()) return true;
+    
+    // Extract just the genotype part (before the first colon)
+    std::string gt = gt_field;
+    size_t colon_pos = gt_field.find(':');
+    if(colon_pos != std::string::npos) {
+        gt = gt_field.substr(0, colon_pos);
+    }
+    
     if(gt=="." || gt=="./." || gt==".|.") return true;
+    
     // also check partial => find slash or pipe
     std::string tmp(gt);
     for(char &c: tmp) {
@@ -117,11 +126,50 @@ void VCFXMissingDetector::detectMissingGenotypes(std::istream& in, std::ostream&
             continue;
         }
 
+        // Check FORMAT field (index 8) to find the position of GT
+        int gtIndex = -1;
+        std::string format = fields[8];
+        if (!format.empty()) {
+            std::istringstream format_ss(format);
+            std::string token;
+            int index = 0;
+            while (std::getline(format_ss, token, ':')) {
+                if (token == "GT") {
+                    gtIndex = index;
+                    break;
+                }
+                index++;
+            }
+        }
+
         // gather sample columns from index=9 onward
-        bool hasMissing= false;
-        for(size_t s=9; s<fields.size(); s++){
-            if(genotypeIsMissing(fields[s])) {
-                hasMissing= true;
+        bool hasMissing = false;
+        for(size_t s=9; s<fields.size(); s++) {
+            std::string sample_value = fields[s];
+            
+            // If GT is the only FORMAT field, use the entire sample value
+            // Otherwise, extract just the GT part based on its index
+            std::string gt;
+            if (format == "GT") {
+                gt = sample_value;
+            } else if (gtIndex >= 0) {
+                std::istringstream sample_ss(sample_value);
+                std::string token;
+                int index = 0;
+                while (std::getline(sample_ss, token, ':')) {
+                    if (index == gtIndex) {
+                        gt = token;
+                        break;
+                    }
+                    index++;
+                }
+            } else {
+                // No GT field found, can't determine if missing
+                continue;
+            }
+            
+            if(genotypeIsMissing(gt)) {
+                hasMissing = true;
                 break;
             }
         }
