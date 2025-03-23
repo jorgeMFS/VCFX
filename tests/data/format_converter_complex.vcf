@@ -1,0 +1,10 @@
+##fileformat=VCFv4.2
+##source=VCFX
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
+##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the variant">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE1
+chr1	10000	del1	AGCTAGCT	A	100	PASS	SVTYPE=DEL;END=10008	GT	0/1
+chr2	20000	ins1	T	TAACCTTGGCC	120	PASS	SVTYPE=INS	GT	1/1
+chr3	30000	dup1	G	<DUP>	80	PASS	SVTYPE=DUP;END=35000	GT	0/1
+chr4	40000	inv1	T	<INV>	60	PASS	SVTYPE=INV;END=45000	GT	0/1
+chrX	15000	cnv1	C	<CN0>	70	PASS	SVTYPE=CNV;END=20000	GT	1/1

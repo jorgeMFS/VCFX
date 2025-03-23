@@ -1,0 +1,16 @@
+##fileformat=VCFv4.2
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
+##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele Count">
+##INFO=<ID=MLEAF,Number=A,Type=Float,Description="Maximum likelihood expectation of allele frequency">
+##INFO=<ID=END,Number=1,Type=Integer,Description="End position">
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
+##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">
+##FORMAT=<ID=PL,Number=G,Type=Integer,Description="Phred-scaled genotype likelihoods">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE1	SAMPLE2	SAMPLE3
+chr1	10000	rs123	A	G,T,C	100	PASS	DP=80;AF=0.2,0.1,0.05;AC=10,5,3;MLEAF=0.18,0.11,0.06	GT:AD:DP:GQ:PL	0/1:30,10,0,0:40:30:30,0,100,40,100,100,50,120,130,150	0/2:35,0,8,0:43:25:25,50,100,0,100,20,60,110,115,140	1/3:25,12,0,7:44:35:35,0,120,50,140,160,0,130,150,0
+chr2	20000	rs456	CT	C,CTT,CTTT	90	PASS	DP=70;AF=0.15,0.08,0.04;AC=8,4,2;MLEAF=0.13,0.09,0.03	GT:AD:DP:GQ:PL	0/1:25,8,0,0:33:22:22,0,90,35,90,90,40,110,115,130	0/3:30,0,0,5:35:18:18,40,90,45,95,110,0,80,90,0	2/3:22,0,6,4:32:28:28,35,85,0,80,105,0,90,0,0
+chr3	30000	sv1	G	<DEL>,<INS>	80	PASS	DP=60;AF=0.12,0.06;AC=6,3;MLEAF=0.11,0.07;END=40000;SVTYPE=DEL	GT:AD:DP:GQ:PL	0/1:20,6,0:26:15:15,0,80,25,80,90	0/2:18,0,4:22:12:12,30,70,0,70,10	1/2:15,8,3:26:20:20,0,60,0,65,0

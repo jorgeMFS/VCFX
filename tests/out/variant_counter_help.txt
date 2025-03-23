@@ -1,0 +1,19 @@
+VCFX_variant_counter: Counts the total number of valid variants in a VCF.
+
+Usage:
+  VCFX_variant_counter [options] < input.vcf
+
+Options:
+  -h, --help        Show this help.
+  -s, --strict      Fail on any data line with <8 columns.
+
+Description:
+  Reads a VCF from stdin, ignores all header lines (#). For each data line,
+  we check if it has >=8 columns; if it does, we count it; if fewer columns:
+   * if --strict => we exit with error,
+   * otherwise => we skip with a warning.
+  Finally, we print 'Total Variants: X'.
+
+Example:
+  VCFX_variant_counter < input.vcf
+  VCFX_variant_counter --strict < input.vcf

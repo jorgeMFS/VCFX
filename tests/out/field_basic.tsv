@@ -1,0 +1,6 @@
+CHROM	POS	ID	REF	ALT
+chr1	10000	rs123	A	G
+chr1	20000	rs456	C	T
+chr1	30000	rs789	G	A
+chr1	40000	.	T	C
+chr1	50000	rs102	G	T

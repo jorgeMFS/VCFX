@@ -1,0 +1,24 @@
+VCFX_sv_handler: Filter or modify structural variants in a VCF.
+
+Usage:
+  VCFX_sv_handler [options] < input.vcf > output.vcf
+
+Options:
+  -h, --help           Show this help.
+  -f, --sv-filter-only Keep only lines that have 'SVTYPE=' in their INFO.
+  -m, --sv-modify      Modify the INFO field of structural variants.
+
+Description:
+  * If --sv-filter-only is set, we skip lines without structural variant.
+  * If --sv-modify is set, we add 'SV_VALIDATED=1', 'SV_SIZE=...' for DEL/DUP.
+    Also 'INV_TYPE=PARALLEL' for INV, 'BND_ORIENTATION=PAIR' for BND. etc.
+  * If both are set, we do both filtering and modification.
+  * Non-SV lines are only included if !filterOnly.
+
+Example:
+  1) Keep only structural variants:
+     VCFX_sv_handler --sv-filter-only < in.vcf > out.vcf
+  2) Modify structural variants:
+     VCFX_sv_handler --sv-modify < in.vcf > out.vcf
+  3) Do both:
+     VCFX_sv_handler --sv-filter-only --sv-modify < in.vcf > out.vcf

@@ -1,0 +1,10 @@
+##fileformat=VCFv4.2
+##source=VCFX
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+chr1	10000	rs1	A	G	100	PASS	.
+chr2	15000	rs2	C	T	90	PASS	.
+chr1	25000	rs3	G	A	80	PASS	.
+chr3	5000	rs4	T	C	70	PASS	.
+chr2	35000	rs5	G	T	60	PASS	.
+chr3	15000	rs6	A	C	50	PASS	.
+chr1	45000	rs7	C	G	40	PASS	.

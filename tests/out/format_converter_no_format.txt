@@ -1,0 +1,15 @@
+No valid output format specified (--to-bed or --to-csv).
+VCFX_format_converter
+Usage: VCFX_format_converter [OPTIONS]
+
+Options:
+  --to-bed             Convert VCF to BED format.
+  --to-csv             Convert VCF to CSV format.
+  --help, -h           Display this help message and exit.
+
+Description:
+  Converts VCF files to specified formats (BED or CSV).
+
+Example:
+  ./VCFX_format_converter --to-bed < input.vcf > output.bed
+  ./VCFX_format_converter --to-csv < input.vcf > output.csv

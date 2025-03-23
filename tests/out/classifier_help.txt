@@ -1,0 +1,25 @@
+VCFX_variant_classifier: Classify variants in a VCF as SNP, INDEL, MNV, or STRUCTURAL.
+
+Usage:
+  VCFX_variant_classifier [options] < input.vcf > output.vcf_or_tsv
+
+Options:
+  -h, --help         Show help.
+  -a, --append-info  Instead of producing a TSV, output a valid VCF
+                     with a new 'VCF_CLASS' subfield in the INFO.
+
+Description:
+  Reads each variant line, determines if it is:
+    SNP: single base ref & alt,
+    INDEL: length mismatch (less than 50 bp difference) in ref vs alt,
+    MNV: same length >1,
+    STRUCTURAL: alt is symbolic (<DEL>, <INS>, <DUP>), or breakend ([chr etc.)
+                or length difference >=50.
+  If --append-info, prints original columns + updated INFO. Otherwise prints
+  'CHROM POS ID REF ALT Classification' as TSV.
+
+Examples:
+  1) TSV classification:
+     VCFX_variant_classifier < input.vcf > classified.tsv
+  2) Modify INFO in output VCF:
+     VCFX_variant_classifier --append-info < input.vcf > annotated.vcf

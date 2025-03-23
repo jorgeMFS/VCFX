@@ -1,0 +1,7 @@
+##fileformat=VCFv4.2
+##source=VCFX
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+chr1	10000	rs123	A	G	100	PASS	DP=55;AF=0.25
+malformed_without_enough_columns
+chr3	NOT_A_NUMBER	rs789	G	A	50	LowQual	DP=29;AF=0.05
+chr4	40000	.	T	C	INVALID	PASS	DP=87;AF=0.35

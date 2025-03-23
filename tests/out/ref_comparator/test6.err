@@ -1,0 +1,2 @@
+Error: cannot open reference non_existent_file.fasta
+Error: failed to load reference from non_existent_file.fasta

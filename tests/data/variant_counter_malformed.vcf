@@ -1,0 +1,9 @@
+##fileformat=VCFv4.2
+##source=VCFX
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Total read depth">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele frequency">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE1	SAMPLE2
+chr1	invalid	rs123	A	G	100	PASS	DP=55;AF=0.25	GT:DP	0/1:30	0/0:25
+chr1	20000	rs456	C	T	not_a_number	PASS	DP=60;AF=0.10	GT:DP	0/0:28	0/1:32
+missing_chrom_field_but_has_8_columns	30000	rs789	G	A	50	LowQual	DP=29
+chr1	40000	.	T	C	90	PASS	DP=87;AF=0.35	GT:DP	0/1:45	1/1:42

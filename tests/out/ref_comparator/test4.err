@@ -1,0 +1,3 @@
+Warning: data line encountered before #CHROM => skipping.
+Warning: VCF line has <8 columns => skipping.
+Warning: VCF line has <8 columns => skipping.

@@ -1,0 +1,5 @@
+CHROM	POS	ID	INFO	SAMPLE1:GT
+chr1	10000	rs123	DP=55;AF=0.25	0/1
+chr1	invalid_pos	rs456	DP=60;AF=INVALID	0/0
+malformed_line_with_fewer_columns	20000	rs789	.	.
+chr1	30000	rs789	DP=29;AF=0.05	.

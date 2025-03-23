@@ -1,0 +1,16 @@
+VCFX_indel_normalizer: Normalize INDEL variants by splitting multi-allelic lines,
+and removing common leading/trailing bases to produce a minimal left-aligned representation.
+
+Usage:
+  VCFX_indel_normalizer [options] < input.vcf > output.vcf
+
+Description:
+  This code does a simplified left alignment that:
+   1) Splits multi-ALT lines into separate lines.
+   2) Removes the longest shared prefix from REF/ALT, adjusting POS.
+   3) Removes the largest shared suffix from REF/ALT.
+
+  Note: true left alignment for repeated motifs requires the full reference genome.
+
+Example:
+  VCFX_indel_normalizer < input.vcf > normalized.vcf

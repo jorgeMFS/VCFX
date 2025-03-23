@@ -25,34 +25,36 @@ void VCFXVariantCounter::displayHelp(){
 }
 
 int VCFXVariantCounter::run(int argc, char* argv[]){
-    if(argc==1){
-        displayHelp();
-        return 0;
-    }
     bool showHelp=false;
     static struct option long_opts[]={
         {"help", no_argument, 0,'h'},
         {"strict", no_argument, 0,'s'},
         {0,0,0,0}
     };
-    while(true){
-        int c= ::getopt_long(argc, argv,"hs", long_opts,nullptr);
-        if(c==-1) break;
-        switch(c){
-            case 'h':
-                showHelp=true;
-                break;
-            case 's':
-                strictMode= true;
-                break;
-            default:
-                showHelp=true;
+    
+    // Check for options/flags
+    if (argc > 1) {
+        while(true){
+            int c= ::getopt_long(argc, argv,"hs", long_opts,nullptr);
+            if(c==-1) break;
+            switch(c){
+                case 'h':
+                    showHelp=true;
+                    break;
+                case 's':
+                    strictMode= true;
+                    break;
+                default:
+                    showHelp=true;
+            }
         }
     }
+    
     if(showHelp){
         displayHelp();
         return 0;
     }
+    
     int total= countVariants(std::cin);
     if(total<0){
         // indicates an error if strict

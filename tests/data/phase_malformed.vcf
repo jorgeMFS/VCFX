@@ -1,0 +1,9 @@
+##fileformat=VCFv4.2
+##source=VCFX
+malformed_line
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Total read depth">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE1
+too_few_columns
+chr1	10000	rs123	A	G	100	PASS	DP=55	GT	X/Y
+chr1	20000	rs456	C	T	80	PASS	DP=60	GT	0|X

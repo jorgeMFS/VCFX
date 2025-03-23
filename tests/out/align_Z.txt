@@ -1,0 +1,1 @@
+CHROM	POS	ID	REF	ALT	Discrepancy_Type	Reference_Value	VCF_Value

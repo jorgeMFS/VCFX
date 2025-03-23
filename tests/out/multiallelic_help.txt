@@ -1,0 +1,5 @@
+VCFX_multiallelic_splitter:
+  Splits multi-allelic variants into multiple lines, rewriting GT/AD/PL.
+Usage:
+  VCFX_multiallelic_splitter [options] < input.vcf > output.vcf
+  --help, -h

@@ -1,0 +1,18 @@
+VCFX_sorter: Sort a VCF by chromosome and position.
+
+Usage:
+  VCFX_sorter [options] < input.vcf > output.vcf
+
+Options:
+  -h, --help          Show help.
+  -n, --natural-chr   Use a natural chromosome sort (chr1 < chr2 < chr10) instead of lexicographic.
+
+Description:
+  Reads all data lines into memory, sorts by (CHROM,POS). Preserves all header lines
+  in original order, and outputs them first, then prints sorted data lines.
+
+Examples:
+  1) Lexicographic:
+     VCFX_sorter < unsorted.vcf > sorted.vcf
+  2) Natural order:
+     VCFX_sorter --natural-chr < unsorted.vcf > sorted.vcf

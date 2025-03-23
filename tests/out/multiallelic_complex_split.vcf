@@ -1,0 +1,21 @@
+##fileformat=VCFv4.2
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
+##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele Count">
+##INFO=<ID=MLEAF,Number=A,Type=Float,Description="Maximum likelihood expectation of allele frequency">
+##INFO=<ID=END,Number=1,Type=Integer,Description="End position">
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
+##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">
+##FORMAT=<ID=PL,Number=G,Type=Integer,Description="Phred-scaled genotype likelihoods">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE1	SAMPLE2	SAMPLE3
+chr1	10000	rs123	A	G	100	PASS	DP=80;AF=0.2;AC=10;MLEAF=0.18	GT:AD:DP:GQ:PL	0/1:30,10:40:30:30,0,40	0/.:35,0:43:25:25,50,0	1/.:25,12:44:35:35,0,50
+chr1	10000	rs123	A	T	100	PASS	DP=80;AF=0.1;AC=5;MLEAF=0.11	GT:AD:DP:GQ:PL	0/.:30,0:40:30:30,100,100	0/1:35,8:43:25:25,100,20	.:25,0:44:35:35,120,160
+chr1	10000	rs123	A	C	100	PASS	DP=80;AF=0.05;AC=3;MLEAF=0.06	GT:AD:DP:GQ:PL	0/.:30,0:40:30:30,40,50	0/.:35,0:43:25:25,0,60	./1:25,7:44:35:35,50,0
+chr2	20000	rs456	CT	C	90	PASS	DP=70;AF=0.15;AC=8;MLEAF=0.13	GT:AD:DP:GQ:PL	0/1:25,8:33:22:22,0,35	0/.:30,0:35:18:18,40,45	.:22,0:32:28:28,35,0
+chr2	20000	rs456	CT	CTT	90	PASS	DP=70;AF=0.08;AC=4;MLEAF=0.09	GT:AD:DP:GQ:PL	0/.:25,0:33:22:22,90,90	0/.:30,0:35:18:18,90,110	1/.:22,6:32:28:28,85,105
+chr2	20000	rs456	CT	CTTT	90	PASS	DP=70;AF=0.04;AC=2;MLEAF=0.03	GT:AD:DP:GQ:PL	0/.:25,0:33:22:22,35,40	0/1:30,5:35:18:18,45,0	./1:22,4:32:28:28,0,0
+chr3	30000	sv1	G	<DEL>	80	PASS	DP=60;AF=0.12;AC=6;MLEAF=0.11;END=40000;SVTYPE=DEL	GT:AD:DP:GQ:PL	0/1:20,6:26:15:15,0,80	0/.:18,0:22:12:12,30,70	1/.:15,8:26:20:20,0,60
+chr3	30000	sv1	G	<INS>	80	PASS	DP=60;AF=0.06;AC=3;MLEAF=0.07;END=40000;SVTYPE=DEL	GT:AD:DP:GQ:PL	0/.:20,0:26:15:15,80,25	0/1:18,4:22:12:12,70,0	./1:15,3:26:20:20,60,0

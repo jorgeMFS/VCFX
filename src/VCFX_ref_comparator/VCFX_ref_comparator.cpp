@@ -169,15 +169,13 @@ void VCFXRefComparator::compareVCF(std::istream &vcfIn, std::ostream &vcfOut){
             // out of range
             if(!info.empty() && info.back()!=';') info+=';';
             info+= "REF_COMPARISON=INVALID_POS";
-            // rewrite line
+            // rewrite
             std::ostringstream newLine;
-            for(size_t i=0; i<8; i++){
+            for(int i=0; i<7; i++){
                 newLine<< fields[i];
                 if(i<7) newLine<<"\t";
             }
-            // update info field
-            newLine<<"\t"<< info;
-            // any other columns
+            newLine<< info;
             for(size_t i=8; i<fields.size(); i++){
                 newLine<<"\t"<< fields[i];
             }
@@ -190,13 +188,13 @@ void VCFXRefComparator::compareVCF(std::istream &vcfIn, std::ostream &vcfOut){
             // unknown chrom
             if(!info.empty() && info.back()!=';') info+=';';
             info+= "REF_COMPARISON=UNKNOWN_CHROM";
-            // rewrite line
+            // rewrite
             std::ostringstream newLine;
-            for(size_t i=0; i<8; i++){
+            for(int i=0; i<7; i++){
                 newLine<< fields[i];
                 if(i<7) newLine<<"\t";
             }
-            newLine<<"\t"<< info;
+            newLine<< info;
             for(size_t i=8; i<fields.size(); i++){
                 newLine<<"\t"<< fields[i];
             }
@@ -210,11 +208,11 @@ void VCFXRefComparator::compareVCF(std::istream &vcfIn, std::ostream &vcfOut){
             info+= "REF_COMPARISON=INVALID_POS";
             // rewrite
             std::ostringstream newLine;
-            for(size_t i=0; i<8; i++){
+            for(int i=0; i<7; i++){
                 newLine<< fields[i];
                 if(i<7) newLine<<"\t";
             }
-            newLine<<"\t"<< info;
+            newLine<< info;
             for(size_t i=8; i<fields.size(); i++){
                 newLine<<"\t"<< fields[i];
             }
@@ -261,11 +259,11 @@ void VCFXRefComparator::compareVCF(std::istream &vcfIn, std::ostream &vcfOut){
 
         // rebuild line
         std::ostringstream outLine;
-        for(int i=0;i<8;i++){
+        for(int i=0;i<7;i++){
             outLine<< fields[i];
-            if(i<7) outLine<<"\t";
+            if(i<6) outLine<<"\t";  // Changed from i<7 to i<6 to avoid adding an extra tab after FILTER
         }
-        outLine<<"\t"<< info;
+        outLine<<"\t"<< info;  // Add tab after FILTER, then add INFO without spaces
         // any other columns
         for(size_t i=8; i< fields.size(); i++){
             outLine<<"\t"<< fields[i];

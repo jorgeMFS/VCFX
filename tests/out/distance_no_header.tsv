@@ -1,0 +1,2 @@
+CHROM	POS	PREV_POS	DISTANCE
+Error: VCF header (#CHROM) not found before variant records.

@@ -1,0 +1,17 @@
+VCFX_phase_checker: Output only VCF variant lines in which every sample genotype is fully phased.
+
+Usage:
+  ./VCFX_phase_checker [options] < input.vcf > phased_output.vcf
+
+Options:
+  -h, --help   Display this help message and exit
+
+Description:
+  The tool reads a VCF from standard input and checks the GT field (genotype) for each sample.
+  A genotype is considered fully phased if it uses the '|' separator (e.g., "0|1") and contains
+  no missing alleles. If every sample in a variant line is fully phased, the line is printed to
+  standard output; otherwise, it is skipped and a warning is written to standard error.
+
+Examples:
+  To extract only fully phased variants:
+    ./VCFX_phase_checker < input.vcf > phased_output.vcf

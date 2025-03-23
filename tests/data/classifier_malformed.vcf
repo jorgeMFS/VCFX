@@ -1,0 +1,9 @@
+##fileformat=VCFv4.2
+##source=VCFX
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+chr1	10000	mal1	A	G	100	PASS	.
+malformed_line_with_few_columns
+chr1	not_a_position	mal2	C	T	80	PASS	.
+chr1	30000	mal3	G		50	LowQual	.
+chr1	40000	mal4		A	90	PASS	.
+chr1	50000	mal5	G	T,	30	LowQual	.

@@ -1,0 +1,5 @@
+##fileformat=VCFv4.2
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SampleX	SampleY
+1	100	.	A	G	.	.	.	GT:DP	0/1:10	1/1:50
+1	200	.	T	C	.	.	.	GT:DP	0/0:20	0/1:45
+1	300	.	C	G	.	.	.	GT:DP	.:.	1/2:88

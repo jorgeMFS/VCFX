@@ -1,0 +1,7 @@
+##fileformat=VCFv4.2
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
+##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the variant">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+chr1	invalid	.	A	<DEL>	.	PASS	SVTYPE=DEL;END=15000
+chr1	20000	.	G	<DUP>	.	PASS	SVTYPE=
+chr1	30000	.	AAAA	<INV>	.	PASS	SVTYPE=INV;END=35000

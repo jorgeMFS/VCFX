@@ -1,0 +1,17 @@
+VCFX_field_extractor
+Usage: VCFX_field_extractor --fields "FIELD1,FIELD2,..." [OPTIONS]
+
+Description:
+  Extracts specified fields from each VCF record. Fields can be:
+    - Standard fields: CHROM, POS, ID, REF, ALT, QUAL, FILTER, INFO
+    - Subkeys in INFO (e.g. DP, AF, ANN). These are extracted from the INFO column.
+    - Sample subfields: e.g. SampleName:GT or S2:DP, referencing the second sample's DP.
+      You can use sample name as it appears in #CHROM line, or 'S' plus 1-based sample index.
+If a requested field is not found or invalid, '.' is output.
+
+Example:
+  VCFX_field_extractor --fields "CHROM,POS,ID,REF,ALT,DP,Sample1:GT" < input.vcf > out.tsv
+
+Options:
+  --fields, -f   Comma-separated list of fields to extract
+  --help, -h     Show this help message

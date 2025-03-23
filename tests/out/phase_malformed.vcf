@@ -1,0 +1,6 @@
+##fileformat=VCFv4.2
+##source=VCFX
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Total read depth">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE1
+chr1	20000	rs456	C	T	80	PASS	DP=60	GT	0|X

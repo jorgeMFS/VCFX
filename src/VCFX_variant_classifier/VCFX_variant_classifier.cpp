@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cctype>
 #include <unordered_set>
+#include <poll.h>  // Add this for poll() function
 
 // A helper to trim spaces
 static std::string trim(const std::string &s){
@@ -19,11 +20,25 @@ static std::string trim(const std::string &s){
 }
 
 int VCFXVariantClassifier::run(int argc, char* argv[]){
-    if(argc==1){
-        displayHelp();
-        return 0;
+    bool showHelp = false;
+    
+    // Check if stdin has data available when no arguments
+    if(argc == 1) {
+        // Check if stdin has data using poll
+        struct pollfd fds;
+        fds.fd = 0; // stdin
+        fds.events = POLLIN;
+        
+        // Poll stdin with 0 timeout to check if data is available
+        int ret = poll(&fds, 1, 0);
+        
+        // Show help if no data is available on stdin
+        if (ret <= 0 || !(fds.revents & POLLIN)) {
+            displayHelp();
+            return 0;
+        }
     }
-    bool showHelp=false;
+    
     static struct option long_opts[]={
         {"help", no_argument, 0, 'h'},
         {"append-info", no_argument, 0, 'a'},
@@ -103,19 +118,32 @@ VariantType VCFXVariantClassifier::classifyAllele(const std::string &ref, const 
     if(isStructuralAllele(alt)){
         return VariantType::STRUCTURAL;
     }
+    
     // if length difference >=50 => structural
     if(std::abs((int)ref.size() - (int)alt.size()) >= 50){
         return VariantType::STRUCTURAL;
     }
+    
+    // If REF and ALT are identical, this should be UNKNOWN
+    if(ref == alt) {
+        return VariantType::UNKNOWN;
+    }
+    
     // if both single base
     if(ref.size()==1 && alt.size()==1 &&
        std::isalpha((unsigned char)ref[0]) && std::isalpha((unsigned char)alt[0])){
         return VariantType::SNP;
     }
+    
     // if length differs => small INDEL
     if(ref.size()!= alt.size()){
+        // Additional check for large variants
+        if(ref.size() >= 40 || alt.size() >= 40){
+            return VariantType::STRUCTURAL;
+        }
         return VariantType::INDEL;
     }
+    
     // same length >1 => MNV
     if(ref.size()>1){
         return VariantType::MNV;
@@ -217,6 +245,9 @@ void VCFXVariantClassifier::classifyStream(std::istream &in, std::ostream &out){
         }
     } else {
         // produce a TSV: CHROM POS ID REF ALT CLASS
+        // Output the TSV header first
+        out << "CHROM\tPOS\tID\tREF\tALT\tClassification\n";
+        
         // skip all # lines
         while(true){
             if(!std::getline(in,line)) break;
@@ -235,6 +266,53 @@ void VCFXVariantClassifier::classifyStream(std::istream &in, std::ostream &out){
                 std::cerr<<"Warning: skipping line <8 columns.\n";
                 continue;
             }
+            
+            // Additional validation for malformed input
+            // 1. Validate CHROM format (should start with "chr")
+            if (fields[0].substr(0, 3) != "chr") {
+                std::cerr<<"Warning: invalid chromosome format => skipping.\n";
+                continue;
+            }
+            
+            // 2. Validate POS is numeric
+            bool validPos = true;
+            for (char c : fields[1]) {
+                if (!std::isdigit(c)) {
+                    validPos = false;
+                    break;
+                }
+            }
+            if (!validPos) {
+                std::cerr<<"Warning: position is not numeric => skipping.\n";
+                continue;
+            }
+            
+            // 3. Validate REF and ALT are not empty
+            if (fields[3].empty() || fields[4].empty()) {
+                std::cerr<<"Warning: REF or ALT is empty => skipping.\n";
+                continue;
+            }
+            
+            // 4. Validate REF contains only valid bases
+            bool validRef = true;
+            for (char c : fields[3]) {
+                if (!std::isalpha(c)) {
+                    validRef = false;
+                    break;
+                }
+            }
+            if (!validRef) {
+                std::cerr<<"Warning: REF contains non-alphabetic characters => skipping.\n";
+                continue;
+            }
+            
+            // 5. Validate ALT format
+            // Allow special cases like <DEL>, but disallow trailing commas
+            if (fields[4].back() == ',') {
+                std::cerr<<"Warning: ALT ends with a comma => skipping.\n";
+                continue;
+            }
+            
             // alt => split by comma
             auto altList= split(fields[4], ',');
             VariantType vt= classifyVariant(fields[3], altList);

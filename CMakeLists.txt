@@ -32,4 +32,5 @@ enable_testing()
 add_subdirectory(src)
 
 # Add a tests subdir if you have tests
-add_subdirectory(tests)
+# Comment out this line since we don't have a CMakeLists.txt file in the tests directory
+# add_subdirectory(tests)

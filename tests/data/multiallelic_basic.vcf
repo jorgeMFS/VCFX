@@ -1,0 +1,11 @@
+##fileformat=VCFv4.2
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
+##INFO=<ID=BaseQRankSum,Number=A,Type=Float,Description="Z-score from Wilcoxon rank sum test of alt vs. ref base qualities">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
+##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">
+##FORMAT=<ID=PL,Number=G,Type=Integer,Description="Phred-scaled genotype likelihoods">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE1	SAMPLE2
+chr1	10000	rs123	A	G,T	100	PASS	DP=50;AF=0.2,0.1;BaseQRankSum=1.5,2.0	GT:AD:DP:GQ:PL	0/1:10,5,0:15:20:20,0,100,40,100,100	0/2:12,0,4:16:18:18,50,100,0,100,20

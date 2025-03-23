@@ -1,0 +1,15 @@
+##fileformat=VCFv4.2
+##source=VCFX
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Total read depth">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele frequency">
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
+##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the variant">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE1
+chr1	10000	snp1	A	G	100	PASS	DP=55;AF=0.25	GT	0/1
+chr1	20000	indel1	CA	T	80	PASS	DP=60;AF=0.10	GT	0/1
+chr1	30000	indel2	G	GACGT	50	LowQual	DP=29;AF=0.05	GT	0/1
+chr1	40000	mnv1	ATG	GTC	90	PASS	DP=87;AF=0.35	GT	0/1
+chr1	50000	sv1	G	<DEL>	30	LowQual	SVTYPE=DEL;END=51000	GT	0/1
+chr2	15000	sv2	T	T[chr3:12345[	70	PASS	DP=40;AF=0.15	GT	0/1
+chr2	25000	sv3	AACTGAATGACTGACTGACTGACTGACTAGCTAGCTAGCTAGCTAGCTA	A	60	PASS	DP=30;AF=0.20	GT	0/1
+chr2	35000	sv4	A	AACTGAATGACTGACTGACTGACTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTA	50	PASS	DP=25;AF=0.18	GT	0/1

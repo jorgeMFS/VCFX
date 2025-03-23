@@ -1,0 +1,5 @@
+##fileformat=VCFv4.2
+##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">
+chr1	100	rs123	A	T	60	PASS	NS=2;DP=10
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+chr2	200	rs456	G	C	80	PASS	NS=2;DP=15

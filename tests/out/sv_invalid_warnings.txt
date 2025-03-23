@@ -1,0 +1,2 @@
+Warning: invalid POS => skipping.
+Warning: no SVTYPE => skipping line.

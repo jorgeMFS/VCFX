@@ -108,10 +108,6 @@ bool VCFRecord::naturalCompare(const VCFRecord &a, const VCFRecord &b){
 }
 
 int VCFXSorter::run(int argc, char* argv[]){
-    if(argc==1){
-        displayHelp();
-        return 0;
-    }
     bool showHelp=false;
     static struct option long_opts[]={
         {"help", no_argument, 0, 'h'},
@@ -136,6 +132,13 @@ int VCFXSorter::run(int argc, char* argv[]){
         displayHelp();
         return 0;
     }
+    
+    // Check if stdin has data
+    if (std::cin.peek() == EOF) {
+        displayHelp();
+        return 0;
+    }
+    
     loadVCF(std::cin);
     sortRecords();
     outputVCF(std::cout);

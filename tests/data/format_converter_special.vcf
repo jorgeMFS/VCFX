@@ -1,0 +1,8 @@
+##fileformat=VCFv4.2
+##source=VCFX
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE1
+chr1	10000	id1	A	G	100	PASS	Note="This, has, commas"	GT	0/1
+chr2	20000	id2	C	T	90	PASS	Text="Has ""quoted"" text"	GT	1/1
+chr3	30000	"id,3"	G	A	80	PASS	Key="Value with ""double"" and 'single' quotes"	GT	0/1
+chr4	40000	id4	T	C	70	LowQual	Descr="New
+line in field"	GT	0/0

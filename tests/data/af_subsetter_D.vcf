@@ -1,0 +1,6 @@
+##fileformat=VCFv4.2
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+4	100	.	A	T	.	.	AF=0.0
+4	200	.	A	T	.	.	AF=1.0
+4	300	.	A	T	.	.	AF=0.9999
+4	400	.	A	T	.	.	AF=0.0001

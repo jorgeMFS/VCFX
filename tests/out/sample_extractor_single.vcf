@@ -1,0 +1,8 @@
+##fileformat=VCFv4.2
+##source=VCFX
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Total read depth">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele frequency">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE1
+chr1	10000	rs123	A	G	100	PASS	DP=55;AF=0.25	GT:DP	0/1:30
+chr1	20000	rs456	C	T	80	PASS	DP=60;AF=0.10	GT:DP	0/0:28
+chr1	30000	rs789	G	A	50	LowQual	DP=29;AF=0.05	GT:DP	0/1:15

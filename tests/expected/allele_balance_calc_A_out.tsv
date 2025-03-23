@@ -1,0 +1,7 @@
+CHROM	POS	ID	REF	ALT	Sample	Allele_Balance
+1	100	.	A	G	SampleX	1.000000
+1	100	.	A	G	SampleY	0.000000
+1	200	.	T	C	SampleX	0.000000
+1	200	.	T	C	SampleY	1.000000
+1	300	.	C	G	SampleX	NA
+1	300	.	C	G	SampleY	0.000000

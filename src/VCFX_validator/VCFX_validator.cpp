@@ -4,6 +4,7 @@
 #include <vector>
 #include <cctype>
 #include <cstdlib>
+#include <unistd.h>
 
 static std::string trim(const std::string &s){
     size_t start=0; 
@@ -15,7 +16,8 @@ static std::string trim(const std::string &s){
 }
 
 int VCFXValidator::run(int argc, char* argv[]){
-    if(argc==1){
+    bool hasStdin = !isatty(fileno(stdin));
+    if(argc==1 && !hasStdin){
         displayHelp();
         return 0;
     }
@@ -210,8 +212,9 @@ bool VCFXValidator::validateVCF(std::istream &in){
                 if(!validateChromHeader(line, lineNum)) return false;
                 foundChromLine= true;
             } else {
-                // might be some weird # line? We'll allow # as well but let's do a basic check
-                // We'll treat lines that start with '#' but not "##" or "#CHROM" as okay
+                // Any line starting with '#' but not "##" or "#CHROM" is invalid
+                std::cerr<<"Error: line "<<lineNum<<" is a header line but neither starts with '##' nor is a #CHROM header line.\n";
+                return false;
             }
         } else {
             // data line

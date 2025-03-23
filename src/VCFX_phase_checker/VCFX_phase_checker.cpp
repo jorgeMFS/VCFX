@@ -5,15 +5,27 @@
 #include <vector>
 #include <cstdlib>
 #include <algorithm>
+#include <sys/select.h>
+#include <unistd.h>
 
 int VCFXPhaseChecker::run(int argc, char* argv[]) {
-    // If no arguments are provided, display help.
-    if (argc == 1) {
+    bool showHelp = false;
+    
+    // Check if stdin has data available
+    struct timeval tv;
+    fd_set fds;
+    tv.tv_sec = 0;
+    tv.tv_usec = 0;
+    FD_ZERO(&fds);
+    FD_SET(STDIN_FILENO, &fds);
+    bool hasStdinInput = select(STDIN_FILENO+1, &fds, NULL, NULL, &tv) > 0;
+    
+    // If no arguments are provided and no stdin input, display help.
+    if (argc == 1 && !hasStdinInput) {
         displayHelp();
         return 0;
     }
     
-    bool showHelp = false;
     int opt;
     static struct option long_opts[] = {
         {"help", no_argument, 0, 'h'},
@@ -56,8 +68,13 @@ void VCFXPhaseChecker::displayHelp() {
 
 bool VCFXPhaseChecker::isFullyPhased(const std::string &gt) const {
     if(gt.empty() || gt == "." || gt == "./." || gt == ".|.") return false;
+    
+    // Haploid genotypes (like "0" or "1") are not considered phased
+    if(gt.find('|') == std::string::npos) return false;
+    
     // A fully phased genotype should use '|' exclusively.
     if(gt.find('/') != std::string::npos) return false;
+    
     std::vector<std::string> alleles;
     std::istringstream ss(gt);
     std::string token;

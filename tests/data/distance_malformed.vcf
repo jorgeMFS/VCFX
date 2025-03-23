@@ -1,0 +1,9 @@
+##fileformat=VCFv4.2
+##source=VCFX
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+chr1	10000	rs1	A	G	100	PASS	.
+not_a_chromosome	20000	rs2	C	T	90	PASS	.
+chr2	not_a_position	rs3	G	A	80	PASS	.
+chr2	30000	rs4	T	C	70	PASS	.
+malformed_line_with_insufficient_columns
+chr3	40000	rs5	G	T	60	PASS	.

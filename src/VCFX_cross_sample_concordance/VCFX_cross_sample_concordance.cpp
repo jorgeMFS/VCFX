@@ -189,9 +189,15 @@ static void calculateConcordance(std::istream &in, std::ostream &out) {
             }
         }
 
-        // If no samples had a valid genotype, skip counting this variant
+        // If no samples had a valid genotype, mark this variant as NO_GENOTYPES
         if (sampleCountHere == 0) {
             skippedBecauseNoGenotypes++;
+            // Output with NO_GENOTYPES status instead of skipping
+            out << chrom << "\t" << pos << "\t" << id << "\t" << ref << "\t" << alt
+                << "\t" << sampleCountHere 
+                << "\t" << 0  // No unique genotypes
+                << "\t" << "NO_GENOTYPES"
+                << "\n";
             continue;
         }
 
@@ -212,7 +218,7 @@ static void calculateConcordance(std::istream &in, std::ostream &out) {
             discordantCount++;
         }
 
-        std::string status = allConcordant ? "Concordant" : "Discordant";
+        std::string status = allConcordant ? "CONCORDANT" : "DISCORDANT";
         // Print row
         out << chrom << "\t" << pos << "\t" << id << "\t" << ref << "\t" << alt
             << "\t" << sampleCountHere 

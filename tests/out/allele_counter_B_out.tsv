@@ -1,0 +1,3 @@
+CHROM	POS	ID	REF	ALT	Sample	Ref_Count	Alt_Count
+2	100	.	A	G	Y	0	2
+2	200	.	C	T	Y	2	0

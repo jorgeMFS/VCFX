@@ -1,0 +1,4 @@
+CHROM	POS	ID	REF	ALT	Classification
+chr1	10100	var1	A	AT	INDEL
+chr1	10200	var2	AT	GC	MNV
+chr1	10300	var3	A	<DEL>	STRUCTURAL
