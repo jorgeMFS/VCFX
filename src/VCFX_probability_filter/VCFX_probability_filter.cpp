@@ -30,7 +30,12 @@ int VCFXProbabilityFilter::run(int argc, char* argv[]) {
         }
     }
 
-    if (showHelp || condition.empty()) {
+    if (showHelp) {
+        displayHelp();
+        return 0;
+    }
+    
+    if (condition.empty()) {
         displayHelp();
         return 1;
     }

@@ -15,6 +15,7 @@ int VCFXGLFilter::run(int argc, char* argv[]) {
     bool showHelp = false;
     std::string filterCondition;
     bool anyMode = false; // default is 'all' mode
+    bool invalidMode = false;
 
     static struct option long_options[] = {
         {"help",   no_argument,       0, 'h'},
@@ -38,6 +39,7 @@ int VCFXGLFilter::run(int argc, char* argv[]) {
                     anyMode = false;
                 } else {
                     std::cerr << "Error: --mode must be 'any' or 'all'.\n";
+                    invalidMode = true;
                     showHelp = true;
                 }
                 break;
@@ -46,14 +48,36 @@ int VCFXGLFilter::run(int argc, char* argv[]) {
         }
     }
 
-    if (showHelp || filterCondition.empty()) {
+    if (showHelp) {
         displayHelp();
         return 1;
     }
 
+    if (filterCondition.empty()) {
+        std::cerr << "Error: --filter must be specified.\n";
+        displayHelp();
+        return 1;
+    }
+
+    // Redirect cerr to a string stream to check for errors
+    std::stringstream error_output;
+    std::streambuf* cerr_buffer = std::cerr.rdbuf();
+    std::cerr.rdbuf(error_output.rdbuf());
+
     // Filter VCF based on genotype likelihood
     filterByGL(std::cin, std::cout, filterCondition, anyMode);
-
+    
+    // Restore cerr
+    std::cerr.rdbuf(cerr_buffer);
+    
+    // Check if there were any errors
+    std::string error_msg = error_output.str();
+    if (!error_msg.empty()) {
+        // There was an error, output it and return error code
+        std::cerr << error_msg;
+        return 1;
+    }
+    
     return 0;
 }
 
@@ -85,7 +109,8 @@ void VCFXGLFilter::filterByGL(std::istream& in,
     std::smatch matches;
     if (!std::regex_match(filterCondition, matches, conditionRegex)) {
         std::cerr << "Error: Invalid filter condition format. Expected e.g. \"GQ>20\" or \"DP<=3.5\".\n";
-        return;
+        // Don't continue processing, just return
+        return; // The error has been reported, the caller will handle the return code
     }
 
     std::string field = matches[1];
@@ -117,7 +142,7 @@ void VCFXGLFilter::filterByGL(std::istream& in,
         // Must have #CHROM
         if (!headerParsed) {
             std::cerr << "Error: No #CHROM header found before data.\n";
-            return;
+            return; // Just return, the caller will handle the error status
         }
 
         // Parse data line

@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <getopt.h>
+#include <set>
 
 // ----------------------------------------------------
 // A helper struct for storing freq data by population
@@ -21,8 +22,10 @@ struct PopFreqKey {
     double frequency;
 };
 
-// We’ll keep a direct structure: freqData["chr:pos:ref:alt:POP"] = frequency
+// We'll keep a direct structure: freqData["chr:pos:ref:alt:POP"] = frequency
 typedef std::unordered_map<std::string, double> FrequencyMap;
+// Map from variant key to map of pop->frequency for more efficient lookup
+typedef std::unordered_map<std::string, std::unordered_map<std::string, double>> VariantPopFreqMap;
 
 // ----------------------------------------------------
 // Class: VCFXAncestryInferrer
@@ -39,12 +42,16 @@ private:
     // CHROM  POS  REF  ALT  POPULATION  FREQUENCY
     bool loadPopulationFrequencies(const std::string& freqFilePath);
 
-    // Infer ancestry from VCF
-    void inferAncestry(std::istream& vcfInput, std::ostream& output);
+    // Infer ancestry from VCF, returns true if successful
+    bool inferAncestry(std::istream& vcfInput, std::ostream& output);
 
 private:
     // Frequencies keyed by "chr:pos:ref:alt:pop"
     FrequencyMap freqData;
+    // More efficient structure: variant key -> (pop -> freq)
+    VariantPopFreqMap variantPopFreqs;
+    // Set of all known populations
+    std::set<std::string> populations;
 };
 
 // ----------------------------------------------------
@@ -95,7 +102,9 @@ int VCFXAncestryInferrer::run(int argc, char* argv[]) {
     }
 
     // Read VCF from stdin, write ancestry results to stdout
-    inferAncestry(std::cin, std::cout);
+    if (!inferAncestry(std::cin, std::cout)) {
+        return 1;
+    }
 
     return 0;
 }
@@ -159,6 +168,13 @@ bool VCFXAncestryInferrer::loadPopulationFrequencies(const std::string& freqFile
         // Build a key: "chr:pos:ref:alt:pop"
         std::string key = chrom + ":" + pos + ":" + ref + ":" + alt + ":" + pop;
         freqData[key] = freq;
+        
+        // Also store in the more efficient structure
+        std::string variantKey = chrom + ":" + pos + ":" + ref + ":" + alt;
+        variantPopFreqs[variantKey][pop] = freq;
+        
+        // Add to the set of known populations
+        populations.insert(pop);
     }
     freqFile.close();
 
@@ -177,7 +193,7 @@ bool VCFXAncestryInferrer::loadPopulationFrequencies(const std::string& freqFile
 //      population score = sum of freq for each ALT allele
 //   4) after all lines, pick population with highest score
 // ----------------------------------------------------
-void VCFXAncestryInferrer::inferAncestry(std::istream& vcfInput, std::ostream& out) {
+bool VCFXAncestryInferrer::inferAncestry(std::istream& vcfInput, std::ostream& out) {
     std::string line;
     bool foundChromHeader = false;
     std::vector<std::string> headerFields;
@@ -187,7 +203,15 @@ void VCFXAncestryInferrer::inferAncestry(std::istream& vcfInput, std::ostream& o
     // Then we pick the highest for each sample
     std::unordered_map<std::string, std::unordered_map<std::string, double>> sampleScores;
 
+    // Check if the input stream is valid
+    if (!vcfInput) {
+        std::cerr << "Error: Invalid VCF input stream.\n";
+        return false;
+    }
+
+    int lineNum = 0;
     while (std::getline(vcfInput, line)) {
+        lineNum++;
         if (line.empty()) {
             continue;
         }
@@ -205,11 +229,20 @@ void VCFXAncestryInferrer::inferAncestry(std::istream& vcfInput, std::ostream& o
                         headerFields.push_back(tok);
                     }
                 }
+                
+                // Validate header has at least the required fields
+                if (headerFields.size() < 9) {
+                    std::cerr << "Error: Invalid VCF header format. Expected at least 9 columns.\n";
+                    return false;
+                }
+                
                 // sample columns start at index 9
                 for (size_t c = 9; c < headerFields.size(); ++c) {
                     sampleNames.push_back(headerFields[c]);
-                    // initialize each sample's population scores to 0
-                    // We'll create the map on-the-fly later, so not strictly needed here
+                    // Initialize scores for each known population to 0
+                    for (const auto& pop : populations) {
+                        sampleScores[headerFields[c]][pop] = 0.0;
+                    }
                 }
             }
             continue;
@@ -218,7 +251,7 @@ void VCFXAncestryInferrer::inferAncestry(std::istream& vcfInput, std::ostream& o
         // We must have #CHROM header before data
         if (!foundChromHeader) {
             std::cerr << "Error: Encountered VCF data before #CHROM header.\n";
-            return;
+            return false;
         }
 
         // Parse data line
@@ -233,9 +266,11 @@ void VCFXAncestryInferrer::inferAncestry(std::istream& vcfInput, std::ostream& o
         }
 
         if (fields.size() < 10) {
-            // not enough columns to have samples
+            // Not enough columns to have samples, skip line
+            std::cerr << "Warning: Line " << lineNum << " has fewer than 10 columns, skipping.\n";
             continue;
         }
+        
         // Indices: 0=CHROM, 1=POS, 2=ID, 3=REF, 4=ALT, 5=QUAL, 6=FILTER, 7=INFO, 8=FORMAT, 9+ = samples
         const std::string &chrom = fields[0];
         const std::string &pos   = fields[1];
@@ -252,6 +287,12 @@ void VCFXAncestryInferrer::inferAncestry(std::istream& vcfInput, std::ostream& o
             while (std::getline(altSS, altTok, ',')) {
                 altAlleles.push_back(altTok);
             }
+        }
+        
+        // Validate ALT field
+        if (altAlleles.empty()) {
+            std::cerr << "Warning: Line " << lineNum << " has empty ALT field, skipping.\n";
+            continue;
         }
 
         // Find GT index in format
@@ -273,6 +314,7 @@ void VCFXAncestryInferrer::inferAncestry(std::istream& vcfInput, std::ostream& o
         }
         if (gtIndex < 0) {
             // no genotype in this line
+            std::cerr << "Warning: Line " << lineNum << " has no GT field, skipping.\n";
             continue;
         }
 
@@ -314,11 +356,14 @@ void VCFXAncestryInferrer::inferAncestry(std::istream& vcfInput, std::ostream& o
             if (alleleNums.empty()) {
                 continue;
             }
+            
             // For each allele: 0 => REF, 1 => altAlleles[0], 2 => altAlleles[1], etc.
             for (auto &aStr : alleleNums) {
                 if (aStr.empty() || aStr == ".") {
                     continue; // missing
                 }
+                
+                // Validate allele is numeric
                 bool numeric = true;
                 for (char c : aStr) {
                     if (!isdigit(c)) {
@@ -329,93 +374,78 @@ void VCFXAncestryInferrer::inferAncestry(std::istream& vcfInput, std::ostream& o
                 if (!numeric) {
                     continue;
                 }
+                
                 int aVal = std::stoi(aStr);
                 if (aVal == 0) {
-                    // ref => build a key with the REF as alt? 
-                    // Typically we want alt freq, but let's say we do have lines for "chr:pos:ref:REF"? 
-                    // Usually ancestry freq is about alt. If you want to incorporate ref, you'd store that
-                    // in the freq file. We'll skip if we only track alt freqs. 
-                    // For demonstration, let's skip 0 -> no alt allele => no ancestry added.
+                    // REF allele, skip 
                     continue;
                 }
+                
                 if (aVal > 0 && (size_t)aVal <= altAlleles.size()) {
-                    // This alt
+                    // This is an ALT allele
                     std::string actualAlt = altAlleles[aVal - 1];
-                    // Now check each population freq. 
-                    // We store freq in freqData keyed by "chr:pos:ref:alt:pop".
-                    // We do not average them; we add the freq for each population? 
-                    // Usually you'd pick the population with the highest freq. 
-                    // Another approach is to add freq to that population's score. 
-                    // Let's do "score += freq" for that population only. 
-                    // That requires we look up each pop? 
-                    // But we only have a single freq entry per pop in freqData. 
-                    // Let's do a pass over freqData for all populations that have a key "chr:pos:ref:actualAlt:POP".
-                    // Then we add that freq to sampleScores. This is a “sum all populations?” That doesn't make sense. 
-                    // Usually you'd pick the single population with the highest freq. 
-                    // Alternatively, you can add to them *all*, weighting by their freq. 
-                    // But the code in question used "max freq" approach or "all freq"? 
-                    // We'll do the "max freq" approach, consistent with #7 / #8 style.
                     
-                    double bestFreq = -1.0;
-                    std::string bestPop;
+                    // Build the variant key for lookup
+                    std::string variantKey = chrom + ":" + pos + ":" + ref + ":" + actualAlt;
                     
-                    // We must search each possible pop in freqData. But we store them individually as keys with pop at the end.
-                    // Let's build a pattern "chrom:pos:ref:actualAlt:" and iterate over possible pops? 
-                    // There's no direct iteration over freqData by prefix. So let's do a small trick:
-                    
-                    // We'll build the prefix:
-                    std::string prefix = chrom + ":" + pos + ":" + ref + ":" + actualAlt + ":";
-                    
-                    // Now we can look up each population's freq by prefix + pop if we had a separate list of populations.
-                    // But we do not store the list of populations here. So let's do an approach:
-                    // We'll iterate over freqData and check if it starts with prefix, extracting the pop. This is not super efficient,
-                    // but simple for demonstration. Or we can store a separate structure. 
-                    // For a large dataset, we should store a multi-level structure or keep a set of populations. 
-                    // We'll do the iteration approach for clarity.
-                    
-                    for (auto &kv : freqData) {
-                        const std::string &fullKey = kv.first; // e.g. "chr1:12345:A:G:EUR"
-                        if (fullKey.rfind(prefix, 0) == 0) {
-                            // Extract the pop from the remainder
-                            // prefix length is prefix.size(). The pop is what's after that
-                            std::string pop = fullKey.substr(prefix.size());
-                            double populationFreq = kv.second;
-                            if (populationFreq > bestFreq) {
-                                bestFreq = populationFreq;
-                                bestPop = pop;
+                    // Use the more efficient lookup structure
+                    auto variantIt = variantPopFreqs.find(variantKey);
+                    if (variantIt != variantPopFreqs.end()) {
+                        const auto& popFreqs = variantIt->second;
+                        
+                        // Find the population with the highest frequency
+                        double bestFreq = -1.0;
+                        std::string bestPop;
+                        
+                        for (const auto& popFreq : popFreqs) {
+                            if (popFreq.second > bestFreq) {
+                                bestFreq = popFreq.second;
+                                bestPop = popFreq.first;
                             }
                         }
-                    }
-                    
-                    if (!bestPop.empty() && bestFreq >= 0.0) {
-                        // We add the bestFreq to the sample's pop
-                        sampleScores[sampleNames[s]][bestPop] += bestFreq;
+                        
+                        if (!bestPop.empty() && bestFreq >= 0.0) {
+                            // Add the bestFreq to the sample's population score
+                            sampleScores[sampleNames[s]][bestPop] += bestFreq;
+                        }
                     }
                 } 
-                // else if aVal > altAlleles.size() => skip 
+                // Skip if aVal > altAlleles.size()
             }
         }
     }
 
-    // Done reading VCF. Now we pick the best population for each sample.
+    // Check if we read any valid VCF data
+    if (!foundChromHeader) {
+        std::cerr << "Error: No valid VCF data found in input.\n";
+        return false;
+    }
+
+    // Output the results
     out << "Sample\tInferred_Population\n";
     for (auto &sName : sampleNames) {
         // sampleScores[sName] => map<pop, score>
         auto it = sampleScores.find(sName);
-        if (it == sampleScores.end()) {
+        if (it == sampleScores.end() || it->second.empty()) {
             // no data => unknown
             out << sName << "\tUnknown\n";
             continue;
         }
+        
         const auto &popMap = it->second;
         std::string bestPop = "Unknown";
         double bestScore = -1.0;
+        
         for (auto &ps : popMap) {
             if (ps.second > bestScore) {
                 bestScore = ps.second;
                 bestPop = ps.first;
             }
         }
+        
         out << sName << "\t" << bestPop << "\n";
     }
+    
+    return true;
 }
+

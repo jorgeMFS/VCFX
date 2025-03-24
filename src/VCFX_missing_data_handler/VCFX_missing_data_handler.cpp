@@ -195,7 +195,7 @@ bool handleMissingDataAll(const Arguments& args) {
             std::ifstream fin(path);
             if(!fin.is_open()) {
                 std::cerr<<"Error: cannot open file "<< path << "\n";
-                continue; 
+                return false; 
             }
             if(!firstFile) {
                 // skip printing the #CHROM header again?

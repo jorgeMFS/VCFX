@@ -1,0 +1,12 @@
+##fileformat=VCFv4.2
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	EUR_MISS	AFR_MISS	EAS_MISS
+1	100	rs1	A	G	30	PASS	AF=0.5	GT	1/1	./.	0/1
+1	200	rs2	C	T	40	PASS	AF=0.5	GT	0/0	1/1	./.
+1	300	rs3	G	A	50	PASS	AF=0.5	GT	0/1	./.	1/1
+1	400	rs4	T	C	60	PASS	AF=0.5	GT	./.	0/1	0/0
+2	150	rs5	A	T	70	PASS	AF=0.5	GT	1/1	0/0	./.
+2	250	rs6	C	G	80	PASS	AF=0.5	GT	0/0	./.	0/1
+2	350	rs7	G	C	90	PASS	AF=0.5	GT	./.	1/1	0/0
+2	450	rs8	T	A	100	PASS	AF=0.5	GT	0/0	0/1	./.

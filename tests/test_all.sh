@@ -20,6 +20,8 @@ bash test_variant_counter.sh
 bash test_sample_extractor.sh
 
 # Additional comprehensive tests
+bash test_allele_freq_calc.sh
+bash test_ancestry_inferrer.sh
 bash test_distance_calculator.sh
 bash test_variant_classifier.sh
 bash test_cross_sample_concordance.sh
@@ -37,5 +39,9 @@ bash test_missing_detector.sh
 bash test_nonref_filter.sh
 bash test_outlier_detector.sh
 bash test_population_filter.sh
-
+bash test_genotype_query.sh
+bash test_quality_adjuster.sh
+bash test_probability_filter.sh
+bash test_gl_filter.sh
+bash test_missing_data_handler.sh
 echo "All tests completed successfully!"
