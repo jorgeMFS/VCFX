@@ -1,0 +1,9 @@
+##fileformat=VCFv4.2
+##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes">
+##INFO=<ID=AN,Number=1,Type=Integer,Description="Total number of alleles in called genotypes">
+##INFO=<ID=IMPACT,Number=1,Type=String,Description="Predicted impact">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	100	rs1	A	G	100	PASS	AC=1;AN=2;IMPACT=HIGH
+1	200	rs2	C	T	100	PASS	AC=1;AN=2;IMPACT=MODERATE
+1	300	rs3	G	A	100	PASS	AC=1;AN=2;IMPACT=LOW
+1	400	rs4	T	C	100	PASS	AC=1;AN=2;IMPACT=MODIFIER

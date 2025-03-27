@@ -8,310 +8,348 @@
 #include <cmath>
 #include <iomanip>
 
-// -------------------------------------------------------------------------
-// displayHelp
-// -------------------------------------------------------------------------
+// --------------------------------------------------------------------------
+// A helper function to remove BOM and leading/trailing whitespace
+static void sanitizeLine(std::string &line) {
+    // Possibly remove a UTF-8 BOM
+    static const std::string BOM = "\xEF\xBB\xBF";
+    if (line.size() >= BOM.size() && line.compare(0, BOM.size(), BOM) == 0) {
+        line.erase(0, BOM.size());
+    }
+    // Trim front
+    while (!line.empty() &&
+           (line[0] == ' ' || line[0] == '\t' || line[0] == '\r' || line[0] == '\n')) {
+        line.erase(line.begin());
+    }
+    // Trim back
+    while (!line.empty() &&
+           (line.back() == ' ' || line.back() == '\t' || line.back() == '\r' || line.back() == '\n')) {
+        line.pop_back();
+    }
+}
+
+// --------------------------------------------------------------------------
+// Split a line on '\t', removing trailing CR if present
+static std::vector<std::string> splitByTab(const std::string &line) {
+    std::vector<std::string> fields;
+    std::stringstream ss(line);
+    std::string f;
+    while (std::getline(ss, f, '\t')) {
+        if (!f.empty() && f.back() == '\r') {
+            f.pop_back();
+        }
+        fields.push_back(f);
+    }
+    return fields;
+}
+
+// --------------------------------------------------------------------------
 void VCFXInbreedingCalculator::displayHelp() {
-    std::cout 
+    std::cout
         << "VCFX_inbreeding_calculator: Compute individual inbreeding coefficients (F)\n"
         << "based on biallelic sites in a VCF.\n\n"
         << "Usage:\n"
         << "  VCFX_inbreeding_calculator [options] < input.vcf > output.txt\n\n"
         << "Description:\n"
-        << "  Reads a VCF. For each biallelic site (no commas in ALT), collects each\n"
-        << "  sample's genotype as 0/0 =>0, 0/1 =>1, 1/1 =>2. Then for each sample, we\n"
-        << "  exclude that sample's allele(s) when computing the alt allele frequency.\n"
-        << "  The expected heterozygosity for that site is 2 p(1-p). Summing across all\n"
-        << "  included sites => sumExp. Observed number of heterozygous sites => obsHet.\n"
-        << "  We define F = 1 - obsHet / sumExp. If no sites, F=NA.\n\n"
-        << "Example:\n"
-        << "  VCFX_inbreeding_calculator < input.vcf > inbreeding.txt\n";
+        << "  Reads a VCF in a single pass, ignoring multi-allelic lines (ALT with commas).\n"
+        << "  For each biallelic variant, we parse each sample's genotype code:\n"
+        << "       0/0 => 0,   0/1 => 1,   1/1 => 2, else => -1 (ignored)\n\n"
+        << "  Then, depending on --freq-mode:\n"
+        << "    * excludeSample => Each sample excludes its own genotype when computing p.\n"
+        << "    * global        => Compute a single global p from all samples' genotypes.\n\n"
+        << "  The --skip-boundary option, if set, ignores boundary freq p=0 or p=1.\n"
+        << "    BUT if you also specify --count-boundary-as-used, those boundary sites\n"
+        << "    increment usedCount (forcing F=1) without contributing to sumExp.\n\n"
+        << "  If sumExp=0 for a sample but usedCount>0, we output F=1.\n"
+        << "  If usedCount=0, we output NA.\n\n"
+        << "Options:\n"
+        << "  -h, --help                Show this help.\n"
+        << "  --freq-mode <mode>        'excludeSample' (default) or 'global'\n"
+        << "  --skip-boundary           Skip boundary freq sites. By default, they are used.\n"
+        << "  --count-boundary-as-used  If also skipping boundary, still increment usedCount.\n"
+        << std::endl;
 }
 
-// -------------------------------------------------------------------------
-// parseGenotype: parse "0/1" or "1|0". We only accept 0 or 1 as alleles.
-//   Return -1 if missing or multi-allelic. Return 0 => homRef, 1 => het, 2 => homAlt
-// -------------------------------------------------------------------------
-int VCFXInbreedingCalculator::parseGenotype(const std::string& s) {
-    if (s.empty() || s==".") {
-        return -1;
-    }
-    // unify '|' => '/'
-    std::string g(s);
-    for (char &c : g) {
-        if (c=='|') c='/';
-    }
-    // split on '/'
-    size_t slash= g.find('/');
-    if (slash==std::string::npos) {
-        return -1; // not diploid
-    }
-    std::string a1= g.substr(0, slash);
-    std::string a2= g.substr(slash+1);
-    if (a1=="." || a2=="." || a1.empty() || a2.empty()) {
+// --------------------------------------------------------------------------
+int VCFXInbreedingCalculator::parseGenotype(const std::string &s) {
+    // Check for missing or empty
+    if (s.empty() || s=="." || s=="./." || s==".|." || s==".|" || s=="./") {
         return -1; // missing
     }
-    // must parse them as int. If either >1 => skip
-    int i1=0, i2=0;
+    std::string g = s;
+    for (char &c : g) {
+        if (c == '|') c = '/';
+    }
+    size_t slash = g.find('/');
+    if (slash == std::string::npos) {
+        return -1; // not diploid
+    }
+    std::string a1 = g.substr(0, slash);
+    std::string a2 = g.substr(slash+1);
+    if (a1.empty() || a2.empty() || a1=="." || a2==".") {
+        return -1;
+    }
+    int i1, i2;
     try {
-        i1= std::stoi(a1);
-        i2= std::stoi(a2);
-    } catch(...) {
+        i1 = std::stoi(a1);
+        i2 = std::stoi(a2);
+    } catch (...) {
         return -1;
     }
-    if (i1<0 || i2<0) {
-        return -1; // negative not valid
-    }
-    // if either allele >=2 => multi-allelic => skip
-    if (i1>1 || i2>1) {
+    // skip if allele≥2 => multi-allelic genotype (since we only handle 0 or 1)
+    if (i1<0 || i1>1 || i2<0 || i2>1) {
         return -1;
     }
-    // so we have only 0 or 1
+    // 0/0 =>0, 1/1 =>2, else =>1
     if (i1==i2) {
-        // if both 0 => code=0, if both 1 => code=2
-        return (i1==0) ? 0 : 2;
+        return (i1==0 ? 0 : 2);
     }
-    // otherwise => 1
-    return 1;
+    return 1; // 0/1
 }
 
-// -------------------------------------------------------------------------
-// isBiallelic: if ALT has a comma => multi-ALT => skip
-// -------------------------------------------------------------------------
+// --------------------------------------------------------------------------
 bool VCFXInbreedingCalculator::isBiallelic(const std::string &alt) {
-    if (alt.find(',')!=std::string::npos) {
-        return false;
-    }
-    return true;
+    return (alt.find(',') == std::string::npos);
 }
 
-// -------------------------------------------------------------------------
-// calculateInbreeding
-//   1) read header => sample names
-//   2) read variants => if biallelic, parse genotype => store code
-//   3) after reading all, for each sample, do a loop over variants => compute F
-// -------------------------------------------------------------------------
-void VCFXInbreedingCalculator::calculateInbreeding(std::istream& in,
-                                                   std::ostream& out)
-{
-    std::string line;
-    bool foundChrom= false;
+// --------------------------------------------------------------------------
+FrequencyMode VCFXInbreedingCalculator::parseFreqMode(const std::string &modeStr) {
+    if (modeStr == "excludeSample") {
+        return FrequencyMode::EXCLUDE_SAMPLE;
+    } else if (modeStr == "global") {
+        return FrequencyMode::GLOBAL;
+    }
+    // Default
+    std::cerr << "Warning: unrecognized freq-mode='" << modeStr
+              << "'. Using 'excludeSample' by default.\n";
+    return FrequencyMode::EXCLUDE_SAMPLE;
+}
+
+// --------------------------------------------------------------------------
+void VCFXInbreedingCalculator::calculateInbreeding(std::istream &in, std::ostream &out) {
+    bool foundChrom = false;
     std::vector<std::string> sampleNames;
-    // We'll store all variants in a vector
+    int numSamples = 0;
     std::vector<InbreedingVariant> variants;
-    int numSamples=0;
 
-    // read header lines
+    // 1) parse lines
     while (true) {
-        auto pos= in.tellg();
-        if(!std::getline(in, line)) {
-            break; 
+        std::string line;
+        if (!std::getline(in, line)) {
+            break; // EOF
         }
+        sanitizeLine(line);
         if (line.empty()) continue;
-        if (line[0]=='#') {
-            // check if #CHROM => parse sample columns
-            if(!foundChrom && line.rfind("#CHROM",0)==0) {
-                foundChrom= true;
-                // parse
-                std::stringstream ss(line);
-                std::string t;
-                std::vector<std::string> tokens;
-                while(std::getline(ss,t,'\t')) {
-                    tokens.push_back(t);
-                }
-                // from col=9 onward => samples
-                for (size_t c=9; c<tokens.size(); c++){
-                    sampleNames.push_back(tokens[c]);
-                }
-                numSamples= sampleNames.size();
-            }
-            // skip printing or storing header lines
-            continue;
-        } else {
-            // not a header => revert and break
-            in.seekg(pos);
-            break;
-        }
-    }
-    if(!foundChrom){
-        std::cerr<<"Error: No #CHROM line found.\n";
-        return;
-    }
 
-    // read data lines
-    while(std::getline(in,line)) {
-        if(line.empty()|| line[0]=='#') {
-            continue;
-        }
-        std::stringstream ss(line);
-        std::vector<std::string> fields;
-        {
-            std::string f;
-            while(std::getline(ss,f,'\t')) {
-                fields.push_back(f);
+        if (line[0] == '#') {
+            // check if #CHROM
+            if (!foundChrom && line.find("#CHROM") != std::string::npos) {
+                foundChrom = true;
+                auto tokens = splitByTab(line);
+                if (tokens.size() >= 10) {
+                    for (size_t i=9; i<tokens.size(); i++){
+                        sampleNames.push_back(tokens[i]);
+                    }
+                    numSamples = (int)sampleNames.size();
+                }
             }
-        }
-        if(fields.size()<10) {
-            // skip
             continue;
         }
-        std::string chrom= fields[0];
-        std::string posStr= fields[1];
-        std::string id= fields[2];
-        std::string ref= fields[3];
-        std::string alt= fields[4];
-        if(!isBiallelic(alt)) {
-            // skip multi-ALT
+        // data line
+        if (!foundChrom) {
+            // ignore data lines if #CHROM not found
             continue;
         }
-        int posVal=0;
+        auto fields = splitByTab(line);
+        if (fields.size() < 10) {
+            continue;
+        }
+        if (!isBiallelic(fields[4])) {
+            continue; // skip multi-allelic
+        }
+        InbreedingVariant var;
+        var.chrom = fields[0];
         try {
-            posVal= std::stoi(posStr);
+            var.pos = std::stoi(fields[1]);
         } catch(...) {
             continue;
         }
-
-        // The format col= fields[8], we won't parse subfields, we assume GT is first or something
-        // We'll just parse the sample columns directly for genotype
-        // i.e. fields[9..8+numSamples]
-        InbreedingVariant v;
-        v.chrom= chrom;
-        v.pos= posVal;
-        v.genotypeCodes.resize(numSamples, -1);
-        int sampleCol=9;
-        for(int s=0; s<numSamples; s++){
-            if((size_t)(sampleCol+s)>= fields.size()) {
-                // missing
-                break;
-            }
-            int code= parseGenotype(fields[sampleCol+s]);
-            v.genotypeCodes[s]= code;
+        var.genotypeCodes.resize(numSamples, -1);
+        for (int s=0; s<numSamples; s++){
+            int colIndex = 9 + s;
+            if ((size_t)colIndex >= fields.size()) break;
+            var.genotypeCodes[s] = parseGenotype(fields[colIndex]);
         }
-        variants.push_back(v);
+        variants.push_back(var);
     }
 
-    if(variants.empty()){
-        std::cerr<<"No biallelic variants found.\n";
-        // we can output an empty result
+    // If no #CHROM found or no variants, handle gracefully
+    if (!foundChrom) {
+        std::cerr << "Error: No #CHROM line found.\n";
+        out << "Sample\tInbreedingCoefficient\n";
+        return;
+    }
+    if (numSamples == 0) {
+        std::cerr << "Error: No sample columns found.\n";
+        out << "Sample\tInbreedingCoefficient\n";
+        return;
+    }
+    if (variants.empty()) {
+        // No valid (biallelic) variants
+        std::cerr << "No biallelic variants found.\n";
+        out << "Sample\tInbreedingCoefficient\n";
+        for (int s=0; s<numSamples; s++){
+            out << sampleNames[s] << "\tNA\n";
+        }
         return;
     }
 
-    // Now compute inbreeding for each sample
-    // We'll do a 2 pass approach: in pass 1, for each variant we compute total # alt alleles among
-    // all samples that have code>=0. We'll store that in an int altCount
-    // We'll also store how many samples have code>=0 => count *2 => totalAlleles
-
-    // store altCount, nGenotypes for each variant
-    std::vector<int> altCounts(variants.size(),0);
-    std::vector<int> validSampleCounts(variants.size(),0);
-
-    // pass 1
-    for(size_t vIdx=0; vIdx<variants.size(); vIdx++){
-        int altC=0;
-        int nG=0;
-        const auto & codes= variants[vIdx].genotypeCodes;
-        for(int s=0; s<numSamples; s++){
-            int c= codes[s];
-            if(c<0) continue; // skip
-            // c in [0,1,2]
-            // alt alleles => c
-            // 0 => no alt, 1 => 1 alt, 2 => 2 alt
-            altC+= c;
-            nG++;
-        }
-        altCounts[vIdx]= altC;
-        validSampleCounts[vIdx]= nG;
-    }
-
-    // pass 2: for each sample, we do sum of obsHet and sumExp
-    std::vector<double> obsHet (numSamples, 0.0);
+    // Prepare result arrays
     std::vector<double> sumExp(numSamples, 0.0);
-    std::vector<int> usedVariantCount(numSamples,0);
+    std::vector<double> obsHet(numSamples, 0.0);
+    std::vector<int>    usedCount(numSamples, 0);
 
-    for(size_t vIdx=0; vIdx<variants.size(); vIdx++){
-        const auto & codes= variants[vIdx].genotypeCodes;
-        int altC= altCounts[vIdx];
-        int nG= validSampleCounts[vIdx];
-        if(nG<2) {
-            // not enough samples
+    // 2) For each variant
+    for (size_t v=0; v<variants.size(); v++){
+        const auto &var = variants[v];
+        const auto &codes = var.genotypeCodes;
+
+        // Count altSum & nGood (i.e. how many samples have code>=0)
+        int altSum = 0;
+        int nGood  = 0;
+        for (int s=0; s<numSamples; s++){
+            if (codes[s] >= 0) {
+                altSum += codes[s];
+                nGood++;
+            }
+        }
+        // If fewer than 2 genotyped samples, skip
+        if (nGood < 2) {
             continue;
         }
-        // for each sample with code>=0 => compute freq excluding sample
-        // altEx= altC - code, nEx= nG-1 => p= altEx/(2*nEx)
-        for(int s=0; s<numSamples; s++){
-            int c= codes[s];
-            if(c<0) {
-                // skip
+
+        // For freq-mode=GLOBAL, we compute p once
+        double globalP = (double)altSum / (2.0 * nGood);
+
+        // 3) Each sample that has a valid genotype
+        for (int s=0; s<numSamples; s++){
+            int code = codes[s];
+            if (code < 0) {
+                continue; // missing or invalid
+            }
+
+            double p;
+            if (freqMode_ == FrequencyMode::GLOBAL) {
+                p = globalP;
+            } else {
+                // freqMode_ == FrequencyMode::EXCLUDE_SAMPLE
+                int altEx   = altSum - code;
+                int validEx = nGood  - 1;
+                if (validEx < 1) {
+                    // can't define p => skip
+                    continue;
+                }
+                p = (double)altEx / (2.0 * validEx);
+            }
+
+            // If skipBoundary_ is set and p is boundary
+            if (skipBoundary_ && (p <= 0.0 || p >= 1.0)) {
+                // If user wants to count boundary as used
+                if (countBoundaryAsUsed_) {
+                    // This increments usedCount but adds 0 to sumExp
+                    usedCount[s]++;
+                }
+                // Then continue, so we don't add eHet
                 continue;
             }
-            int altEx= altC - c;
-            int nEx= nG -1;
-            if(nEx<1) {
-                // can't do freq
-                continue;
+
+            // Mark that we used this site for sample s
+            usedCount[s]++;
+
+            // expected heterozygosity
+            double eHet = 2.0 * p * (1.0 - p);
+            sumExp[s]   += eHet;
+
+            // observed heterozygosity increment if 0/1 => code=1
+            if (code == 1) {
+                obsHet[s] += 1.0;
             }
-            double p= (double)altEx/(2.0*nEx);
-            // expected het => 2 p(1-p)
-            double eHet= 2.0 * p * (1.0 - p);
-            sumExp[s]+= eHet;
-            if(c==1) {
-                obsHet[s]+=1.0;
-            }
-            usedVariantCount[s]++;
         }
     }
 
-    // now compute F => 1 - obsHet/sumExp
-    // if sumExp=0 => "NA"
-    // output
-    std::cout<<"Sample\tInbreedingCoefficient\n";
-    for(int s=0; s<numSamples; s++){
-        if(usedVariantCount[s]==0) {
-            std::cout<< sampleNames[s] << "\tNA\n";
+    // 4) Output
+    out << "Sample\tInbreedingCoefficient\n";
+    for (int s=0; s<numSamples; s++){
+        if (usedCount[s] == 0) {
+            // No used sites => NA
+            out << sampleNames[s] << "\tNA\n";
             continue;
         }
-        double e= sumExp[s];
-        if(e<=0.0) {
-            std::cout<< sampleNames[s] << "\tNA\n";
+        double e = sumExp[s];
+        if (e <= 0.0) {
+            // used some sites => but sumExp=0 => fully homo => F=1
+            out << sampleNames[s] << "\t1.000000\n";
             continue;
         }
-        double f= 1.0 - (obsHet[s]/ e);
-        std::cout<< sampleNames[s] << "\t"<< std::fixed << std::setprecision(6) << f <<"\n";
+        double f = 1.0 - (obsHet[s] / e);
+        out << sampleNames[s] << "\t"
+            << std::fixed << std::setprecision(6)
+            << f << "\n";
     }
 }
 
-// -------------------------------------------------------------------------
-// run
-// -------------------------------------------------------------------------
-int VCFXInbreedingCalculator::run(int argc, char* argv[]) {
-    // parse args for help
-    int opt;
-    bool showHelp= false;
+// --------------------------------------------------------------------------
+int VCFXInbreedingCalculator::run(int argc, char* argv[]){
+    bool showHelp = false;
+
     static struct option long_opts[] = {
-        {"help", no_argument, 0, 'h'},
+        {"help",                no_argument,       0, 'h'},
+        {"freq-mode",           required_argument, 0,  0 },
+        {"skip-boundary",       no_argument,       0,  0 },
+        {"count-boundary-as-used", no_argument,    0,  0 },
         {0,0,0,0}
     };
-    while(true){
-        int c= getopt_long(argc, argv, "h", long_opts, NULL);
-        if(c==-1) break;
+
+    // Parse arguments
+    while(true) {
+        int option_index = 0;
+        int c = getopt_long(argc, argv, "h", long_opts, &option_index);
+        if (c == -1) break;
+
         switch(c){
             case 'h':
-                showHelp= true;
+                showHelp = true;
                 break;
+            case 0:
+            {
+                // We got a long option
+                std::string optName(long_opts[option_index].name);
+                if (optName == "freq-mode") {
+                    freqMode_ = parseFreqMode(optarg);
+                } else if (optName == "skip-boundary") {
+                    skipBoundary_ = true;
+                } else if (optName == "count-boundary-as-used") {
+                    countBoundaryAsUsed_ = true;
+                }
+                break;
+            }
             default:
-                showHelp= true;
+                showHelp = true;
         }
     }
+
     if(showHelp) {
         displayHelp();
         return 0;
     }
 
-    // do main
+    // Run main logic
     calculateInbreeding(std::cin, std::cout);
     return 0;
 }
 
+// -------------------------------------------------------------------------
+// main entry point
 int main(int argc, char* argv[]){
     VCFXInbreedingCalculator calc;
     return calc.run(argc, argv);

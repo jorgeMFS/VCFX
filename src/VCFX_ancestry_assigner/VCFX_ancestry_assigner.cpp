@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <getopt.h>
+#include <limits>
 
 // ---------------------------------------------------------
 // A helper struct to store command-line options if needed
@@ -213,8 +214,10 @@ void VCFXAncestryAssigner::assignAncestry(std::istream& vcfIn, std::ostream& out
     int chrIndex = -1, posIndex = -1, refIndex = -1, altIndex = -1;
     std::vector<std::string> sampleNames;
 
-    // For each sample: sampleScores[sample][population] => cumulative ancestry score
+    // For each sample: sampleScores[sample][population] => log likelihood
     std::unordered_map<std::string, std::unordered_map<std::string, double>> sampleScores;
+    // For each sample: number of variants used in scoring
+    std::unordered_map<std::string, int> sampleVariantCounts;
 
     while (std::getline(vcfIn, line)) {
         if (line.empty()) {
@@ -234,7 +237,7 @@ void VCFXAncestryAssigner::assignAncestry(std::istream& vcfIn, std::ostream& out
                 }
                 // Identify columns
                 for (size_t i = 0; i < headers.size(); ++i) {
-                    if (headers[i] == "CHROM") chrIndex = (int)i;
+                    if (headers[i] == "#CHROM" || headers[i] == "CHROM") chrIndex = (int)i;
                     else if (headers[i] == "POS") posIndex = (int)i;
                     else if (headers[i] == "REF") refIndex = (int)i;
                     else if (headers[i] == "ALT") altIndex = (int)i;
@@ -246,193 +249,157 @@ void VCFXAncestryAssigner::assignAncestry(std::istream& vcfIn, std::ostream& out
                 // Sample columns start at index 9
                 for (size_t i = 9; i < headers.size(); ++i) {
                     sampleNames.push_back(headers[i]);
-                    // Initialize all sample->pop scores to 0
-                    for (auto &pop : populations) {
+                    // Initialize scores for this sample
+                    for (const auto& pop : populations) {
                         sampleScores[headers[i]][pop] = 0.0;
                     }
+                    sampleVariantCounts[headers[i]] = 0;
                 }
             }
-            continue; // skip printing these lines
+            continue;
         }
 
-        // Must have #CHROM line before data
         if (!haveHeader) {
-            std::cerr << "Error: VCF data encountered before #CHROM line.\n";
+            std::cerr << "Error: VCF header not found.\n";
             return;
         }
 
-        // Parse a data line
+        // Parse VCF line
         std::stringstream ss(line);
         std::vector<std::string> fields;
-        std::string f;
-        while (std::getline(ss, f, '\t')) {
-            fields.push_back(f);
+        std::string field;
+        while (std::getline(ss, field, '\t')) {
+            fields.push_back(field);
         }
+
         if (fields.size() < 9) {
-            // Not enough columns
+            std::cerr << "Warning: Skipping malformed VCF line:\n" << line << "\n";
             continue;
         }
 
-        const std::string &chrom = fields[chrIndex];
-        int posVal = 0;
-        try {
-            posVal = std::stoi(fields[posIndex]);
-        } catch (...) {
-            // invalid POS
-            continue;
-        }
-        const std::string &ref = fields[refIndex];
-        const std::string &altField = fields[altIndex];
+        const std::string& chrom = fields[chrIndex];
+        const std::string& pos = fields[posIndex];
+        const std::string& ref = fields[refIndex];
+        const std::string& alt = fields[altIndex];
 
-        // Split ALT by comma for multi-allelic
-        std::vector<std::string> alts;
-        {
-            std::stringstream altSS(altField);
-            std::string a;
-            while (std::getline(altSS, a, ',')) {
-                alts.push_back(a);
-            }
+        // Build key for frequency lookup
+        const std::string key = chrom + ":" + pos + ":" + ref + ":" + alt;
+        auto freqIt = variantFrequencies.find(key);
+        if (freqIt == variantFrequencies.end()) {
+            continue; // Skip variants not in frequency file
         }
 
-        // Identify the GT field index from the FORMAT column
-        const std::string &formatCol = fields[8];
-        std::vector<std::string> formatParts;
-        {
-            std::stringstream fmts(formatCol);
-            while (std::getline(fmts, f, ':')) {
-                formatParts.push_back(f);
-            }
+        // Parse FORMAT field
+        std::stringstream formatSS(fields[8]);
+        std::vector<std::string> formatFields;
+        std::string formatField;
+        while (std::getline(formatSS, formatField, ':')) {
+            formatFields.push_back(formatField);
         }
+
+        // Find GT index in FORMAT
         int gtIndex = -1;
-        for (size_t i = 0; i < formatParts.size(); ++i) {
-            if (formatParts[i] == "GT") {
+        for (size_t i = 0; i < formatFields.size(); ++i) {
+            if (formatFields[i] == "GT") {
                 gtIndex = (int)i;
                 break;
             }
         }
         if (gtIndex < 0) {
-            // No genotype data
-            continue;
+            continue; // Skip if no GT field
         }
 
-        // For each sample
-        for (size_t s = 0; s < sampleNames.size(); ++s) {
-            // The sample field is at index (9 + s)
-            size_t sampleFieldIndex = 9 + s;
-            if (sampleFieldIndex >= fields.size()) {
-                continue; // no data
-            }
-            const std::string &sampleStr = fields[sampleFieldIndex];
-            // e.g. "0/1:..." => split by ':'
-            std::vector<std::string> sampleParts;
-            {
-                std::stringstream sss(sampleStr);
-                std::string x;
-                while (std::getline(sss, x, ':')) {
-                    sampleParts.push_back(x);
-                }
-            }
-            if ((int)sampleParts.size() <= gtIndex) {
-                // no GT for this sample
+        // Process each sample
+        for (size_t i = 0; i < sampleNames.size(); ++i) {
+            const std::string& sample = sampleNames[i];
+            if (i + 9 >= fields.size()) {
                 continue;
             }
-            // genotype string, e.g. "0/1"
-            const std::string &genotype = sampleParts[gtIndex];
 
+            // Parse genotype
+            std::stringstream sampleSS(fields[i + 9]);
+            std::vector<std::string> sampleFields;
+            std::string sampleField;
+            while (std::getline(sampleSS, sampleField, ':')) {
+                sampleFields.push_back(sampleField);
+            }
+
+            if (gtIndex >= (int)sampleFields.size()) {
+                continue; // Skip if GT field missing
+            }
+
+            const std::string& gt = sampleFields[gtIndex];
+            if (gt == "./." || gt == ".|.") {
+                continue; // Skip missing genotypes
+            }
+
+            // Parse alleles
+            std::vector<std::string> alleles;
+            std::string gtCopy = gt;
             // Replace '|' with '/' for consistency
-            std::string gt = genotype;
-            for (char &c : gt) {
+            for (char& c : gtCopy) {
                 if (c == '|') c = '/';
             }
-
-            // Split genotype on '/'
-            // e.g. "1/2"
-            std::vector<std::string> gtAlleles;
-            {
-                std::stringstream gts(gt);
-                std::string tok;
-                while (std::getline(gts, tok, '/')) {
-                    gtAlleles.push_back(tok);
+            std::stringstream gtSS(gtCopy);
+            std::string allele;
+            while (std::getline(gtSS, allele, '/')) {
+                if (allele != ".") {
+                    alleles.push_back(allele);
                 }
             }
-            if (gtAlleles.size() < 2) {
-                // not a diploid or not parseable
-                continue;
+            if (alleles.size() != 2) {
+                continue; // Skip invalid genotypes
             }
 
-            // For each allele in genotype:
-            //   0 => REF, 1 => alts[0], 2 => alts[1], etc.
-            // If an allele is numeric but >0, we find that alt, look up freq => add to ancestry
-            for (size_t alleleIndex = 0; alleleIndex < gtAlleles.size(); ++alleleIndex) {
-                const std::string &aStr = gtAlleles[alleleIndex];
-                if (aStr.empty() || aStr == ".") {
-                    continue; // missing
-                }
-                bool numeric = true;
-                for (char c : aStr) {
-                    if (!isdigit(c)) {
-                        numeric = false;
-                        break;
-                    }
-                }
-                if (!numeric) {
-                    continue;
-                }
-                int alleleInt = std::stoi(aStr);
-                if (alleleInt <= 0) {
-                    // 0 => ref
-                    continue;
-                }
-                if ((size_t)alleleInt > alts.size()) {
-                    // genotype says "3" but we only have 2 alts => skip
-                    continue;
-                }
-                // The alt is alts[alleleInt - 1]
-                const std::string &thisAlt = alts[alleleInt - 1];
+            // Calculate scores for each population
+            for (const auto& pop : populations) {
+                double altFreq = freqIt->second.at(pop);
+                
+                // Ensure frequencies are not too close to 0 or 1
+                altFreq = std::max(0.001, std::min(0.999, altFreq));
+                double refFreq = 1.0 - altFreq;
 
-                // Build key for freq
-                std::string key = chrom + ":" + std::to_string(posVal) + ":" + ref + ":" + thisAlt;
-                auto it = variantFrequencies.find(key);
-                if (it == variantFrequencies.end()) {
-                    // We have no freq data for this alt
-                    continue;
+                // Calculate genotype probability under Hardy-Weinberg equilibrium
+                double p = 0.0;
+                if (gt == "0/0" || gt == "0|0") {
+                    p = refFreq * refFreq;
                 }
-                // freqMap => pop => freq
-                const auto &freqMap = it->second;
+                else if (gt == "0/1" || gt == "1/0" || gt == "0|1" || gt == "1|0") {
+                    p = 2.0 * refFreq * altFreq;
+                }
+                else if (gt == "1/1" || gt == "1|1") {
+                    p = altFreq * altFreq;
+                }
 
-                // pick the population with the highest freq
-                double maxFreq = -1.0;
-                std::string bestPop;
-                for (auto &popFreq : freqMap) {
-                    if (popFreq.second > maxFreq) {
-                        maxFreq = popFreq.second;
-                        bestPop = popFreq.first;
-                    }
-                }
-                if (bestPop.empty()) {
-                    continue; // no freq data
-                }
-                // add score for bestPop
-                // Each allele we see => + maxFreq
-                // (2 alt copies if genotype=1/1 => we do it twice in loop)
-                sampleScores[sampleNames[s]][bestPop] += maxFreq;
+                // Add log-likelihood to score
+                double logLikelihood = -std::log(p + 1e-12);
+                sampleScores[sample][pop] += logLikelihood;
             }
+            sampleVariantCounts[sample]++;
         }
     }
 
-    // After reading the VCF, pick the best population for each sample
-    out << "Sample\tAssigned_Ancestry\n";
-    for (auto &sample : sampleScores) {
-        const std::string &sampleName = sample.first;
-        double bestScore = -1.0;
-        std::string bestPop = "NA";
-        for (auto &p : sample.second) {
-            if (p.second > bestScore) {
-                bestScore = p.second;
-                bestPop = p.first;
+    // Output results
+    for (const auto& sample : sampleNames) {
+        if (sampleVariantCounts[sample] == 0) {
+            out << sample << "\tUNKNOWN\n";
+            continue;
+        }
+
+        // Find population with highest likelihood (lowest negative log-likelihood)
+        std::string bestPop = populations[0];
+        double bestScore = sampleScores[sample][populations[0]];
+
+        std::cerr << "Final scores for " << sample << ":\n";
+        for (const auto& pop : populations) {
+            std::cerr << "  " << pop << ": " << sampleScores[sample][pop] << "\n";
+            if (sampleScores[sample][pop] < bestScore) {
+                bestScore = sampleScores[sample][pop];
+                bestPop = pop;
             }
         }
-        out << sampleName << "\t" << bestPop << "\n";
+
+        out << sample << "\t" << bestPop << "\n";
     }
 }
 

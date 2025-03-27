@@ -1,0 +1,2 @@
+==== START OF TEST: invalid_mode ====
+Error: --mode must be 'any' or 'all'.

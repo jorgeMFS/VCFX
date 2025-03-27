@@ -1,0 +1,11 @@
+VCFX_file_splitter: Split a VCF file into multiple files based on chromosome.
+
+Usage:
+  VCFX_file_splitter [options] < input.vcf
+
+Options:
+  -h, --help            Display this help message and exit
+  -p, --prefix <prefix> Output file prefix (default: 'split')
+
+Example:
+  VCFX_file_splitter --prefix "chr" < input.vcf

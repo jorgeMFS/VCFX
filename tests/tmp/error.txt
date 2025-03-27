@@ -1,0 +1,1 @@
+Error: --mode must be 'any' or 'all'.

@@ -1,0 +1,7 @@
+##fileformat=VCFv4.2
+##source=VCFX_test
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	100	rs1	A	G	100	PASS	.
+1	200	rs2	C	T	100	PASS	.
+2	300	rs3	G	A	100	PASS	.
+2	400	rs4	T	C	100	PASS	.

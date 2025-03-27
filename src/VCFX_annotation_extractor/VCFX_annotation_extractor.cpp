@@ -210,19 +210,9 @@ static void processVCF(std::istream &in, const AnnotationOptions &opts) {
             }
         }
 
-        // Now let's produce lines, one per ALT. 
-        // For each alt, we figure out the sub-annotation for any multi-value fields
-        // like "ANN=val1,val2,val3" if we have 3 alts. 
-        // We'll do that if rawAnnValues["ANN"] != "NA" 
-        // We'll split by ',' and pick sub-annotation i for alt i 
-        // If out-of-range, "NA."
-        // We'll do the same for any annotation that looks comma separated. 
-        // If your annotation is not meant to align with alt, you might skip this logic 
-        // or check a list of known multi-value keys. 
-        // We'll assume all requested keys might be multi-value.
-
-        // For each annotation, we split on ',' 
-        // We store them in a vector. Then for alt index i, we pick subAnn[i] if exists, else "NA."
+        // For each annotation, we split on ',' ONLY if it's marked as Number=A in the VCF header
+        // Currently, we know ANN is Number=A, so we'll only split that one
+        // In a more complete implementation, we would parse the VCF header to know which fields are Number=A
         std::unordered_map<std::string, std::vector<std::string>> splittedAnnValues;
         for (auto &annName : opts.annotations) {
             std::string val = rawAnnValues[annName];
@@ -231,12 +221,15 @@ static void processVCF(std::istream &in, const AnnotationOptions &opts) {
                 splittedAnnValues[annName] = {};
                 continue;
             }
-            // split by ','
-            auto subVals = split(val, ',');
-            splittedAnnValues[annName] = subVals;
+            // Only split ANN field, which we know is Number=A
+            // Other fields like Gene, Impact, DP are single-value
+            if (annName == "ANN") {
+                auto subVals = split(val, ',');
+                splittedAnnValues[annName] = subVals;
+            }
         }
 
-        // Now produce lines
+        // Now let's produce lines
         for (size_t altIndex = 0; altIndex < alts.size(); ++altIndex) {
             // alt allele
             const std::string &thisAlt = alts[altIndex];
@@ -248,18 +241,30 @@ static void processVCF(std::istream &in, const AnnotationOptions &opts) {
             outLine << chrom << "\t" << pos << "\t" << id << "\t" 
                     << ref << "\t" << thisAlt;
 
-            // Now each annotation
+            // For each requested annotation
             for (auto &annName : opts.annotations) {
-                const auto &subVals = splittedAnnValues[annName];
-                std::string outVal = "NA";
-                if (altIndex < subVals.size() && !subVals[altIndex].empty()) {
-                    outVal = subVals[altIndex];
+                outLine << "\t";
+                // Check if this is a multi-value annotation (like ANN)
+                auto it = splittedAnnValues.find(annName);
+                if (it != splittedAnnValues.end() && !it->second.empty()) {
+                    // This is a multi-value annotation
+                    if (altIndex < it->second.size()) {
+                        outLine << it->second[altIndex];
+                    } else {
+                        outLine << "NA";
+                    }
+                } else {
+                    // This is a single-value annotation
+                    auto rawIt = rawAnnValues.find(annName);
+                    if (rawIt != rawAnnValues.end()) {
+                        outLine << rawIt->second;
+                    } else {
+                        outLine << "NA";
+                    }
                 }
-                outLine << "\t" << outVal;
             }
-
-            // Print
-            std::cout << outLine.str() << "\n";
+            outLine << "\n";
+            std::cout << outLine.str();
         }
     }
 }
@@ -271,7 +276,8 @@ int main(int argc, char* argv[]) {
     AnnotationOptions opts;
     if (!parseArguments(argc, argv, opts)) {
         // parseArguments already printed help if needed
-        return 0; 
+        // Return 1 to indicate error
+        return 1;
     }
     // Process from stdin => produce to stdout
     processVCF(std::cin, opts);

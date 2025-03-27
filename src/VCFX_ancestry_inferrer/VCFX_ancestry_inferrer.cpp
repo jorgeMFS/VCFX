@@ -449,3 +449,4 @@ bool VCFXAncestryInferrer::inferAncestry(std::istream& vcfInput, std::ostream& o
     return true;
 }
 
+

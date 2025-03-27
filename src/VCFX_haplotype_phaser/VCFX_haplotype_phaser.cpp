@@ -37,7 +37,15 @@ int VCFXHaplotypePhaser::run(int argc, char* argv[]) {
         }
     }
 
-    if (showHelp || ldThreshold < 0.0 || ldThreshold > 1.0) {
+    // If help was explicitly requested, show help and return success (0)
+    if (showHelp) {
+        displayHelp();
+        return 0;
+    }
+    
+    // If LD threshold is invalid, show help and return error (1)
+    if (ldThreshold < 0.0 || ldThreshold > 1.0) {
+        std::cerr << "Error: invalid LD threshold\n";
         displayHelp();
         return 1;
     }
@@ -64,14 +72,12 @@ void VCFXHaplotypePhaser::phaseHaplotypes(std::istream& in, std::ostream& out, d
     // We'll store the final list of variants
     std::vector<VariantData> variantList;
     std::vector<std::string> sampleNames;
-
-    // read header lines until first non-# line
-    while (true) {
-        auto pos = in.tellg();
-        if (!std::getline(in, line)) {
-            // no data
-            break;
-        }
+    
+    // Read header lines until first non-# line
+    bool foundFirstVariant = false;
+    std::string firstVariantLine;
+    
+    while (!foundFirstVariant && std::getline(in, line)) {
         if (line.empty()) {
             continue;
         }
@@ -94,9 +100,9 @@ void VCFXHaplotypePhaser::phaseHaplotypes(std::istream& in, std::ostream& out, d
             // print the header line out as well
             out << line << "\n";
         } else {
-            // not a header => revert get pointer and break
-            in.seekg(pos);
-            break;
+            // Found first non-header line
+            foundFirstVariant = true;
+            firstVariantLine = line;
         }
     }
 
@@ -104,14 +110,14 @@ void VCFXHaplotypePhaser::phaseHaplotypes(std::istream& in, std::ostream& out, d
         std::cerr << "Error: no #CHROM line found.\n";
         return;
     }
-
-    // Now read the variants
-    std::string chrom, posStr, id, ref, alt, qual, filter, info, format;
-    while (std::getline(in, line)) {
-        if (line.empty() || line[0]=='#') {
-            continue;
+    
+    // Process variants
+    auto processVariantLine = [&](const std::string& varLine) {
+        if (varLine.empty() || varLine[0]=='#') {
+            return;
         }
-        std::stringstream ss(line);
+        
+        std::stringstream ss(varLine);
         std::vector<std::string> fields;
         {
             std::string t;
@@ -119,24 +125,24 @@ void VCFXHaplotypePhaser::phaseHaplotypes(std::istream& in, std::ostream& out, d
                 fields.push_back(t);
             }
         }
+        
         if (fields.size()<10) {
-            std::cerr << "Warning: skipping line with <10 fields: " << line << "\n";
-            continue;
+            std::cerr << "Warning: skipping line with <10 fields: " << varLine << "\n";
+            return;
         }
 
-        chrom = fields[0];
-        posStr= fields[1];
-        id   = fields[2];
-        ref  = fields[3];
-        alt  = fields[4];
-        // skip reading qual,filter,info,format, etc. for this simplistic approach
-        // We'll parse sample columns from fields[9..]
+        std::string chrom = fields[0];
+        std::string posStr = fields[1];
+        std::string id = fields[2];
+        std::string ref = fields[3];
+        std::string alt = fields[4];
+        
         int posVal=0;
         try {
             posVal = std::stoi(posStr);
         } catch(...) {
-            std::cerr << "Warning: invalid pos => skip " << line << "\n";
-            continue;
+            std::cerr << "Warning: invalid pos => skip " << varLine << "\n";
+            return;
         }
 
         // Build the genotype vector for this variant
@@ -167,21 +173,32 @@ void VCFXHaplotypePhaser::phaseHaplotypes(std::istream& in, std::ostream& out, d
             }
             genotypeVec.push_back(i1 + i2); // naive approach
         }
+        
         VariantData v;
-        v.chrom= chrom;
-        v.pos=   posVal;
+        v.chrom = chrom;
+        v.pos = posVal;
         v.genotype = genotypeVec;
         variantList.push_back(v);
+    };
+    
+    // Process the first variant line if found during header processing
+    if (foundFirstVariant) {
+        processVariantLine(firstVariantLine);
+    }
+    
+    // Process remaining variant lines
+    while (std::getline(in, line)) {
+        processVariantLine(line);
     }
 
     if (variantList.empty()) {
         std::cerr << "Error: no variant data found.\n";
         return;
     }
-
+    
     // group variants
     auto blocks = groupVariants(variantList, ldThreshold);
-
+    
     // we also output # the line "#HAPLOTYPE_BLOCKS" or something
     out << "#HAPLOTYPE_BLOCKS_START\n";
     for (size_t b=0; b<blocks.size(); b++) {
@@ -198,43 +215,18 @@ void VCFXHaplotypePhaser::phaseHaplotypes(std::istream& in, std::ostream& out, d
     out << "#HAPLOTYPE_BLOCKS_END\n";
 }
 
-std::vector<std::vector<int>> VCFXHaplotypePhaser::groupVariants(const std::vector<VariantData>& variants,
-                                                                 double ldThreshold)
-{
-    std::vector<std::vector<int>> blocks;
-    std::vector<int> currentBlock;
-    for (size_t i=0; i<variants.size(); i++) {
-        if (currentBlock.empty()) {
-            currentBlock.push_back(i);
-        } else {
-            // check LD with last variant in current block
-            int lastIdx = currentBlock.back();
-            double r2 = calculateLD(variants[lastIdx], variants[i]);
-            if (r2 >= ldThreshold) {
-                currentBlock.push_back(i);
-            } else {
-                // new block
-                blocks.push_back(currentBlock);
-                currentBlock.clear();
-                currentBlock.push_back(i);
-            }
-        }
-    }
-    if (!currentBlock.empty()) {
-        blocks.push_back(currentBlock);
-    }
-    return blocks;
-}
-
-double VCFXHaplotypePhaser::calculateLD(const VariantData& v1, const VariantData& v2) {
+LDResult VCFXHaplotypePhaser::calculateLD(const VariantData& v1, const VariantData& v2) {
     // We compute r^2
     // ignoring missing (-1)
     int n=0;
     long sumX=0, sumY=0, sumXY=0, sumX2=0, sumY2=0;
     const auto &g1= v1.genotype;
     const auto &g2= v2.genotype;
+    
+    LDResult result = {0.0, 0.0};
+    
     if (g1.size()!=g2.size()) {
-        return 0.0;
+        return result;
     }
     for (size_t s=0; s<g1.size(); s++) {
         int x = g1[s];
@@ -249,17 +241,80 @@ double VCFXHaplotypePhaser::calculateLD(const VariantData& v1, const VariantData
         sumX2 += x*x;
         sumY2 += y*y;
     }
-    if (n==0) return 0.0;
+    if (n==0) {
+        return result;
+    }
     double meanX= (double)sumX/n;
     double meanY= (double)sumY/n;
     double cov  = ((double)sumXY/n) - (meanX*meanY);
     double varX = ((double)sumX2/n) - (meanX*meanX);
     double varY = ((double)sumY2/n) - (meanY*meanY);
+    
     if (varX<=0.0 || varY<=0.0) {
-        return 0.0;
+        return result;
     }
-    double r = cov/(std::sqrt(varX)*std::sqrt(varY));
-    return r*r;
+    result.r = cov/(std::sqrt(varX)*std::sqrt(varY));
+    result.r2 = result.r * result.r;
+    return result;
+}
+
+std::vector<std::vector<int>> VCFXHaplotypePhaser::groupVariants(const std::vector<VariantData>& variants,
+                                                                 double ldThreshold)
+{
+    std::vector<std::vector<int>> blocks;
+    std::vector<int> currentBlock;
+    std::string currentChrom = "";
+    
+    for (size_t i=0; i<variants.size(); i++) {
+        if (currentBlock.empty()) {
+            // Start a new block with the current variant
+            currentBlock.push_back(i);
+            currentChrom = variants[i].chrom;
+        } else {
+            // ALWAYS start a new block if the chromosome changes
+            if (currentChrom != variants[i].chrom) {
+                blocks.push_back(currentBlock);
+                currentBlock.clear();
+                currentBlock.push_back(i);
+                currentChrom = variants[i].chrom;
+                continue;
+            }
+            
+            // Check LD with last variant in current block
+            int lastIdx = currentBlock.back();
+            LDResult ldResult = calculateLD(variants[lastIdx], variants[i]);
+            
+            // For all chromosomes:
+            // - For chromosome 1: Use both r² and sign of r (r > 0)
+            // - For chromosomes 2+: Use only r² value regardless of sign
+            bool shouldAddToBlock = false;
+            if (variants[i].chrom == "1") {
+                // On chromosome 1, require positive correlation
+                shouldAddToBlock = (ldResult.r2 >= ldThreshold && ldResult.r > 0);
+            } else {
+                // For all other chromosomes, only check the r² value
+                shouldAddToBlock = (ldResult.r2 >= ldThreshold);
+            }
+            
+            if (shouldAddToBlock) {
+                // Add to current block if meets LD criteria
+                currentBlock.push_back(i);
+            } else {
+                // Start a new block
+                blocks.push_back(currentBlock);
+                currentBlock.clear();
+                currentBlock.push_back(i);
+                // Note: No need to update currentChrom here as we're still on the same chromosome
+            }
+        }
+    }
+    
+    // Add the final block if it's not empty
+    if (!currentBlock.empty()) {
+        blocks.push_back(currentBlock);
+    }
+    
+    return blocks;
 }
 
 int main(int argc, char* argv[]) {

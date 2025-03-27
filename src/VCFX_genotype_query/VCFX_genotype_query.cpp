@@ -3,6 +3,8 @@
 #include <vector>
 #include <algorithm>
 #include <cstdlib>
+#include <iostream>
+#include <cctype>
 
 // ------------------------------------------------------------------
 // printHelp
@@ -49,9 +51,10 @@ bool parseArguments(int argc, char* argv[], std::string& genotype_query, bool &s
 }
 
 // ------------------------------------------------------------------
-// Helper: unify genotype by replacing '|' with '/', then possibly sorting alleles if not strict
-// e.g. "0|1" => "0/1", "2|1" => "1/2" if not strict
-// returns "" if malformed
+// unifyGenotype(gt, strict):
+//   - If strict==true, return gt unchanged.
+//   - Else unify phasing by replacing '|' with '/', and sort alleles numerically
+//   - Return empty if malformed
 // ------------------------------------------------------------------
 static std::string unifyGenotype(const std::string &gt, bool strict) {
     if (gt.empty()) return "";
@@ -60,13 +63,14 @@ static std::string unifyGenotype(const std::string &gt, bool strict) {
     if (strict) {
         return gt;
     }
-    // else unify phasing, sort alleles
+
+    // unify phasing
     std::string g = gt;
-    // unify separators
     for (char &c : g) {
-        if (c=='|') c='/';
+        if (c=='|') c = '/';
     }
-    // split
+
+    // Split on '/'
     std::vector<std::string> tokens;
     {
         std::stringstream ss(g);
@@ -75,22 +79,20 @@ static std::string unifyGenotype(const std::string &gt, bool strict) {
             tokens.push_back(t);
         }
     }
-    if (tokens.size()<2) {
-        // not diploid => can just return g or empty
-        return g; 
+    // If not diploid or missing, just return g
+    if (tokens.size() != 2) {
+        return g;
     }
-    // check if both are numeric
+
+    // Check numeric; if not numeric or ".", leave as is
     std::vector<int> vals;
-    vals.reserve(tokens.size());
     for (auto &tk : tokens) {
         if (tk=="." || tk.empty()) {
             // missing
-            return g; // unify as is or return empty
+            return g;
         }
-        // check numeric
         for (char c : tk) {
-            if (!std::isdigit(c)) {
-                // not numeric => just return g
+            if (!std::isdigit(static_cast<unsigned char>(c))) {
                 return g;
             }
         }
@@ -98,157 +100,144 @@ static std::string unifyGenotype(const std::string &gt, bool strict) {
     }
     // sort numeric
     std::sort(vals.begin(), vals.end());
+
     // reassemble
     std::stringstream out;
-    out << vals[0];
-    for (size_t i=1; i<vals.size(); i++) {
-        out << "/" << vals[i];
-    }
+    out << vals[0] << "/" << vals[1];
     return out.str();
 }
 
 // ------------------------------------------------------------------
-// genotypeQuery
+// genotypeQuery: stream-based approach
 // ------------------------------------------------------------------
 void genotypeQuery(std::istream& in, std::ostream& out,
                    const std::string& genotype_query,
-                   bool strictCompare) {
-    std::string line;
-    bool headerFound = false;
+                   bool strictCompare) 
+{
+    bool foundChrom = false;
+    bool printedHeader = false;
+    std::vector<std::string> headerLines;
 
     // We'll unify the user-specified genotype if !strict
     std::string unifiedQuery = unifyGenotype(genotype_query, strictCompare);
     if (unifiedQuery.empty()) {
-        // fallback
+        // fallback to whatever user typed
         unifiedQuery = genotype_query;
     }
 
-    // Find all header lines
-    std::vector<std::string> headerLines;
-    
-    while (std::getline(in, line)) {
+    // Read the file line by line
+    std::string line;
+    while (true) {
+        if (!std::getline(in, line)) {
+            // EOF
+            break;
+        }
         if (line.empty()) {
             continue;
         }
-        
+
         if (line[0] == '#') {
-            // Store header lines
+            // This is a header line
             headerLines.push_back(line);
-            if (line.rfind("#CHROM",0)==0) {
-                headerFound = true;
-                break;
+            // Check if it's the #CHROM line
+            if (line.rfind("#CHROM", 0) == 0) {
+                foundChrom = true;
             }
         } else {
-            std::cerr << "Error: No #CHROM header found before data lines.\n";
-            return;
-        }
-    }
-    
-    // Find all matching data lines
-    std::vector<std::string> matchingLines;
-    
-    while (std::getline(in, line)) {
-        if (line.empty()) {
-            continue;
-        }
-        
-        // parse columns
-        std::stringstream ss(line);
-        std::vector<std::string> fields;
-        {
-            std::string token;
-            while (std::getline(ss, token, '\t')) {
-                fields.push_back(token);
+            // Data line
+            if (!foundChrom) {
+                std::cerr << "Error: No #CHROM header found before data lines.\n";
+                return;
             }
-        }
-        
-        if (fields.size()<10) {
-            // not enough columns for at least 1 sample
-            std::cerr << "Warning: skipping line with <10 fields: " << line << "\n";
-            continue;
-        }
-        
-        // The 9th column is the format: e.g. GT:DP:...
-        std::string formatStr = fields[8];
-        // find GT index
-        std::vector<std::string> fmts;
-        {
-            std::stringstream fmtsSS(formatStr);
-            std::string f;
-            while (std::getline(fmtsSS, f, ':')) {
-                fmts.push_back(f);
+            // Print the header lines once, right before the first data line
+            if (!printedHeader) {
+                for (const auto &h : headerLines) {
+                    out << h << "\n";
+                }
+                printedHeader = true;
             }
-        }
-        
-        int gtIndex = -1;
-        for (int i=0; i<(int)fmts.size(); i++) {
-            if (fmts[i] == "GT") {
-                gtIndex = i;
-                break;
-            }
-        }
-        
-        if (gtIndex<0) {
-            // no GT => skip
-            continue;
-        }
-        
-        bool match = false;
-        // from column 10 onward are sample columns
-        for (size_t c=9; c<fields.size(); c++) {
-            // parse sample data by ':'
-            std::stringstream sampSS(fields[c]);
-            std::vector<std::string> sampleTokens;
+
+            // Parse columns
+            std::stringstream ss(line);
+            std::vector<std::string> fields;
             {
-                std::string x;
-                while (std::getline(sampSS, x, ':')) {
-                    sampleTokens.push_back(x);
+                std::string token;
+                while (std::getline(ss, token, '\t')) {
+                    fields.push_back(token);
                 }
             }
-            if (gtIndex >= (int)sampleTokens.size()) {
-                continue; 
+            if (fields.size() < 10) {
+                std::cerr << "Warning: skipping line with <10 fields: " << line << "\n";
+                continue;
             }
-            // unify genotype
-            std::string gtVal = unifyGenotype(sampleTokens[gtIndex], strictCompare);
-            if (gtVal == unifiedQuery) {
-                match = true;
-                break;
+
+            // FORMAT column is fields[8]. We look for "GT" inside it
+            std::string formatStr = fields[8];
+            std::vector<std::string> fmts;
+            {
+                std::stringstream fmtsSS(formatStr);
+                std::string f;
+                while (std::getline(fmtsSS, f, ':')) {
+                    fmts.push_back(f);
+                }
+            }
+            int gtIndex = -1;
+            for (int i=0; i<(int)fmts.size(); i++) {
+                if (fmts[i] == "GT") {
+                    gtIndex = i;
+                    break;
+                }
+            }
+            if (gtIndex < 0) {
+                // no GT => skip
+                continue;
+            }
+
+            // Check each sample's GT
+            bool match = false;
+            for (size_t c = 9; c < fields.size(); c++) {
+                std::stringstream sampSS(fields[c]);
+                std::vector<std::string> sampleTokens;
+                {
+                    std::string x;
+                    while (std::getline(sampSS, x, ':')) {
+                        sampleTokens.push_back(x);
+                    }
+                }
+                if (gtIndex >= (int)sampleTokens.size()) {
+                    continue; 
+                }
+                // unify genotype
+                std::string gtVal = unifyGenotype(sampleTokens[gtIndex], strictCompare);
+                if (gtVal == unifiedQuery) {
+                    match = true;
+                    break;
+                }
+            }
+
+            if (match) {
+                out << line << "\n";
             }
         }
-        
-        if (match) {
-            matchingLines.push_back(line);
-        }
     }
-    
-    // Output header lines
-    for (const auto& hline : headerLines) {
-        out << hline << "\n";
+
+    // If we never found #CHROM, error out
+    if (!foundChrom) {
+        std::cerr << "Error: No #CHROM line found in VCF.\n";
+        return;
     }
-    
-    // Output matching lines
-    for (size_t i = 0; i < matchingLines.size(); i++) {
-        if (i == matchingLines.size() - 1) {
-            // For the last line, check if we need special handling
-            std::stringstream ss(matchingLines[i]);
-            std::vector<std::string> fields;
-            std::string token;
-            while (std::getline(ss, token, '\t')) {
-                fields.push_back(token);
-            }
-            
-            // Special case for the genotype_query test
-            if (fields.size() > 2 && fields[0] == "1" && fields[1] == "800" && fields[2] == "rs8") {
-                out << matchingLines[i] << " ";  // Only space, no newline
-            } else {
-                out << matchingLines[i];
-            }
-        } else {
-            out << matchingLines[i] << "\n";
+    // If we found #CHROM but no data lines at all,
+    // we still need to print the header lines if not printed
+    if (!printedHeader) {
+        for (const auto &h : headerLines) {
+            out << h << "\n";
         }
     }
 }
 
+// ------------------------------------------------------------------
+// main
+// ------------------------------------------------------------------
 int main(int argc, char* argv[]) {
     std::string genotypeQueryStr;
     bool strictCompare = false;

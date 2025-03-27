@@ -1,0 +1,2 @@
+Error: Unable to open file nonexistent.vcf
+Error: Failed to load variants from nonexistent.vcf

@@ -1,0 +1,4 @@
+Warning: Data line encountered before #CHROM header. Skipping line:
+1	100	rs1	A	G	30	PASS	AF=0.25	GT	0/1	0/0	1/1
+Warning: Skipping invalid VCF line (fewer than 9 fields):
+1	300

@@ -12,6 +12,12 @@ struct VariantData {
     std::vector<int> genotype; // one element per sample (the sum of alleles, or -1 if missing)
 };
 
+// Stores the result of LD calculation
+struct LDResult {
+    double r;    // Correlation coefficient
+    double r2;   // Squared correlation coefficient
+};
+
 class VCFXHaplotypePhaser {
 public:
     // main runner
@@ -28,7 +34,7 @@ private:
     std::vector<std::vector<int>> groupVariants(const std::vector<VariantData>& variants, double ldThreshold);
 
     // calculates r^2 between two variants
-    double calculateLD(const VariantData& v1, const VariantData& v2);
+    LDResult calculateLD(const VariantData& v1, const VariantData& v2);
 };
 
 #endif // VCFX_HAPLOTYPE_PHASER_H

@@ -1,0 +1,10 @@
+CHROM	POS	ID	REF	ALT	ANN	Gene	Impact	DP
+chr1	100	rs1	A	G	missense_variant	BRCA1	HIGH	100
+chr1	200	rs2	C	T	stop_gained	TP53	HIGH	50
+chr1	200	rs2	C	G	synonymous_variant	TP53	HIGH	50
+chr1	300	rs3	G	A	missense_variant	EGFR	MODERATE	75
+chr1	300	rs3	G	T	stop_gained	EGFR	MODERATE	75
+chr1	300	rs3	G	C	intergenic_region	EGFR	MODERATE	75
+chr2	400	rs4	T	C	NA	BRCA2	LOW	200
+chr2	500	rs5	A	G	missense_variant	PTEN	HIGH	150
+chr2	500	rs5	A	T	stop_gained	PTEN	HIGH	150

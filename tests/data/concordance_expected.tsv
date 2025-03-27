@@ -1,0 +1,7 @@
+CHROM	POS	ID	REF	ALT	SAMPLE1_GT	SAMPLE2_GT	Concordance
+1	100	rs1	A	T	0/1	0/1	Concordant
+1	200	rs2	G	C	1/1	1/1	Concordant
+1	300	rs3	T	A	0/0	0/1	Discordant
+1	400	rs4	C	G	1/1	0/0	Discordant
+1	500	rs5	A	T,C	1/2	1/2	Concordant
+1	600	rs6	G	C,A	1/2	1/2	Concordant

@@ -1,0 +1,10 @@
+CHROM	POS	ID	REF	ALT	MissingAnn
+chr1	100	rs1	A	G	NA
+chr1	200	rs2	C	T	NA
+chr1	200	rs2	C	G	NA
+chr1	300	rs3	G	A	NA
+chr1	300	rs3	G	T	NA
+chr1	300	rs3	G	C	NA
+chr2	400	rs4	T	C	NA
+chr2	500	rs5	A	G	NA
+chr2	500	rs5	A	T	NA

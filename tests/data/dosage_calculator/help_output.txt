@@ -1,0 +1,19 @@
+VCFX_dosage_calculator: Calculate genotype dosage for each variant in a VCF file.
+
+Usage:
+  VCFX_dosage_calculator [options] < input.vcf > dosage_output.txt
+
+Options:
+  -h, --help    Display this help message and exit
+
+Description:
+  For each variant in the input VCF, the tool computes the dosage for each sample
+  based on the genotype (GT) field. Dosage is defined as the number of alternate
+  alleles (i.e. each allele > 0 counts as 1). Thus:
+    0/0  => dosage 0
+    0/1  => dosage 1
+    1/1  => dosage 2
+    1/2  => dosage 2  (each alternate, regardless of numeric value, counts as 1)
+
+Example:
+  VCFX_dosage_calculator < input.vcf > dosage_output.txt

@@ -1,0 +1,5 @@
+1	100	A	G	HighImpact
+1	200	T	C	ModerateImpact
+1	300	G	A	NoImpact
+2	100	C	T	CriticalImpact
+malformed line

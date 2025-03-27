@@ -1,0 +1,10 @@
+##fileformat=VCFv4.2
+##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes">
+##INFO=<ID=AN,Number=1,Type=Integer,Description="Total number of alleles in called genotypes">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE1	SAMPLE2
+
+1	100	rs1	A	G	100	PASS	AC=2;AN=4	GT	0/0	1/1
+
+# This is a comment
+1	200	rs2	C	T	100	PASS	AC=2;AN=4	GT	0/1	0/1
+

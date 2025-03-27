@@ -1,0 +1,10 @@
+CHROM	POS	ID	REF	ALT	Gene
+chr1	100	rs1	A	G	BRCA1
+chr1	200	rs2	C	T	TP53
+chr1	200	rs2	C	G	TP53
+chr1	300	rs3	G	A	EGFR
+chr1	300	rs3	G	T	EGFR
+chr1	300	rs3	G	C	EGFR
+chr2	400	rs4	T	C	BRCA2
+chr2	500	rs5	A	G	PTEN
+chr2	500	rs5	A	T	PTEN

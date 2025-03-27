@@ -1,0 +1,9 @@
+##fileformat=VCFv4.2
+##contig=<ID=1,length=1000>
+##INFO=<ID=CustomAnnotation,Number=.,Type=String,Description="Custom annotations added by VCFX_custom_annotator (multi-allelic)">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE1
+1	100	rs1	A	G	100	PASS	DP=10;CustomAnnotation=HighImpact	GT	0/1
+1	200	rs2	T	C,G	100	PASS	DP=20;CustomAnnotation=ModerateImpact,LowImpact	GT	0/1
+1	300	rs3	G	A,T	100	PASS	DP=30;CustomAnnotation=NoImpact,NA	GT	1/2
+2	100	rs4	C	T	100	PASS	CustomAnnotation=CriticalImpact	GT	0/1
+2	200	rs5	A	G	100	PASS	DP=40;CustomAnnotation=NA	GT	1/1

@@ -1,47 +1,94 @@
-#!/usr/bin/env bash
+#!/bin/bash
+
+# Run all tests in the test suite
+
+# Stop on first error
 set -e
 
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# The root directory is one level up from the tests directory
+ROOT_DIR="$( cd "$SCRIPT_DIR/.." && pwd )"
+
+# Create build directory if it doesn't exist
+mkdir -p "${ROOT_DIR}/build"
+cd "${ROOT_DIR}/build"
+
+# Configure and build
+cmake .. 
+make -j
+
+# Return to the tests directory
+cd "${SCRIPT_DIR}"
+
+# List of all test scripts
+TEST_SCRIPTS=(
+    "test_af_subsetter.sh"
+    "test_alignment_checker.sh"
+    "test_allele_balance_calc.sh"
+    "test_allele_balance_filter.sh"
+    "test_allele_counter.sh"
+    "test_allele_freq_calc.sh"
+    "test_ancestry_assigner.sh"
+    "test_ancestry_inferrer.sh"
+    "test_annotation_extractor.sh"
+    "test_compressor.sh"
+    "test_concordance_checker.sh"
+    "test_cross_sample_concordance.sh"
+    "test_custom_annotator.sh"
+    "test_diff_tool.sh"
+    "test_distance_calculator.sh"
+    "test_dosage_calculator.sh"
+    "test_duplicate_remover.sh"
+    "test_fasta_converter.sh"
+    "test_field_extractor.sh"
+    "test_file_splitter.sh"
+    "test_format_converter.sh"
+    "test_genotype_query.sh"
+    "test_gl_filter.sh"
+    "test_haplotype_extractor.sh"
+    "test_header_parser.sh"
+    "test_hwe_tester.sh"
+    "test_impact_filter.sh"
+    "test_indel_normalizer.sh"
+    "test_indexer.sh"
+    "test_info_aggregator.sh"
+    "test_info_summarizer.sh"
+    "test_inbreeding_calculator.sh"
+    "test_missing_data_handler.sh"
+    "test_missing_detector.sh"
+    "test_multiallelic_splitter.sh"
+    "test_nonref_filter.sh"
+    "test_outlier_detector.sh"
+    "test_phase_checker.sh"
+    "test_phred_filter.sh"
+    "test_population_filter.sh"
+    "test_position_subsetter.sh"
+    "test_probability_filter.sh"
+    "test_quality_adjuster.sh"
+    "test_record_filter.sh"
+    "test_ref_comparator.sh"
+    "test_sample_extractor.sh"
+    "test_sorter.sh"
+    "test_sv_handler.sh"
+    "test_validator.sh"
+    "test_variant_classifier.sh"
+    "test_variant_counter.sh"
+)
+
 # Run all tests
-echo "Running all VCFX tests..."
+for TEST_SCRIPT in "${TEST_SCRIPTS[@]}"; do
+    echo "---------------------------------------------------------"
+    echo "Running $TEST_SCRIPT"
+    echo "---------------------------------------------------------"
+    
+    # Make the script executable if it isn't already
+    chmod +x "$TEST_SCRIPT"
+    
+    # Run the test script
+    ./"$TEST_SCRIPT"
+    
+    echo
+done
 
-# Original tests
-bash test_af_subsetter.sh
-bash test_alignment_checker.sh
-bash test_allele_balance_filter.sh
-bash test_allele_balance_calc.sh
-bash test_allele_counter.sh
-
-# New tests
-bash test_header_parser.sh
-bash test_record_filter.sh
-bash test_field_extractor.sh
-bash test_format_converter.sh
-bash test_variant_counter.sh
-bash test_sample_extractor.sh
-
-# Additional comprehensive tests
-bash test_allele_freq_calc.sh
-bash test_ancestry_inferrer.sh
-bash test_distance_calculator.sh
-bash test_variant_classifier.sh
-bash test_cross_sample_concordance.sh
-bash test_phase_checker.sh
-bash test_validator.sh
-bash test_indel_normalizer.sh
-bash test_multiallelic_splitter.sh
-bash test_sv_handler.sh
-bash test_sorter.sh
-bash test_position_subsetter.sh
-bash test_haplotype_extractor.sh
-bash test_ref_comparator.sh
-bash test_phred_filter.sh
-bash test_missing_detector.sh
-bash test_nonref_filter.sh
-bash test_outlier_detector.sh
-bash test_population_filter.sh
-bash test_genotype_query.sh
-bash test_quality_adjuster.sh
-bash test_probability_filter.sh
-bash test_gl_filter.sh
-bash test_missing_data_handler.sh
-echo "All tests completed successfully!"
+echo "All tests passed!"

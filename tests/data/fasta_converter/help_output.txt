@@ -1,0 +1,16 @@
+VCFX_fasta_converter: Convert a variant-only VCF into simple per-sample FASTA.
+
+Usage:
+  VCFX_fasta_converter [options] < input.vcf > output.fasta
+
+Description:
+  Reads a VCF with diploid genotypes and writes a FASTA file. Each variant
+  line becomes one position in the FASTA alignment. For multi-allelic sites,
+  each sample's genotype is interpreted to produce a single IUPAC base
+  (if heterozygous with different single-base alleles) or 'N' if ambiguous.
+
+  Indels, multi-base alleles, or complicated genotypes default to 'N'.
+
+Example:
+  VCFX_fasta_converter < input.vcf > output.fasta
+

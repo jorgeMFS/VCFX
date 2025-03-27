@@ -98,6 +98,8 @@ void VCFXFileSplitter::splitVCFByChromosome(std::istream& in,
                         *(cf.ofs) << line << "\n";
                     }
                 }
+                // Also add to initial header lines for any future chromosome files
+                initialHeaderLines.push_back(line);
             }
         } else {
             // This is a data line

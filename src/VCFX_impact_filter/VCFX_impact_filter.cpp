@@ -167,7 +167,7 @@ void VCFXImpactFilter::filterByImpact(std::istream& in,
         // Then collect up to next ; or end
         // Alternatively, a case-insensitive regex. Let's do a simpler approach:
         // We'll do a small approach or a regex
-        static const std::regex reImpact("(?i)IMPACT=([A-Za-z_]+[^;\\s]*)");
+        static const std::regex reImpact("IMPACT=([^;]+)", std::regex::icase);
         std::smatch m;
         std::string extracted = "UNKNOWN";
         if (std::regex_search(info, m, reImpact)) {

@@ -1,0 +1,18 @@
+VCFX_genotype_query
+Usage: VCFX_genotype_query [OPTIONS]
+
+Options:
+  --genotype-query, -g "GENOTYPE"  Specify the genotype to query (e.g., "0/1", "1/1").
+  --strict                        Use strict string compare (no phasing unify or allele sorting).
+  --help, -h                      Display this help message and exit.
+
+Description:
+  Reads a VCF from stdin, outputs only the lines (plus all header lines) where
+  at least one sample has the specified genotype in the 'GT' subfield.
+
+Examples:
+  # Flexible matching 0/1 or 0|1 => both become 0/1
+  ./VCFX_genotype_query --genotype-query "0/1" < input.vcf > out.vcf
+
+  # Strict matching => "0|1" won't match "0/1"
+  ./VCFX_genotype_query --genotype-query "0|1" --strict < input.vcf > out.vcf

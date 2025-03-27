@@ -13,12 +13,23 @@ struct InbreedingVariant {
     std::vector<int> genotypeCodes;
 };
 
+// Frequency mode for computing inbreeding
+enum class FrequencyMode {
+    EXCLUDE_SAMPLE, // exclude the sample's own genotype from p
+    GLOBAL          // use a single site-wide p for all samples
+};
+
 // VCFXInbreedingCalculator: calculates individual inbreeding coefficients
 class VCFXInbreedingCalculator {
 public:
     int run(int argc, char* argv[]);
 
 private:
+    // Command-line settings
+    FrequencyMode freqMode_          = FrequencyMode::EXCLUDE_SAMPLE;
+    bool skipBoundary_               = false;
+    bool countBoundaryAsUsed_        = false;
+
     // Print help
     void displayHelp();
 
@@ -31,8 +42,8 @@ private:
     // Helper to decide if ALT is biallelic
     bool isBiallelic(const std::string &alt);
 
-    // Summation step: for each sample, we sum observed het and sum of expected
-    //   expected is sum(2 p_excl(1 - p_excl)) across variants
+    // Command-line parser for freq-mode
+    FrequencyMode parseFreqMode(const std::string &modeStr);
 };
 
 #endif // VCFX_INBREEDING_CALCULATOR_H

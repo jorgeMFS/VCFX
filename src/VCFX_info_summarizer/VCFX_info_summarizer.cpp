@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include <iomanip>
 #include <map>
+#include <cstdlib>
 
 // Function to display help message
 void printHelp() {
@@ -14,57 +15,70 @@ void printHelp() {
               << "  --info, -i \"FIELD1,FIELD2\"   Specify the INFO fields to summarize (e.g., \"DP,AF\").\n"
               << "  --help, -h                    Display this help message and exit.\n\n"
               << "Description:\n"
-              << "  Summarizes numeric fields in the INFO column of a VCF file by calculating statistics such as mean, median, and mode.\n\n"
+              << "  Summarizes numeric fields in the INFO column of a VCF file by calculating\n"
+              << "  statistics such as mean, median, and mode.\n\n"
               << "Examples:\n"
               << "  ./VCFX_info_summarizer --info \"DP,AF\" < input.vcf > summary_stats.tsv\n";
 }
 
 // Function to parse command-line arguments
 bool parseArguments(int argc, char* argv[], std::vector<std::string>& info_fields) {
+    // We'll only return true if at least one non-empty field is actually parsed
+    bool foundAnyField = false;
+
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
+
+        // Check for --info or -i with the next argument
         if ((arg == "--info" || arg == "-i") && i + 1 < argc) {
             std::string fields_str = argv[++i];
-            // Split the fields by comma
             std::stringstream ss(fields_str);
             std::string field;
             while (std::getline(ss, field, ',')) {
-                // Trim whitespace from field
+                // Trim whitespace
                 field.erase(0, field.find_first_not_of(" \t\n\r\f\v"));
                 field.erase(field.find_last_not_of(" \t\n\r\f\v") + 1);
                 if (!field.empty()) {
                     info_fields.push_back(field);
+                    foundAnyField = true;
                 }
             }
-            return true;
-        } else if (arg.find("--info=") == 0) {
+        }
+        // Check for --info=<FIELDS>
+        else if (arg.rfind("--info=", 0) == 0) {
             std::string fields_str = arg.substr(7);
             std::stringstream ss(fields_str);
             std::string field;
             while (std::getline(ss, field, ',')) {
-                // Trim whitespace from field
+                // Trim whitespace
                 field.erase(0, field.find_first_not_of(" \t\n\r\f\v"));
                 field.erase(field.find_last_not_of(" \t\n\r\f\v") + 1);
                 if (!field.empty()) {
                     info_fields.push_back(field);
+                    foundAnyField = true;
                 }
             }
-            return true;
-        } else if (arg == "--help" || arg == "-h") {
-            printHelp();
-            exit(0);
         }
+        else if (arg == "--help" || arg == "-h") {
+            printHelp();
+            std::exit(0);
+        }
+        // else ignore unrecognized options
     }
-    std::cerr << "Error: INFO fields not specified.\n";
-    std::cerr << "Use --help for usage information.\n";
-    return false;
+
+    if (!foundAnyField) {
+        std::cerr << "Error: INFO fields not specified.\n";
+        std::cerr << "Use --help for usage information.\n";
+        return false;
+    }
+    return true;
 }
 
 // Function to calculate mean
 double calculateMean(const std::vector<double>& data) {
     if (data.empty()) return 0.0;
     double sum = 0.0;
-    for (const auto& val : data) {
+    for (auto val : data) {
         sum += val;
     }
     return sum / static_cast<double>(data.size());
@@ -86,16 +100,17 @@ double calculateMedian(std::vector<double> data) {
 double calculateMode(const std::vector<double>& data) {
     if (data.empty()) return 0.0;
     std::unordered_map<double, int> frequency;
-    int max_freq = 0;
-    double mode = data[0];
-    for (const auto& val : data) {
+    int maxFreq = 0;
+    double modeValue = data[0];
+
+    for (auto val : data) {
         frequency[val]++;
-        if (frequency[val] > max_freq) {
-            max_freq = frequency[val];
-            mode = val;
+        if (frequency[val] > maxFreq) {
+            maxFreq = frequency[val];
+            modeValue = val;
         }
     }
-    return mode;
+    return modeValue;
 }
 
 // Function to parse the INFO field and collect specified fields
@@ -103,22 +118,21 @@ bool summarizeInfoFields(std::istream& in, std::ostream& out, const std::vector<
     std::string line;
     bool header_found = false;
 
-    // Map to store vectors of values for each INFO field
+    // Map to store vectors of values for each requested INFO field
     std::map<std::string, std::vector<double>> info_data;
-
-    // Initialize map keys
     for (const auto& field : info_fields) {
-        info_data[field] = std::vector<double>();
+        info_data[field]; // ensures key is created
     }
 
     while (std::getline(in, line)) {
         if (line.empty()) continue;
 
         if (line[0] == '#') {
-            if (line.find("#CHROM") == 0) {
+            // Check if it is #CHROM
+            if (line.rfind("#CHROM", 0) == 0) {
                 header_found = true;
             }
-            continue; // Skip header lines
+            continue;
         }
 
         if (!header_found) {
@@ -126,6 +140,7 @@ bool summarizeInfoFields(std::istream& in, std::ostream& out, const std::vector<
             return false;
         }
 
+        // parse columns
         std::stringstream ss(line);
         std::string chrom, pos, id, ref, alt, qual, filter, info;
         if (!std::getline(ss, chrom, '\t') ||
@@ -140,55 +155,63 @@ bool summarizeInfoFields(std::istream& in, std::ostream& out, const std::vector<
             continue;
         }
 
-        // Parse INFO field into key-value pairs
-        std::stringstream info_ss(info);
-        std::string kv;
+        // Parse INFO field => store key->value
         std::unordered_map<std::string, std::string> info_map;
-        while (std::getline(info_ss, kv, ';')) {
-            size_t eq = kv.find('=');
-            if (eq != std::string::npos) {
-                std::string key = kv.substr(0, eq);
-                std::string value = kv.substr(eq + 1);
-                info_map[key] = value;
-            } else {
-                // Flags without values are set to "1"
-                info_map[kv] = "1";
+        {
+            std::stringstream info_ss(info);
+            std::string kv;
+            while (std::getline(info_ss, kv, ';')) {
+                if (kv.empty()) continue;
+                size_t eq = kv.find('=');
+                if (eq != std::string::npos) {
+                    std::string key = kv.substr(0, eq);
+                    std::string value = kv.substr(eq + 1);
+                    info_map[key] = value;
+                } else {
+                    // A flag => store "1"
+                    info_map[kv] = "1";
+                }
             }
         }
 
-        // Extract and store specified INFO fields
+        // For each requested field
         for (const auto& field : info_fields) {
-            if (info_map.find(field) != info_map.end()) {
-                std::string value_str = info_map[field];
-                // Handle multiple values separated by commas
-                std::stringstream val_ss(value_str);
-                std::string val;
-                while (std::getline(val_ss, val, ',')) {
-                    try {
-                        double val_num = std::stod(val);
-                        info_data[field].push_back(val_num);
-                    } catch (const std::invalid_argument& e) {
-                        // Non-numeric value, skip
-                        std::cerr << "Warning: Non-numeric value for field " << field << " in line: " << line << "\n";
-                        continue;
-                    }
+            auto it = info_map.find(field);
+            if (it == info_map.end()) {
+                // not present
+                continue;
+            }
+            // If present, possibly multiple comma-separated values
+            std::stringstream valSS(it->second);
+            std::string val;
+            while (std::getline(valSS, val, ',')) {
+                try {
+                    double v = std::stod(val);
+                    info_data[field].push_back(v);
+                } catch (...) {
+                    std::cerr << "Warning: Non-numeric value for field " << field
+                              << " in line: " << line << "\n";
                 }
             }
         }
     }
 
-    // Output summary statistics
+    // Print summary table
     out << "INFO_Field\tMean\tMedian\tMode\n";
     for (const auto& field : info_fields) {
-        const auto& data = info_data[field];
+        const auto& data = info_data.at(field);
         if (data.empty()) {
+            // no numeric data => NA
             out << field << "\tNA\tNA\tNA\n";
             continue;
         }
         double mean = calculateMean(data);
         double median = calculateMedian(data);
         double mode = calculateMode(data);
-        out << field << "\t" << std::fixed << std::setprecision(4) << mean << "\t" << median << "\t" << mode << "\n";
+        out << field << "\t"
+            << std::fixed << std::setprecision(4) << mean << "\t"
+            << median << "\t"
+            << mode << "\n";
     }
 
     return true;
@@ -197,9 +220,9 @@ bool summarizeInfoFields(std::istream& in, std::ostream& out, const std::vector<
 int main(int argc, char* argv[]) {
     std::vector<std::string> info_fields;
 
-    // Parse command-line arguments
+    // parse arguments
     if (!parseArguments(argc, argv, info_fields)) {
-        return 1;
+        return 1; // prints error: "Error: INFO fields not specified"
     }
 
     // Summarize INFO fields

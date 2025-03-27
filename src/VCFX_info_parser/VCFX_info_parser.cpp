@@ -2,6 +2,7 @@
 #include <sstream>
 #include <algorithm>
 #include <unordered_map>
+#include <cstdlib>
 
 // Function to display help message
 void printHelp() {
@@ -18,44 +19,51 @@ void printHelp() {
 
 // Function to parse command-line arguments
 bool parseArguments(int argc, char* argv[], std::vector<std::string>& info_fields) {
+    bool foundAnyField = false;
+
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
+        
         if ((arg == "--info" || arg == "-i") && i + 1 < argc) {
             std::string fields_str = argv[++i];
-            // Split the fields by comma
             std::stringstream ss(fields_str);
             std::string field;
             while (std::getline(ss, field, ',')) {
-                // Trim whitespace from field
+                // Trim whitespace
                 field.erase(0, field.find_first_not_of(" \t\n\r\f\v"));
                 field.erase(field.find_last_not_of(" \t\n\r\f\v") + 1);
                 if (!field.empty()) {
                     info_fields.push_back(field);
+                    foundAnyField = true;
                 }
             }
-            return true;
-        } else if (arg.find("--info=") == 0) {
+        }
+        else if (arg.rfind("--info=", 0) == 0) {
+            // e.g. --info=DP,AF
             std::string fields_str = arg.substr(7);
             std::stringstream ss(fields_str);
             std::string field;
             while (std::getline(ss, field, ',')) {
-                // Trim whitespace from field
+                // Trim
                 field.erase(0, field.find_first_not_of(" \t\n\r\f\v"));
                 field.erase(field.find_last_not_of(" \t\n\r\f\v") + 1);
                 if (!field.empty()) {
                     info_fields.push_back(field);
+                    foundAnyField = true;
                 }
             }
-            return true;
-        } else if (arg == "--help" || arg == "-h") {
-            printHelp();
-            exit(0);
         }
+        else if (arg == "--help" || arg == "-h") {
+            printHelp();
+            std::exit(0);
+        }
+        // ignore other unrecognized args...
     }
-    return false;
+
+    return foundAnyField;
 }
 
-// Function to split a string by a delimiter and return a vector of tokens
+// Splits a string by a delimiter
 std::vector<std::string> split(const std::string& s, char delimiter) {
     std::vector<std::string> tokens;
     std::string token;
@@ -66,12 +74,9 @@ std::vector<std::string> split(const std::string& s, char delimiter) {
     return tokens;
 }
 
-// Function to parse the INFO field and display selected fields
+// Parses the INFO field and display selected fields
 bool parseInfoFields(std::istream& in, std::ostream& out, const std::vector<std::string>& info_fields) {
-    std::string line;
-    bool header_printed = false;
-
-    // Print header
+    // If we have any fields, print header
     if (!info_fields.empty()) {
         out << "CHROM\tPOS\tID\tREF\tALT";
         for (const auto& field : info_fields) {
@@ -80,16 +85,13 @@ bool parseInfoFields(std::istream& in, std::ostream& out, const std::vector<std:
         out << "\n";
     }
 
+    std::string line;
     while (std::getline(in, line)) {
         if (line.empty()) {
             continue;
         }
-
         if (line[0] == '#') {
-            // Skip header lines except #CHROM
-            if (line.find("#CHROM") == 0) {
-                // Optionally, you could include parsing and displaying header information
-            }
+            // skip header lines
             continue;
         }
 
@@ -100,48 +102,54 @@ bool parseInfoFields(std::istream& in, std::ostream& out, const std::vector<std:
             continue;
         }
 
-        // Parse INFO field into key-value pairs
-        std::vector<std::string> info_entries = split(info, ';');
+        // parse INFO => key-value or flag
         std::unordered_map<std::string, std::string> info_map;
-        for (const auto& entry : info_entries) {
-            size_t eq = entry.find('=');
-            if (eq != std::string::npos) {
-                std::string key = entry.substr(0, eq);
-                std::string value = entry.substr(eq + 1);
+        auto info_entries = split(info, ';');
+        for (auto &entry : info_entries) {
+            size_t eqPos = entry.find('=');
+            if (eqPos != std::string::npos) {
+                std::string key = entry.substr(0, eqPos);
+                std::string value = entry.substr(eqPos + 1);
                 info_map[key] = value;
             } else {
-                // Flag without a value
+                // This is a flag (no '=' => empty string)
                 info_map[entry] = "";
             }
         }
 
-        // Output selected INFO fields
+        // Print row
         out << chrom << "\t" << pos << "\t" << id << "\t" << ref << "\t" << alt;
         for (const auto& field : info_fields) {
             auto it = info_map.find(field);
             if (it != info_map.end()) {
-                out << "\t" << it->second;
+                // If it's a flag (empty string), print "."
+                if (it->second.empty()) {
+                    out << "\t.";
+                } else {
+                    out << "\t" << it->second;
+                }
             } else {
+                // Field not present
                 out << "\t.";
             }
         }
         out << "\n";
     }
-
     return true;
 }
 
 int main(int argc, char* argv[]) {
     std::vector<std::string> info_fields;
 
-    // Argument parsing
-    if (!parseArguments(argc, argv, info_fields)) {
-        std::cerr << "Error: INFO fields not specified.\n";
-        std::cerr << "Use --help for usage information.\n";
+    // parse arguments
+    bool hasFields = parseArguments(argc, argv, info_fields);
+    if (!hasFields) {
+        std::cerr << "Error: INFO fields not specified.\n"
+                  << "Use --help for usage information.\n";
         return 1;
     }
 
-    // Parse and display INFO fields
-    bool success = parseInfoFields(std::cin, std::cout, info_fields);
-    return success ? 0 : 1;
+    // parse and display
+    bool ok = parseInfoFields(std::cin, std::cout, info_fields);
+    return ok ? 0 : 1;
 }

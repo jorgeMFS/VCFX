@@ -1,0 +1,4 @@
+##fileformat=VCFv4.2
+##source=VCFX_test
+1	100	rs1	A	G	100	PASS	.	GT	0/0	0/1	1/1
+1	150	rs2	C	T	100	PASS	.	GT	0/0	0/1	1/1

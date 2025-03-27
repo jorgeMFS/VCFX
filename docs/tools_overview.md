@@ -1,0 +1,95 @@
+# VCFX Tools Overview
+
+VCFX is a collection of C/C++ tools for processing and analyzing VCF (Variant Call Format) files, with optional WebAssembly compatibility. Each tool is an independent command-line executable that can parse input from `stdin` and write to `stdout`, enabling flexible piping and integration into bioinformatics pipelines.
+
+## Tool Categories
+
+### Data Analysis
+
+These tools help extract statistical information and insights from variant data:
+
+- [VCFX_allele_freq_calc](VCFX_allele_freq_calc.md) - Calculate allele frequencies
+- [VCFX_variant_classifier](VCFX_variant_classifier.md) - Classify variants into SNP, INDEL, MNV, or STRUCTURAL
+- [VCFX_inbreeding_calculator](VCFX_inbreeding_calculator.md) - Calculate inbreeding coefficients
+- [VCFX_dosage_calculator](VCFX_dosage_calculator.md) - Calculate allele dosage from genotypes
+- [VCFX_hwe_tester](VCFX_hwe_tester.md) - Test for Hardy-Weinberg equilibrium
+- [VCFX_distance_calculator](VCFX_distance_calculator.md) - Calculate genetic distances between samples
+- [VCFX_allele_counter](VCFX_allele_counter.md) - Count alleles in VCF files
+- [VCFX_allele_balance_calc](VCFX_allele_balance_calc.md) - Calculate allele balance metrics
+- [VCFX_variant_counter](VCFX_variant_counter.md) - Count variants in VCF files
+- [VCFX_ancestry_inferrer](VCFX_ancestry_inferrer.md) - Infer ancestry from genetic data
+- [VCFX_ancestry_assigner](VCFX_ancestry_assigner.md) - Assign ancestry to samples
+
+### Data Filtering
+
+Tools for selecting variants based on specific criteria:
+
+- [VCFX_phase_checker](VCFX_phase_checker.md) - Filter variants to keep only fully phased genotypes
+- [VCFX_phred_filter](VCFX_phred_filter.md) - Filter variants based on Phred-scaled quality scores
+- [VCFX_record_filter](VCFX_record_filter.md) - Filter variants based on various VCF fields
+- [VCFX_gl_filter](VCFX_gl_filter.md) - Filter variants based on genotype likelihoods
+- [VCFX_allele_balance_filter](VCFX_allele_balance_filter.md) - Filter variants based on allele balance
+- [VCFX_population_filter](VCFX_population_filter.md) - Filter variants based on population statistics
+- [VCFX_probability_filter](VCFX_probability_filter.md) - Filter variants based on probability scores
+- [VCFX_nonref_filter](VCFX_nonref_filter.md) - Filter to keep only non-reference variants
+- [VCFX_impact_filter](VCFX_impact_filter.md) - Filter variants based on predicted impact
+
+### Data Transformation
+
+Tools for converting or reformatting VCF data:
+
+- [VCFX_multiallelic_splitter](VCFX_multiallelic_splitter.md) - Split multiallelic variants into biallelic records
+- [VCFX_sample_extractor](VCFX_sample_extractor.md) - Extract specific samples from a VCF file
+- [VCFX_position_subsetter](VCFX_position_subsetter.md) - Extract variants at specific positions
+- [VCFX_format_converter](VCFX_format_converter.md) - Convert VCF files to other formats
+- [VCFX_genotype_query](VCFX_genotype_query.md) - Query specific genotype patterns
+- [VCFX_indel_normalizer](VCFX_indel_normalizer.md) - Normalize indel representations
+- [VCFX_sv_handler](VCFX_sv_handler.md) - Handle structural variants in VCF files
+- [VCFX_fasta_converter](VCFX_fasta_converter.md) - Convert VCF files to FASTA format
+- [VCFX_sorter](VCFX_sorter.md) - Sort VCF files by position
+- [VCFX_af_subsetter](VCFX_af_subsetter.md) - Extract variants based on allele frequency
+- [VCFX_reformatter](VCFX_reformatter.md) - Reformat VCF files for better readability
+
+### Quality Control
+
+Tools for validating and checking data quality:
+
+- [VCFX_concordance_checker](VCFX_concordance_checker.md) - Check concordance between VCF files
+- [VCFX_missing_detector](VCFX_missing_detector.md) - Detect and report missing data
+- [VCFX_outlier_detector](VCFX_outlier_detector.md) - Detect outlier samples or variants
+- [VCFX_alignment_checker](VCFX_alignment_checker.md) - Check alignment of variants
+- [VCFX_cross_sample_concordance](VCFX_cross_sample_concordance.md) - Check concordance between samples
+- [VCFX_validator](VCFX_validator.md) - Validate VCF format compliance
+
+### File Management
+
+Tools for handling VCF files:
+
+- [VCFX_indexer](VCFX_indexer.md) - Create an index file for random access
+- [VCFX_file_splitter](VCFX_file_splitter.md) - Split VCF files into smaller chunks
+- [VCFX_compressor](VCFX_compressor.md) - Compress VCF files efficiently
+- [VCFX_diff_tool](VCFX_diff_tool.md) - Find differences between VCF files
+- [VCFX_subsampler](VCFX_subsampler.md) - Subsample variants from a VCF file
+- [VCFX_duplicate_remover](VCFX_duplicate_remover.md) - Remove duplicate variants
+
+### Annotation and Reporting
+
+Tools for annotating and extracting information from VCF files:
+
+- [VCFX_custom_annotator](VCFX_custom_annotator.md) - Add custom annotations to VCF files
+- [VCFX_info_summarizer](VCFX_info_summarizer.md) - Summarize INFO fields in VCF files
+- [VCFX_header_parser](VCFX_header_parser.md) - Parse and extract information from VCF headers
+- [VCFX_annotation_extractor](VCFX_annotation_extractor.md) - Extract annotations from VCF files
+- [VCFX_ref_comparator](VCFX_ref_comparator.md) - Compare variants against a reference genome
+- [VCFX_field_extractor](VCFX_field_extractor.md) - Extract specific fields from VCF files
+- [VCFX_info_aggregator](VCFX_info_aggregator.md) - Aggregate INFO fields across variants
+- [VCFX_info_parser](VCFX_info_parser.md) - Parse INFO fields in VCF files
+
+### Data Processing
+
+Tools for processing variants and samples:
+
+- [VCFX_missing_data_handler](VCFX_missing_data_handler.md) - Handle missing data in VCF files
+- [VCFX_quality_adjuster](VCFX_quality_adjuster.md) - Adjust quality scores in VCF files
+- [VCFX_haplotype_phaser](VCFX_haplotype_phaser.md) - Phase haplotypes in VCF files
+- [VCFX_haplotype_extractor](VCFX_haplotype_extractor.md) - Extract haplotype information 

@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <map>
 #include <vector>
+#include <cmath>  // for std::isfinite
 
 // ----------------------------------------------------------------------
 // Displays help
@@ -48,13 +49,13 @@ int VCFXInfoAggregator::run(int argc, char* argv[]) {
     while((opt = getopt_long(argc, argv, "ha:", longOptions, nullptr)) != -1) {
         switch(opt) {
             case 'h':
-                showHelp= true;
+                showHelp = true;
                 break;
             case 'a':
-                infoFieldsStr= optarg;
+                infoFieldsStr = optarg;
                 break;
             default:
-                showHelp= true;
+                showHelp = true;
                 break;
         }
     }
@@ -64,7 +65,7 @@ int VCFXInfoAggregator::run(int argc, char* argv[]) {
         return 0;
     }
     if(infoFieldsStr.empty()) {
-        std::cerr<<"Error: Must specify --aggregate-info with at least one field.\n";
+        std::cerr << "Error: Must specify --aggregate-info with at least one field.\n";
         return 1;
     }
 
@@ -73,7 +74,7 @@ int VCFXInfoAggregator::run(int argc, char* argv[]) {
     {
         std::stringstream ss(infoFieldsStr);
         std::string f;
-        while(std::getline(ss,f,',')) {
+        while(std::getline(ss, f, ',')) {
             // trim
             while(!f.empty() && isspace((unsigned char)f.back())) f.pop_back();
             while(!f.empty() && isspace((unsigned char)f.front())) f.erase(f.begin());
@@ -83,7 +84,7 @@ int VCFXInfoAggregator::run(int argc, char* argv[]) {
         }
     }
     if(infoFields.empty()) {
-        std::cerr<<"Error: no valid fields in --aggregate-info\n";
+        std::cerr << "Error: no valid fields in --aggregate-info\n";
         return 1;
     }
 
@@ -104,33 +105,32 @@ void VCFXInfoAggregator::aggregateInfo(std::istream& in,
 {
     // We'll store each field's collected numeric values in a vector
     std::map<std::string, std::vector<double>> collected;
-    for(auto &fld : infoFields) {
-        collected[fld]= {};
+    for (auto &fld : infoFields) {
+        collected[fld] = {};
     }
 
-    bool foundChromHeader=false;
+    bool foundChromHeader = false;
 
     std::string line;
-    while(true) {
-        if(!std::getline(in,line)) break;
-        if(line.empty()) {
+    while (true) {
+        if (!std::getline(in, line)) break;
+        if (line.empty()) {
             out << line << "\n";
             continue;
         }
 
-        if(line[0]=='#') {
+        if (line[0] == '#') {
             // pass it through unmodified
             out << line << "\n";
-            if(!foundChromHeader && line.rfind("#CHROM",0)==0){
-                foundChromHeader=true;
+            if (!foundChromHeader && line.rfind("#CHROM", 0) == 0) {
+                foundChromHeader = true;
             }
             continue;
         }
 
-        if(!foundChromHeader) {
-            std::cerr<<"Error: encountered data line before #CHROM header.\n";
-            // We can still proceed or break. We'll break
-            break;
+        if (!foundChromHeader) {
+            std::cerr << "Error: encountered data line before #CHROM header.\n";
+            break;  // break or continue, but we'll break
         }
 
         // parse columns
@@ -140,14 +140,14 @@ void VCFXInfoAggregator::aggregateInfo(std::istream& in,
         std::vector<std::string> fields;
         {
             std::string f;
-            while(std::getline(ss,f,'\t')) {
+            while (std::getline(ss, f, '\t')) {
                 fields.push_back(f);
             }
         }
         // pass line unmodified
         out << line << "\n";
 
-        if(fields.size()<8) {
+        if (fields.size() < 8) {
             // skip aggregator for this line
             continue;
         }
@@ -159,32 +159,36 @@ void VCFXInfoAggregator::aggregateInfo(std::istream& in,
         {
             std::stringstream infoSS(info);
             std::string item;
-            while(std::getline(infoSS,item,';')) {
-                if(item.empty()) continue;
+            while (std::getline(infoSS, item, ';')) {
+                if (item.empty()) continue;
                 // find '='
-                size_t eqPos= item.find('=');
-                if(eqPos==std::string::npos) {
+                size_t eqPos = item.find('=');
+                if (eqPos == std::string::npos) {
                     // no '=' => skip
                     continue;
                 }
-                std::string key= item.substr(0, eqPos);
-                std::string val= item.substr(eqPos+1);
-                if(key.empty() || val.empty()) continue;
+                std::string key = item.substr(0, eqPos);
+                std::string val = item.substr(eqPos + 1);
+                if (key.empty() || val.empty()) continue;
                 // trim spaces
-                while(!key.empty() && isspace((unsigned char)key.back())) key.pop_back();
-                while(!key.empty() && isspace((unsigned char)key.front())) key.erase(key.begin());
-                while(!val.empty() && isspace((unsigned char)val.back())) val.pop_back();
-                while(!val.empty() && isspace((unsigned char)val.front())) val.erase(val.begin());
+                while (!key.empty() && isspace((unsigned char)key.back())) key.pop_back();
+                while (!key.empty() && isspace((unsigned char)key.front())) key.erase(key.begin());
+                while (!val.empty() && isspace((unsigned char)val.back())) val.pop_back();
+                while (!val.empty() && isspace((unsigned char)val.front())) val.erase(val.begin());
 
-                auto it= collected.find(key);
-                if(it== collected.end()) {
+                auto it = collected.find(key);
+                if (it == collected.end()) {
                     // not one of requested fields
                     continue;
                 }
-                // parse numeric
+                // parse numeric, skip if NaN or Inf
                 try {
-                    double d= std::stod(val);
-                    it->second.push_back(d);
+                    double d = std::stod(val);
+                    // check for finite
+                    if (std::isfinite(d)) {
+                        it->second.push_back(d);
+                    }
+                    // else skip
                 } catch(...) {
                     // skip
                 }
@@ -194,21 +198,20 @@ void VCFXInfoAggregator::aggregateInfo(std::istream& in,
 
     // now print aggregator summary
     out << "#AGGREGATION_SUMMARY\n";
-    for(auto &kv : collected) {
-        const std::string &field= kv.first;
-        const auto &vals= kv.second;
-        double sum=0.0;
-        for(auto &v : vals) {
-            sum+= v;
+    for (auto &kv : collected) {
+        const std::string &field = kv.first;
+        const auto &vals = kv.second;
+        double sum = 0.0;
+        for (auto &v : vals) {
+            sum += v;
         }
-        double mean=0.0;
-        if(!vals.empty()) {
-            mean= sum/ (double)vals.size();
+        double mean = 0.0;
+        if (!vals.empty()) {
+            mean = sum / static_cast<double>(vals.size());
         }
         out << field << ": Sum=" << sum << ", Average=" << mean << "\n";
     }
 }
-
 
 int main(int argc, char* argv[]){
     VCFXInfoAggregator app;

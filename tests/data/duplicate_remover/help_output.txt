@@ -1,0 +1,14 @@
+VCFX_duplicate_remover
+Usage: VCFX_duplicate_remover [OPTIONS]
+
+Options:
+  --help, -h               Display this help message and exit.
+
+Description:
+  Removes duplicate variants from a VCF file based on the combination of
+  chromosome, position, REF, and ALT alleles. For multi-allelic records, the
+  ALT field is normalized by sorting the comma-separated alleles so that the
+  ordering does not affect duplicate detection.
+
+Example:
+  ./VCFX_duplicate_remover < input.vcf > unique_variants.vcf

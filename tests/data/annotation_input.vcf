@@ -1,0 +1,12 @@
+##fileformat=VCFv4.2
+##source=VCFX_test
+##INFO=<ID=ANN,Number=A,Type=String,Description="Annotation">
+##INFO=<ID=Gene,Number=1,Type=String,Description="Gene name">
+##INFO=<ID=Impact,Number=1,Type=String,Description="Impact level">
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Read depth">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+chr1	100	rs1	A	G	100	PASS	ANN=missense_variant;Gene=BRCA1;Impact=HIGH;DP=100
+chr1	200	rs2	C	T,G	80	PASS	ANN=stop_gained,synonymous_variant;Gene=TP53;Impact=HIGH;DP=50
+chr1	300	rs3	G	A,T,C	60	PASS	ANN=missense_variant,stop_gained,intergenic_region;Gene=EGFR;Impact=MODERATE;DP=75
+chr2	400	rs4	T	C	90	PASS	Gene=BRCA2;Impact=LOW;DP=200
+chr2	500	rs5	A	G,T	70	PASS	ANN=missense_variant,stop_gained;Gene=PTEN;Impact=HIGH;DP=150

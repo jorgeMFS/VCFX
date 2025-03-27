@@ -1,0 +1,134 @@
+site_name: VCFX Documentation
+site_description: Documentation for the VCFX toolkit - a comprehensive VCF manipulation toolkit
+site_author: VCFX Team
+site_url: https://username.github.io/VCFX
+
+# Repository
+repo_name: username/VCFX
+repo_url: https://github.com/username/VCFX
+edit_uri: edit/main/docs/
+
+# Copyright
+copyright: Copyright &copy; 2023 VCFX Team
+
+# Configuration
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+# Extras
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/username/VCFX
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/yourusername
+
+# Extensions
+markdown_extensions:
+  - admonition
+  - codehilite:
+      guess_lang: false
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed
+  - pymdownx.critic
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+# Page tree
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: installation.md
+    - Quick Start: quickstart.md
+  - Tool Documentation: 
+    - Overview: tools_overview.md
+    - Data Analysis:
+      - VCFX_allele_freq_calc: VCFX_allele_freq_calc.md
+      - VCFX_variant_classifier: VCFX_variant_classifier.md
+      - VCFX_inbreeding_calculator: VCFX_inbreeding_calculator.md
+      - VCFX_dosage_calculator: VCFX_dosage_calculator.md
+      - VCFX_hwe_tester: VCFX_hwe_tester.md
+      - VCFX_distance_calculator: VCFX_distance_calculator.md
+      - VCFX_allele_counter: VCFX_allele_counter.md
+      - VCFX_allele_balance_calc: VCFX_allele_balance_calc.md
+      - VCFX_variant_counter: VCFX_variant_counter.md
+      - VCFX_ancestry_inferrer: VCFX_ancestry_inferrer.md
+      - VCFX_ancestry_assigner: VCFX_ancestry_assigner.md
+    - Data Filtering:
+      - VCFX_phase_checker: VCFX_phase_checker.md
+      - VCFX_phred_filter: VCFX_phred_filter.md
+      - VCFX_record_filter: VCFX_record_filter.md
+      - VCFX_gl_filter: VCFX_gl_filter.md
+      - VCFX_allele_balance_filter: VCFX_allele_balance_filter.md
+      - VCFX_population_filter: VCFX_population_filter.md
+      - VCFX_probability_filter: VCFX_probability_filter.md
+      - VCFX_nonref_filter: VCFX_nonref_filter.md
+      - VCFX_impact_filter: VCFX_impact_filter.md
+    - Data Transformation:
+      - VCFX_multiallelic_splitter: VCFX_multiallelic_splitter.md
+      - VCFX_sample_extractor: VCFX_sample_extractor.md
+      - VCFX_position_subsetter: VCFX_position_subsetter.md
+      - VCFX_format_converter: VCFX_format_converter.md
+      - VCFX_genotype_query: VCFX_genotype_query.md
+      - VCFX_indel_normalizer: VCFX_indel_normalizer.md
+      - VCFX_sv_handler: VCFX_sv_handler.md
+      - VCFX_fasta_converter: VCFX_fasta_converter.md
+      - VCFX_sorter: VCFX_sorter.md
+      - VCFX_af_subsetter: VCFX_af_subsetter.md
+      - VCFX_reformatter: VCFX_reformatter.md
+    - Quality Control:
+      - VCFX_concordance_checker: VCFX_concordance_checker.md
+      - VCFX_missing_detector: VCFX_missing_detector.md
+      - VCFX_outlier_detector: VCFX_outlier_detector.md
+      - VCFX_alignment_checker: VCFX_alignment_checker.md
+      - VCFX_cross_sample_concordance: VCFX_cross_sample_concordance.md
+      - VCFX_validator: VCFX_validator.md
+    - File Management:
+      - VCFX_indexer: VCFX_indexer.md
+      - VCFX_file_splitter: VCFX_file_splitter.md
+      - VCFX_compressor: VCFX_compressor.md
+      - VCFX_diff_tool: VCFX_diff_tool.md
+      - VCFX_subsampler: VCFX_subsampler.md
+      - VCFX_duplicate_remover: VCFX_duplicate_remover.md
+    - Annotation and Reporting:
+      - VCFX_custom_annotator: VCFX_custom_annotator.md
+      - VCFX_info_summarizer: VCFX_info_summarizer.md
+      - VCFX_header_parser: VCFX_header_parser.md
+      - VCFX_annotation_extractor: VCFX_annotation_extractor.md
+      - VCFX_ref_comparator: VCFX_ref_comparator.md
+      - VCFX_field_extractor: VCFX_field_extractor.md
+      - VCFX_info_aggregator: VCFX_info_aggregator.md
+      - VCFX_info_parser: VCFX_info_parser.md
+    - Data Processing:
+      - VCFX_missing_data_handler: VCFX_missing_data_handler.md
+      - VCFX_quality_adjuster: VCFX_quality_adjuster.md
+      - VCFX_haplotype_phaser: VCFX_haplotype_phaser.md
+      - VCFX_haplotype_extractor: VCFX_haplotype_extractor.md
+  - Contributing: CONTRIBUTING.md
+  - License: LICENSE.md 
