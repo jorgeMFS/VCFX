@@ -4,7 +4,7 @@ VCFX is a collection of specialized C/C++ command-line tools designed for effici
 
 ## Documentation
 
-**[View the full documentation](https://jorgeMFS.github.io/VCFX/)** (once deployed)
+**[View the full documentation](https://jorgeMFS.github.io/VCFX/)**
 
 For local documentation, see the `docs` directory or build the documentation site:
 ```bash
@@ -14,10 +14,10 @@ mkdocs serve
 
 ## Key Features
 
-- **60+ Specialized Tools**: Each optimized for a specific VCF-related task
+- **60 Specialized Tools**: Each optimized for a specific VCF-related task
 - **Pipeline-Ready**: All tools work with standard input/output for easy integration
 - **Performance-Focused**: Designed for handling large genomic datasets efficiently
-- **Cross-Platform**: Works on Linux, macOS, and potentially Windows
+- **Cross-Platform**: Works on Linux, macOS, and Windows
 - **WebAssembly Support**: Optional WASM builds for browser/Node.js environments
 
 ## Tool Categories
