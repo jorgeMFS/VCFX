@@ -92,4 +92,64 @@ Tools for processing variants and samples:
 - [VCFX_missing_data_handler](VCFX_missing_data_handler.md) - Handle missing data in VCF files
 - [VCFX_quality_adjuster](VCFX_quality_adjuster.md) - Adjust quality scores in VCF files
 - [VCFX_haplotype_phaser](VCFX_haplotype_phaser.md) - Phase haplotypes in VCF files
-- [VCFX_haplotype_extractor](VCFX_haplotype_extractor.md) - Extract haplotype information 
+- [VCFX_haplotype_extractor](VCFX_haplotype_extractor.md) - Extract haplotype information
+
+## Common Usage Patterns
+
+VCFX tools are designed to be combined in pipelines. Here are some common usage patterns:
+
+### Basic Filtering and Analysis
+
+```bash
+# Extract phased variants, filter by quality, and calculate allele frequencies
+cat input.vcf | \
+  VCFX_phase_checker | \
+  VCFX_phred_filter --min-qual 30 | \
+  VCFX_allele_freq_calc > result.tsv
+```
+
+### Variant Classification and Filtering
+
+```bash
+# Classify variants and filter for SNPs with high quality
+cat input.vcf | \
+  VCFX_variant_classifier --append-info | \
+  grep 'VCF_CLASS=SNP' | \
+  VCFX_phred_filter --min-qual 30 > high_quality_snps.vcf
+```
+
+### Sample Extraction and Comparison
+
+```bash
+# Extract samples and check concordance
+cat input.vcf | VCFX_sample_extractor --samples SAMPLE1,SAMPLE2 > samples.vcf
+cat samples.vcf reference.vcf | VCFX_concordance_checker > concordance_report.tsv
+```
+
+### Normalization and Splitting
+
+```bash
+# Normalize indels and split multiallelic variants
+cat input.vcf | \
+  VCFX_indel_normalizer | \
+  VCFX_multiallelic_splitter > normalized_biallelic.vcf
+```
+
+### Population Analysis
+
+```bash
+# Extract population-specific VCFs and calculate allele frequencies
+cat input.vcf | VCFX_population_filter --population EUR --pop-map pop_map.txt > eur.vcf
+cat eur.vcf | VCFX_allele_freq_calc > eur_afs.tsv
+```
+
+### Quality Control Pipeline
+
+```bash
+# Validate, classify, detect missing data, and filter by quality
+cat input.vcf | \
+  VCFX_validator | \
+  VCFX_variant_classifier --append-info | \
+  VCFX_missing_detector --max-missing 0.1 | \
+  VCFX_phred_filter --min-qual 20 > qc_passed.vcf
+``` 

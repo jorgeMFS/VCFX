@@ -150,7 +150,7 @@ cat afr.vcf | VCFX_allele_freq_calc > afr_afs.tsv
 
 After becoming familiar with the basic usage of VCFX tools, you can:
 
-1. Explore the [complete tool documentation](README.md) for details on each tool
+1. Explore the [complete tool documentation](tools_overview.md) for details on each tool
 2. Check the [installation guide](installation.md) if you need to install additional tools
 3. Browse through the example VCF files in the repository to practice
 

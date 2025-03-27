@@ -22,7 +22,7 @@ To begin using VCFX, first follow the [installation instructions](#installation)
 VCFX tools are built using CMake. To build the entire toolkit:
 
 ```bash
-git clone https://github.com/username/VCFX.git
+git clone https://github.com/jorgeMFS/VCFX.git
 cd VCFX
 mkdir -p build
 cd build
@@ -146,8 +146,8 @@ See the [Tools Overview](tools_overview.md#common-usage-patterns) for more usage
 
 ## Community and Support
 
-- [GitHub Repository](https://github.com/username/VCFX)
-- [Issue Tracker](https://github.com/username/VCFX/issues)
+- [GitHub Repository](https://github.com/jorgeMFS/VCFX)
+- [Issue Tracker](https://github.com/jorgeMFS/VCFX/issues)
 - [Contributing Guidelines](CONTRIBUTING.md)
 
 ## License

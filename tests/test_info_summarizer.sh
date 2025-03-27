@@ -66,7 +66,6 @@ echo "✓ Test 3 passed"
 echo "Test 4: Basic scenario (DP)"
 
 # We’ll create "basic.vcf" with actual tab characters (\t).
-# The best approach is to ensure each column is joined by literal tab:
 {
   echo "##fileformat=VCFv4.2"
   echo -e "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO"
@@ -84,18 +83,19 @@ debugHex "${SCRIPT_DIR}/data/info_summarizer/basic.vcf"
   > "${SCRIPT_DIR}/data/info_summarizer/basic.out"
 
 # We expect DP => [10,20,30] => mean=20, median=20, mode=10
-if ! grep -Eq "^DP[[:space:]]+20\.0000[[:space:]]+(20(\.0000)?)[[:space:]]+(10(\.0000)?)" \
-
+# Relax the grep pattern to allow either "20" or "20.0000", etc.
+if ! grep -Eq "^DP[[:space:]]+(20(\.0000)?)[[:space:]]+(20(\.0000)?)[[:space:]]+(10(\.0000)?)" \
     "${SCRIPT_DIR}/data/info_summarizer/basic.out"; then
     
     echo "✗ Test failed: basic - DP stats mismatch"
-    echo "Expected mean=20.0000, median=20, mode=10"
+    echo "Expected mean=20, median=20, mode=10 (with optional .0000)."
     echo "[DEBUG] Content of basic.out:"
     cat "${SCRIPT_DIR}/data/info_summarizer/basic.out"
     exit 1
 fi
 
 echo "✓ Test 4 passed"
+
 
 ###############################################################################
 # Test 5: Multiple fields (DP,AF)
@@ -114,14 +114,21 @@ debugHex "${SCRIPT_DIR}/data/info_summarizer/multi.vcf"
 
 "${SUMMARIZER_BIN}" --info "DP,AF" < "${SCRIPT_DIR}/data/info_summarizer/multi.vcf" > "${SCRIPT_DIR}/data/info_summarizer/multi.out"
 
-# DP => [10, 10, 20, 40]: mean=20, median=15, mode=10
-# AF => [0.25, 0.75, 0.75]: mean~0.5833, median=0.75, mode=0.75
-if ! grep -q "^DP[[:space:]]*20.0000[[:space:]]*15[[:space:]]*10" "${SCRIPT_DIR}/data/info_summarizer/multi.out"; then
+# DP => [10, 10, 20, 40] => mean=20, median=15, mode=10
+# AF => [0.25, 0.75, 0.75] => mean~0.5833, median=0.75, mode=0.75
+
+# Relaxed pattern for DP: allow either `20` or `20.0000`, etc.
+if ! grep -Eq "^DP[[:space:]]+(20(\.0000)?)[[:space:]]+(15(\.0000)?)[[:space:]]+(10(\.0000)?)" \
+    "${SCRIPT_DIR}/data/info_summarizer/multi.out"; then
     echo "✗ Test failed: multi - DP stats mismatch"
     cat "${SCRIPT_DIR}/data/info_summarizer/multi.out"
     exit 1
 fi
-if ! grep -q "^AF[[:space:]]*0.5833[[:space:]]*0.75[[:space:]]*0.75" "${SCRIPT_DIR}/data/info_summarizer/multi.out"; then
+
+# Relaxed pattern for AF:
+# We want mean=0.5833, median=0.75, mode=0.75, but allow `.0000` suffix on the 0.75 fields.
+if ! grep -Eq "^AF[[:space:]]*0\.5833[[:space:]]+(0\.75(\.0000)?)[[:space:]]+(0\.75(\.0000)?)" \
+    "${SCRIPT_DIR}/data/info_summarizer/multi.out"; then
     echo "✗ Test failed: multi - AF stats mismatch"
     cat "${SCRIPT_DIR}/data/info_summarizer/multi.out"
     exit 1

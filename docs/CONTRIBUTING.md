@@ -49,7 +49,7 @@ We welcome suggestions for new features or improvements to existing functionalit
 ### Building for Development
 
 ```bash
-git clone https://github.com/your-username/VCFX.git
+git clone https://github.com/jorgeMFS/VCFX.git
 cd VCFX
 mkdir build && cd build
 cmake ..
