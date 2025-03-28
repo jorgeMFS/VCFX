@@ -10,6 +10,18 @@ The VCFX documentation is built using [MkDocs](https://www.mkdocs.org/) with the
 2. **Configuration**: The `mkdocs.yml` file defines the site structure and navigation
 3. **GitHub Actions Workflow**: Automated build and deployment process in `.github/workflows/docs.yml`
 
+## Initial GitHub Pages Setup
+
+Before automatic deployment can work, you need to set up GitHub Pages in your repository:
+
+1. Go to your repository settings on GitHub
+2. Navigate to the "Pages" section in the sidebar
+3. Under "Build and deployment" > "Source", select "GitHub Actions"
+4. If prompted for a branch, select "gh-pages" (this will be created by the workflow)
+5. Save the settings
+
+This setup only needs to be done once. After this, the GitHub Actions workflow will handle deployments automatically.
+
 ## Testing Locally
 
 Before pushing any changes, you should test the documentation site locally:
@@ -35,7 +47,8 @@ Before pushing any changes, you should test the documentation site locally:
 The documentation is automatically built and published when changes are pushed to the `main` branch. The GitHub Actions workflow will:
 
 1. Build the documentation site
-2. Deploy it to GitHub Pages
+2. Deploy it to the `gh-pages` branch
+3. GitHub Pages will then serve the content from this branch
 
 You can monitor the deployment progress in the "Actions" tab of the GitHub repository.
 
@@ -96,6 +109,7 @@ To maintain consistent documentation:
 - Check the GitHub Actions workflow for errors
 - Ensure the file is included in the navigation in `mkdocs.yml`
 - Verify that the file paths are correct
+- Make sure GitHub Pages is properly configured in the repository settings
 
 **Local Preview Problems**:
 - Make sure MkDocs and all required extensions are installed
@@ -104,7 +118,8 @@ To maintain consistent documentation:
 
 **Deployment Failures**:
 - Check GitHub Actions logs for specific errors
-- Ensure GitHub Pages is configured correctly in the repository settings
+- Ensure you have the correct permissions on the repository
+- Verify that the `gh-pages` branch exists and is set up properly in GitHub Pages settings
 
 ## Resources
 

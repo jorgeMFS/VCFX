@@ -98,7 +98,7 @@ Tools for handling VCF files:
 - [VCFX_compressor](VCFX_compressor.md) - Compress VCF files efficiently
 - [View all file management tools...](tools_overview.md#file-management)
 
-For a complete list of all tools and detailed usage examples, see the [full documentation](tools_overview.md).
+For a complete list of all tools and detailed usage examples, see the [tools overview](tools_overview.md).
 
 ## Who Should Use VCFX?
 
@@ -142,7 +142,7 @@ cat samples.vcf reference.vcf | \
   VCFX_concordance_checker > concordance_report.tsv
 ```
 
-See the [Tools Overview](tools_overview.md#common-usage-patterns) for more usage examples.
+See the [tools overview page](tools_overview.md#common-usage-patterns) for more usage examples.
 
 ## Community and Support
 
