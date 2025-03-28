@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <map>
 #include <cstdlib>
+#include <cmath>   
 
 // Function to display help message
 void printHelp() {
@@ -23,7 +24,6 @@ void printHelp() {
 
 // Function to parse command-line arguments
 bool parseArguments(int argc, char* argv[], std::vector<std::string>& info_fields) {
-    // We'll only return true if at least one non-empty field is actually parsed
     bool foundAnyField = false;
 
     for (int i = 1; i < argc; ++i) {
@@ -187,6 +187,12 @@ bool summarizeInfoFields(std::istream& in, std::ostream& out, const std::vector<
             while (std::getline(valSS, val, ',')) {
                 try {
                     double v = std::stod(val);
+                    // Skip NaN / Inf
+                    if (std::isnan(v) || std::isinf(v)) {
+                        std::cerr << "Warning: Non-finite value for field " << field
+                                  << " in line: " << line << "\n";
+                        continue; // skip
+                    }
                     info_data[field].push_back(v);
                 } catch (...) {
                     std::cerr << "Warning: Non-numeric value for field " << field
@@ -222,7 +228,8 @@ int main(int argc, char* argv[]) {
 
     // parse arguments
     if (!parseArguments(argc, argv, info_fields)) {
-        return 1; // prints error: "Error: INFO fields not specified"
+        // prints error: "Error: INFO fields not specified"
+        return 1;
     }
 
     // Summarize INFO fields

@@ -17,17 +17,20 @@ on:
       - '.github/workflows/docs.yml'
   workflow_dispatch:  # Allow manual triggering
 
+permissions:
+  contents: write # This is required for actions/deploy-pages
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.x'
       
@@ -40,7 +43,7 @@ jobs:
         run: mkdocs build
       
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: site
           path: site/
@@ -51,10 +54,10 @@ jobs:
     if: github.event_name != 'pull_request'  # Only deploy on push to main or manual trigger
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.x'
       
@@ -64,4 +67,7 @@ jobs:
           pip install mkdocs-material pymdown-extensions
       
       - name: Deploy to GitHub Pages
-        run: mkdocs gh-deploy --force 
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          mkdocs gh-deploy --force 
