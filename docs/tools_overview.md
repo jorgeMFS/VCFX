@@ -34,6 +34,7 @@ Tools for selecting variants based on specific criteria:
 - [VCFX_probability_filter](VCFX_probability_filter.md) - Filter variants based on probability scores
 - [VCFX_nonref_filter](VCFX_nonref_filter.md) - Filter to keep only non-reference variants
 - [VCFX_impact_filter](VCFX_impact_filter.md) - Filter variants based on predicted impact
+- [VCFX_phase_quality_filter](VCFX_phase_quality_filter.md) - Filter variants based on phasing quality scores
 
 ### Data Transformation
 
@@ -86,6 +87,7 @@ Tools for annotating and extracting information from VCF files:
 - [VCFX_field_extractor](VCFX_field_extractor.md) - Extract specific fields from VCF files
 - [VCFX_info_aggregator](VCFX_info_aggregator.md) - Aggregate INFO fields across variants
 - [VCFX_info_parser](VCFX_info_parser.md) - Parse INFO fields in VCF files
+- [VCFX_metadata_summarizer](VCFX_metadata_summarizer.md) - Summarize key metadata from VCF files
 
 ### Data Processing
 

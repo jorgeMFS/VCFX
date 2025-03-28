@@ -1,0 +1,8 @@
+VCF Metadata Summary:
+---------------------
+Number of unique contigs: 1
+Number of unique INFO fields: 1
+Number of unique FILTER fields: 0
+Number of unique FORMAT fields: 0
+Number of samples: 0
+Number of variants: 1

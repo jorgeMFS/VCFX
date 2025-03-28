@@ -1,0 +1,7 @@
+##fileformat=VCFv4.2
+#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO
+1\t100\t.\tA\tG\t.\tPASS\tPQ=5
+1\t200\t.\tT\tC\t.\tPASS\tPQ=30
+1\t300\t.\tG\tA\t.\tPASS\tPQ=31
+1\t400\t.\tC\tT\t.\tPASS\t.   # Missing => PQ=0
+1\t500\t.\tA\tG\t.\tPASS\tPQ=20

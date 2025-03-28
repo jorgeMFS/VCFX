@@ -91,6 +91,7 @@ nav:
       - VCFX_probability_filter: VCFX_probability_filter.md
       - VCFX_nonref_filter: VCFX_nonref_filter.md
       - VCFX_impact_filter: VCFX_impact_filter.md
+      - VCFX_phase_quality_filter: VCFX_phase_quality_filter.md
     - Data Transformation:
       - VCFX_multiallelic_splitter: VCFX_multiallelic_splitter.md
       - VCFX_sample_extractor: VCFX_sample_extractor.md
@@ -127,6 +128,7 @@ nav:
       - VCFX_field_extractor: VCFX_field_extractor.md
       - VCFX_info_aggregator: VCFX_info_aggregator.md
       - VCFX_info_parser: VCFX_info_parser.md
+      - VCFX_metadata_summarizer: VCFX_metadata_summarizer.md
     - Data Processing:
       - VCFX_missing_data_handler: VCFX_missing_data_handler.md
       - VCFX_quality_adjuster: VCFX_quality_adjuster.md

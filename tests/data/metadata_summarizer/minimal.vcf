@@ -1,0 +1,5 @@
+##fileformat=VCFv4.2
+##contig=<ID=chr1,length=10000>
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Depth">
+#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO
+chr1\t100\t.\tA\tG\t.\tPASS\tDP=10
