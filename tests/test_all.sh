@@ -72,6 +72,8 @@ TEST_SCRIPTS=(
     "test_quality_adjuster.sh"
     "test_record_filter.sh"
     "test_ref_comparator.sh"
+    "test_reformatter.sh"
+    "test_region_subsampler.sh"
     "test_sample_extractor.sh"
     "test_sorter.sh"
     "test_sv_handler.sh"

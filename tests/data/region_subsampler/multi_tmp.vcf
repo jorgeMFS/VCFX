@@ -1,0 +1,7 @@
+##fileformat=VCFv4.2
+#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO
+chr1\t100\t.\tA\tG\t.\tPASS\tIN_RANGE1
+chr1\t101\t.\tT\tC\t.\tPASS\tOUT_RANGE1
+chr2\t101\t.\tG\tA\t.\tPASS\tIN_RANGE2
+chr2\t200\t.\tC\tT\t.\tPASS\tIN_RANGE2B
+chr2\t201\t.\tA\tC\t.\tPASS\tOUT_RANGE2

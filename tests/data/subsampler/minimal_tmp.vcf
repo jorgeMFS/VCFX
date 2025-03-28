@@ -1,0 +1,5 @@
+##fileformat=VCFv4.2
+#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO
+chr1\t100\t.\tA\tG\t.\tPASS\tSomething
+chr1\tThisIsInvalid
+chr1\t200\t.\tT\tC\t.\tPASS\tAnother

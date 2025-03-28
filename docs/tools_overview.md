@@ -35,6 +35,7 @@ Tools for selecting variants based on specific criteria:
 - [VCFX_nonref_filter](VCFX_nonref_filter.md) - Filter to keep only non-reference variants
 - [VCFX_impact_filter](VCFX_impact_filter.md) - Filter variants based on predicted impact
 - [VCFX_phase_quality_filter](VCFX_phase_quality_filter.md) - Filter variants based on phasing quality scores
+- [VCFX_region_subsampler](VCFX_region_subsampler.md) - Filter variants based on genomic regions
 
 ### Data Transformation
 
