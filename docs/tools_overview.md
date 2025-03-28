@@ -19,6 +19,7 @@ These tools help extract statistical information and insights from variant data:
 - [VCFX_variant_counter](VCFX_variant_counter.md) - Count variants in VCF files
 - [VCFX_ancestry_inferrer](VCFX_ancestry_inferrer.md) - Infer ancestry from genetic data
 - [VCFX_ancestry_assigner](VCFX_ancestry_assigner.md) - Assign ancestry to samples
+- [VCFX_ld_calculator](VCFX_ld_calculator.md) - Calculate pairwise linkage disequilibrium (r²) between variants
 
 ### Data Filtering
 
@@ -71,6 +72,7 @@ Tools for handling VCF files:
 - [VCFX_diff_tool](VCFX_diff_tool.md) - Find differences between VCF files
 - [VCFX_subsampler](VCFX_subsampler.md) - Subsample variants from a VCF file
 - [VCFX_duplicate_remover](VCFX_duplicate_remover.md) - Remove duplicate variants
+- [VCFX_merger](VCFX_merger.md) - Merge multiple VCF files by position
 
 ### Annotation and Reporting
 
@@ -124,6 +126,15 @@ cat input.vcf | \
 # Extract samples and check concordance
 cat input.vcf | VCFX_sample_extractor --samples SAMPLE1,SAMPLE2 > samples.vcf
 cat samples.vcf reference.vcf | VCFX_concordance_checker > concordance_report.tsv
+```
+
+### Linkage Disequilibrium Analysis
+
+```bash
+# Calculate LD in a specific region after filtering for common variants
+cat input.vcf | \
+  VCFX_af_subsetter --min-af 0.05 | \
+  VCFX_ld_calculator --region chr1:10000-20000 > ld_matrix.txt
 ```
 
 ### Normalization and Splitting

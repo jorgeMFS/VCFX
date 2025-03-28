@@ -1,0 +1,4 @@
+##fileformat=VCFv4.2
+#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO
+1\t200\tvarB\tT\tC\t.\tPASS\t.
+1\t150\tvarM\tA\tC\t.\tPASS\t.

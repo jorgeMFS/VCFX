@@ -55,6 +55,8 @@ TEST_SCRIPTS=(
     "test_info_aggregator.sh"
     "test_info_summarizer.sh"
     "test_inbreeding_calculator.sh"
+    "test_ld_calculator.sh"
+    "test_merger.sh"
     "test_missing_data_handler.sh"
     "test_missing_detector.sh"
     "test_multiallelic_splitter.sh"

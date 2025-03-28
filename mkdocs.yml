@@ -80,6 +80,7 @@ nav:
       - VCFX_variant_counter: VCFX_variant_counter.md
       - VCFX_ancestry_inferrer: VCFX_ancestry_inferrer.md
       - VCFX_ancestry_assigner: VCFX_ancestry_assigner.md
+      - VCFX_ld_calculator: VCFX_ld_calculator.md
     - Data Filtering:
       - VCFX_phase_checker: VCFX_phase_checker.md
       - VCFX_phred_filter: VCFX_phred_filter.md
@@ -116,6 +117,7 @@ nav:
       - VCFX_diff_tool: VCFX_diff_tool.md
       - VCFX_subsampler: VCFX_subsampler.md
       - VCFX_duplicate_remover: VCFX_duplicate_remover.md
+      - VCFX_merger: VCFX_merger.md
     - Annotation and Reporting:
       - VCFX_custom_annotator: VCFX_custom_annotator.md
       - VCFX_info_summarizer: VCFX_info_summarizer.md
