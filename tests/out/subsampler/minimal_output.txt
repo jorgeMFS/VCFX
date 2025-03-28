@@ -1,2 +1,5 @@
 ##fileformat=VCFv4.2
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+Warning: skipping line with <8 columns.
+chr1	100	.	A	G	.	PASS	Something
+chr1	200	.	T	C	.	PASS	Another

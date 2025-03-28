@@ -77,6 +77,7 @@ TEST_SCRIPTS=(
     "test_sample_extractor.sh"
     "test_sorter.sh"
     "test_sv_handler.sh"
+    "test_subsampler.sh"
     "test_validator.sh"
     "test_variant_classifier.sh"
     "test_variant_counter.sh"

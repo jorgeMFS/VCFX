@@ -1,94 +1,122 @@
 # VCFX_subsampler
 
 ## Overview
-`VCFX_subsampler` is a utility tool for randomly selecting a subset of variants from a VCF file while preserving all header information. It implements reservoir sampling to efficiently select a random sample of specified size from the input data.
+
+`VCFX_subsampler` is a tool for randomly selecting a specified number of variants from a VCF file. It uses reservoir sampling to efficiently select a random subset of variants while preserving the VCF header information. The tool is particularly useful for creating smaller test datasets or reducing the size of large VCF files for preliminary analysis.
 
 ## Usage
+
 ```bash
-VCFX_subsampler [OPTIONS] < input.vcf > output.vcf
+VCFX_subsampler [options] < input.vcf > output.vcf
 ```
 
 ## Options
+
 | Option | Description |
 |--------|-------------|
-| `-h`, `--help` | Display help message and exit |
-| `-s`, `--subsample <N>` | **Required**: Number of data lines (variants) to keep |
-| `--seed <INT>` | Use a specific random seed for reproducible sampling |
+| `-s, --subsample <N>` | Required: Number of variants to keep in the output |
+| `--seed <INT>` | Optional: Use a specific random seed for reproducible results |
+| `-h, --help` | Display help message and exit |
 
 ## Description
-`VCFX_subsampler` processes a VCF file to create a random subset by:
 
-1. Reading the VCF file from standard input
-2. Preserving all header lines (starting with '#') without modification
-3. Using reservoir sampling to randomly select N data lines
-4. Writing the header lines and the selected subset to standard output
+`VCFX_subsampler` processes a VCF file to:
 
-This tool is particularly useful for:
-- Creating smaller, representative datasets for testing and development
-- Reducing the size of large VCF files for easier handling
-- Creating balanced datasets with a controlled number of variants
-- Generating multiple random subsets for statistical analyses
+1. Preserve all header lines (starting with #)
+2. Randomly select N variants from the data section
+3. Skip invalid lines (those with fewer than 8 columns)
+4. Output the selected variants while maintaining VCF format
 
-## Sampling Method
+The tool uses reservoir sampling to ensure unbiased random selection, even when the total number of variants is unknown in advance.
 
-### Reservoir Sampling
-The tool uses reservoir sampling, an algorithm that efficiently selects a random sample of k items from a population of unknown size n in a single pass. The algorithm:
+## Input Requirements
 
-1. Stores the first k items in a "reservoir"
-2. For each subsequent item (k+1 to n):
-   - Generates a random number j between 0 and the current item number
-   - If j < k, replaces the jth item in the reservoir with the current item
+- Must be a valid VCF file
+- Can be piped through stdin
+- Must have at least 8 columns (CHROM through INFO)
+- Header lines must start with #
 
-This ensures that each variant has an equal probability of being selected in the final sample, regardless of its position in the file.
+## Output Format
+
+The output is a VCF file containing:
+- All original VCF header lines
+- N randomly selected variants (or all variants if input has fewer than N)
+- Same format as input VCF
+- Invalid lines (with <8 columns) are skipped with warnings
 
 ## Examples
 
 ### Basic Usage
-Select 1000 random variants from a VCF file:
+
+Select 1000 random variants:
+
 ```bash
-VCFX_subsampler --subsample 1000 < large.vcf > sample.vcf
+VCFX_subsampler --subsample 1000 < input.vcf > subset.vcf
 ```
 
 ### Reproducible Sampling
-Select 1000 random variants with a fixed seed for reproducibility:
+
+Use a fixed seed for reproducible results:
+
 ```bash
-VCFX_subsampler --subsample 1000 --seed 12345 < large.vcf > reproducible_sample.vcf
+VCFX_subsampler --subsample 1000 --seed 1234 < input.vcf > subset.vcf
 ```
 
-### Creating Multiple Samples
-Generate multiple random samples of the same size:
+### Integration with Other Tools
+
+Combine with other VCFX tools:
+
 ```bash
-VCFX_subsampler --subsample 500 --seed 1 < input.vcf > sample1.vcf
-VCFX_subsampler --subsample 500 --seed 2 < input.vcf > sample2.vcf
-VCFX_subsampler --subsample 500 --seed 3 < input.vcf > sample3.vcf
+cat input.vcf | \
+  VCFX_validator | \
+  VCFX_subsampler --subsample 1000 | \
+  VCFX_metadata_summarizer
 ```
 
-## Special Case Handling
+## Sampling Algorithm
 
-### Small Input Files
-- If the input file contains fewer variants than the requested sample size, all variants are included in the output
+The tool uses reservoir sampling to:
+- Process the input streamingly
+- Maintain a reservoir of N variants
+- Replace variants in the reservoir with probability N/count
+- Ensure unbiased random selection
 
-### Malformed Lines
-- Lines with fewer than 8 columns are skipped with a warning
-- Empty lines in the header section are preserved
+## Error Handling
 
-### Missing Sample Size
-- The `--subsample` option is required; the program will exit with an error if not specified
-- Sample size must be a positive integer; specifying zero or a negative number will result in an error
-
-### Random Seed
-- If no seed is specified, the current time is used as the seed, resulting in different samples each time
-- When a seed is specified, the sampling is deterministic and reproducible
+The tool handles various error conditions:
+- Missing --subsample argument
+- Invalid subsample size (must be >0)
+- Invalid seed value
+- Invalid VCF lines (with <8 columns)
+- Data lines before header
 
 ## Performance Considerations
-- Reservoir sampling requires only a single pass through the data
-- Memory usage is proportional to the requested sample size, not the input file size
-- Very large requested sample sizes may require significant memory
-- Processing time scales linearly with the size of the input file
+
+- Memory efficient: only stores N variants in memory
+- Processes input streamingly
+- Preserves header information
+- Skips invalid lines efficiently
 
 ## Limitations
-- Cannot sample based on specific criteria or filters
-- No preservation of related variants (e.g., those in linkage disequilibrium)
-- Does not maintain the order of variants from the original file
-- No special handling for multi-sample VCF files (sampling is done at the variant level, not the sample level)
-- Cannot handle compressed (gzipped) VCF files directly 
+
+- Only samples variants (data lines)
+- Skips lines with <8 columns
+- Requires at least 8 columns in VCF
+- Skips data lines before #CHROM header
+- No support for weighted sampling
+
+## Common Use Cases
+
+1. Creating test datasets
+2. Reducing large VCF files for quick analysis
+3. Generating random subsets for validation
+4. Preparing data for development and testing
+5. Creating smaller datasets for preliminary analysis
+
+## Best Practices
+
+1. Validate input VCF before sampling
+2. Use --seed for reproducible results
+3. Monitor warning messages for skipped lines
+4. Consider using VCFX_validator before sampling
+5. Document sampling parameters for reproducibility 
