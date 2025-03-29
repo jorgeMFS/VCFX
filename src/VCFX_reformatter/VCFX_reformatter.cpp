@@ -7,6 +7,7 @@
 #include <string>
 #include <cctype>
 #include <unordered_set>
+#include <unordered_map>
 
 // Helper to trim whitespace
 static std::string trim(const std::string &s){

@@ -8,6 +8,7 @@
 #include <string>
 #include <cctype>
 #include <cstdlib>
+#include <unordered_map>
 
 static void mergeIntervals(std::vector<Region> &ivs) {
     if (ivs.empty()) return;
