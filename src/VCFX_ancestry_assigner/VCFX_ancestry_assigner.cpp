@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <getopt.h>
 #include <limits>
+#include <cmath>
 
 // ---------------------------------------------------------
 // A helper struct to store command-line options if needed
