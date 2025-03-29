@@ -93,10 +93,46 @@ Contributions are welcome! Please see [CONTRIBUTING.md](docs/CONTRIBUTING.md) fo
 
 ## Running Tests
 
+VCFX includes a comprehensive test suite with dedicated test scripts for each tool. You can run either all tests or individual tool tests.
+
+### Running All Tests
+
 ```bash
-cd build
-ctest --verbose
+# Navigate to the tests directory
+cd tests
+
+# Make the test script executable if needed
+chmod +x test_all.sh
+
+# Run all tests
+./test_all.sh
 ```
+
+### Running Individual Tool Tests
+
+To test a specific tool:
+
+```bash
+# Navigate to the tests directory
+cd tests
+
+# Make the test script executable
+chmod +x test_tool_name.sh
+
+# Run the specific test
+./test_tool_name.sh
+```
+
+Replace `test_tool_name.sh` with the appropriate test script (e.g., `test_allele_freq_calc.sh`).
+
+### Test Structure
+
+The test suite uses:
+- Sample data in the `tests/data` directory
+- Expected outputs in the `tests/expected` directory
+- Test output is saved to the `tests/out` directory
+
+Each test script validates that the tool produces the expected output for various input scenarios.
 
 ## License
 
