@@ -19,7 +19,6 @@ To begin using VCFX, first follow the [installation instructions](#installation)
 
 ### Installation
 
-#### Building from Source
 VCFX tools are built using CMake. To build the entire toolkit:
 
 ```bash
@@ -36,22 +35,6 @@ To build a specific tool:
 ```bash
 make VCFX_tool_name
 ```
-
-#### Using Bioconda (Recommended)
-
-VCFX is available in the Bioconda channel, providing an easy installation method:
-
-```bash
-# Set up Bioconda channels if you haven't already
-conda config --add channels defaults
-conda config --add channels bioconda
-conda config --add channels conda-forge
-
-# Install VCFX
-conda install vcfx
-```
-
-See the [Installation Guide](installation.md) for more detailed options.
 
 ### Basic Example
 

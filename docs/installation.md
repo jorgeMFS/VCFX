@@ -49,27 +49,7 @@ make VCFX_tool_name
 
 Replace `VCFX_tool_name` with the actual tool name (e.g., `VCFX_allele_freq_calc`).
 
-### Method 3: Using Bioconda
-
-VCFX is available as a package in Bioconda, which provides easy installation through the conda package manager.
-
-1. First, ensure you have conda installed (either [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [Anaconda](https://www.anaconda.com/download)).
-
-2. Set up the Bioconda channels:
-   ```bash
-   conda config --add channels defaults
-   conda config --add channels bioconda
-   conda config --add channels conda-forge
-   ```
-
-3. Install VCFX:
-   ```bash
-   conda install vcfx
-   ```
-
-This method automatically handles all dependencies and provides a ready-to-use installation of VCFX.
-
-### Method 4: Using Docker (Coming Soon)
+### Method 3: Using Docker (Coming Soon)
 
 We are working on providing Docker images for VCFX to simplify the installation process.
 
