@@ -34,12 +34,14 @@ This method automatically handles all dependencies and provides a ready-to-use i
 This method ensures you have the latest version of VCFX.
 
 1. Clone the VCFX repository:
+
    ```bash
    git clone https://github.com/jorgeMFS/VCFX.git
    cd VCFX
    ```
 
 2. Create a build directory and build the tools:
+
    ```bash
    mkdir -p build
    cd build
