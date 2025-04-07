@@ -13,9 +13,25 @@ Before installing VCFX, ensure you have the following prerequisites:
 
 ## Installation Methods
 
-### Method 1: Building from Source (Recommended)
+### Method 1: Using Bioconda (Recommended)
 
-This is the recommended method as it ensures you have the latest version of VCFX.
+VCFX is available in the Bioconda channel, providing an easy installation method:
+
+```bash
+# Set up Bioconda channels if you haven't already
+conda config --add channels defaults
+conda config --add channels bioconda
+conda config --add channels conda-forge
+
+# Install VCFX
+conda install vcfx
+```
+
+This method automatically handles all dependencies and provides a ready-to-use installation of VCFX.
+
+### Method 2: Building from Source
+
+This method ensures you have the latest version of VCFX.
 
 1. Clone the VCFX repository:
    ```bash
@@ -38,7 +54,7 @@ This is the recommended method as it ensures you have the latest version of VCFX
 
 After installation, you should be able to run VCFX tools from your terminal.
 
-### Method 2: Building Individual Tools
+### Method 3: Building Individual Tools
 
 If you only need specific tools, you can build them individually:
 
@@ -49,7 +65,7 @@ make VCFX_tool_name
 
 Replace `VCFX_tool_name` with the actual tool name (e.g., `VCFX_allele_freq_calc`).
 
-### Method 3: Using Docker (Coming Soon)
+### Method 4: Using Docker (Coming Soon)
 
 We are working on providing Docker images for VCFX to simplify the installation process.
 

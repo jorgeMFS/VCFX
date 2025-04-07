@@ -1,5 +1,10 @@
 # VCFX: Comprehensive VCF Manipulation Toolkit
 
+[![Documentation Status](https://readthedocs.org/projects/vcfx/badge/?version=latest)](https://jorgeMFS.github.io/VCFX/)
+[![Bioconda](https://img.shields.io/conda/vn/bioconda/vcfx.svg)](https://anaconda.org/bioconda/vcfx)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+
 VCFX is a collection of specialized C/C++ command-line tools designed for efficient manipulation, analysis, and transformation of VCF (Variant Call Format) files used in genomic research and bioinformatics. Each tool is an independent executable that follows the Unix philosophy: do one thing well and work seamlessly with other tools through standard input/output streams.
 
 ## Documentation
@@ -19,6 +24,7 @@ mkdocs serve
 - **Performance-Focused**: Designed for handling large genomic datasets efficiently
 - **Cross-Platform**: Works on Linux, macOS, and Windows
 - **WebAssembly Support**: Optional WASM builds for browser/Node.js environments
+- **Bioconda Available**: Easy installation through Bioconda package manager
 
 ## Tool Categories
 
@@ -34,6 +40,12 @@ mkdocs serve
 
 ### Installation
 
+#### Using Bioconda (Recommended)
+```bash
+conda install -c bioconda vcfx
+```
+
+#### Building from Source
 ```bash
 git clone https://github.com/jorgeMFS/VCFX.git
 cd VCFX
