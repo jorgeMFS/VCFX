@@ -24,7 +24,7 @@ mkdocs serve
 - **60 Specialized Tools**: Each optimized for a specific VCF-related task
 - **Pipeline-Ready**: All tools work with standard input/output for easy integration
 - **Performance-Focused**: Designed for handling large genomic datasets efficiently
-- **Cross-Platform**: Works on Linux, macOS, and Windows
+- **Cross-Platform**: Works on Linux and macOS
 - **WebAssembly Support**: Optional WASM builds for browser/Node.js environments
 - **Bioconda Available**: Easy installation through Bioconda package manager
 
