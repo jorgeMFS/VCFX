@@ -1,11 +1,11 @@
 site_name: VCFX Documentation
 site_description: Documentation for the VCFX toolkit - a comprehensive VCF manipulation toolkit
 site_author: VCFX Team
-site_url: https://jorgeMFS.github.io/VCFX
+site_url: https://ieeta-pt.github.io/VCFX
 
 # Repository
-repo_name: jorgeMFS/VCFX
-repo_url: https://github.com/jorgeMFS/VCFX
+repo_name: ieeta-pt/VCFX
+repo_url: https://github.com/ieeta-pt/VCFX
 edit_uri: edit/main/docs/
 
 # Copyright
@@ -41,7 +41,7 @@ theme:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/jorgeMFS/VCFX
+      link: https://github.com/ieeta-pt/VCFX
     - icon: fontawesome/brands/twitter
       link: https://twitter.com/MiguelFSilva1
 
