@@ -1,6 +1,6 @@
 # VCFX: Comprehensive VCF Manipulation Toolkit
 
-[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://jorgeMFS.github.io/VCFX/)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://ieeta-pt.github.io/VCFX/)
 [![Bioconda](https://img.shields.io/conda/vn/bioconda/vcfx.svg)](https://anaconda.org/bioconda/vcfx)
 [![Platforms](https://anaconda.org/bioconda/vcfx/badges/platforms.svg)](https://anaconda.org/bioconda/vcfx)
 [![Downloads](https://anaconda.org/bioconda/vcfx/badges/downloads.svg)](https://anaconda.org/bioconda/vcfx)
@@ -10,7 +10,7 @@ VCFX is a collection of specialized C/C++ command-line tools designed for effici
 
 ## Documentation
 
-**[View the full documentation](https://jorgeMFS.github.io/VCFX/)**
+**[View the full documentation](https://ieeta-pt.github.io/VCFX/)**
 
 For local documentation, see the `docs` directory or build the documentation site:
 
@@ -51,7 +51,7 @@ conda install -c bioconda vcfx
 #### Building from Source
 
 ```bash
-git clone https://github.com/jorgeMFS/VCFX.git
+git clone https://github.com/ieeta-pt/VCFX.git
 cd VCFX
 mkdir -p build && cd build
 cmake ..

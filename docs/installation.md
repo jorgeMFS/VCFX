@@ -36,7 +36,7 @@ This method ensures you have the latest version of VCFX.
 1. Clone the VCFX repository:
 
    ```bash
-   git clone https://github.com/jorgeMFS/VCFX.git
+   git clone https://github.com/ieeta-pt/VCFX.git
    cd VCFX
    ```
 
@@ -124,7 +124,7 @@ If you get "command not found" errors when trying to run VCFX tools, check that:
 
 If you encounter any issues during installation, please:
 
-1. Check the [GitHub Issues](https://github.com/jorgeMFS/VCFX/issues) to see if your problem has been reported
+1. Check the [GitHub Issues](https://github.com/ieeta-pt/VCFX/issues) to see if your problem has been reported
 2. Open a new issue if necessary, including details about your system and the exact error messages
 
 ## Next Steps
