@@ -1,5 +1,3 @@
-
-
 <p align="center">
   <img src="assets/images/VCFX.png" alt="VCFX Logo" width="180"/>
 </p>
@@ -12,6 +10,7 @@
 [![Platforms](https://anaconda.org/bioconda/vcfx/badges/platforms.svg)](https://anaconda.org/bioconda/vcfx)
 [![Downloads](https://anaconda.org/bioconda/vcfx/badges/downloads.svg)](https://anaconda.org/bioconda/vcfx)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Docker](https://img.shields.io/badge/Docker-Support-blue)](DOCKER.md)
 
 VCFX is a collection of specialized C/C++ command-line tools designed for efficient manipulation, analysis, and transformation of VCF (Variant Call Format) files used in genomic research and bioinformatics. Each tool is an independent executable that follows the Unix philosophy: do one thing well and work seamlessly with other tools through standard input/output streams.
 
@@ -34,6 +33,7 @@ mkdocs serve
 - **Cross-Platform**: Works on Linux and macOS
 - **WebAssembly Support**: Optional WASM builds for browser/Node.js environments
 - **Bioconda Available**: Easy installation through Bioconda package manager
+- **Docker Support**: Run tools easily with Docker without local installation
 
 ## Tool Categories
 
