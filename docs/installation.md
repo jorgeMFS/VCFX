@@ -49,7 +49,7 @@ This method is ideal for:
 - Running VCFX in any environment with Docker
 - Ensuring consistent tool behavior across different systems
 
-For more advanced Docker usage, see the [Docker Guide](../DOCKER.md).
+For more advanced Docker usage, see the [Docker Guide](docker.md).
 
 ### Method 3: Building from Source
 

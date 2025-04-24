@@ -66,6 +66,7 @@ nav:
   - Getting Started:
     - Installation: installation.md
     - Quick Start: quickstart.md
+    - Docker: docker.md
   - Tool Documentation: 
     - Overview: tools_overview.md
     - Data Analysis:
