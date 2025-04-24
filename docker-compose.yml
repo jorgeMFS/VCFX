@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  vcfx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: vcfx:latest
+    volumes:
+      - ./tests/data:/data
+    working_dir: /data
+    # By default, show the list of available tools
+    # Override this with your specific command to run a particular tool
+    # e.g. docker-compose run --rm vcfx VCFX_allele_freq_calc --help
+    command: echo 'VCFX Toolkit is ready. Run a specific tool using "docker-compose run --rm vcfx TOOL_NAME [options]"'
+
+volumes:
+  # Create a named volume for temporary data
+  tmp_data:
+    driver: local 

@@ -3,6 +3,10 @@ build/
 bin/
 site/
 
+# Data directory (except README)
+data/*
+!data/README.md
+
 # IDE-specific files
 .vscode/
 .idea/

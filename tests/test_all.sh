@@ -98,4 +98,23 @@ for TEST_SCRIPT in "${TEST_SCRIPTS[@]}"; do
     echo
 done
 
+# Check if Docker is installed and run Docker tests if available
+if command -v docker &> /dev/null; then
+    echo "---------------------------------------------------------"
+    echo "Running Docker tests (test_docker.sh)"
+    echo "---------------------------------------------------------"
+    
+    # Make the Docker test script executable if it isn't already
+    chmod +x "test_docker.sh"
+    
+    # Run the Docker test script
+    ./test_docker.sh
+    
+    echo
+else
+    echo "---------------------------------------------------------"
+    echo "Docker not installed - skipping Docker tests"
+    echo "---------------------------------------------------------"
+fi
+
 echo "All tests passed!"
