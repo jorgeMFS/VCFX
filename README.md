@@ -1,4 +1,11 @@
-# VCFX: Comprehensive VCF Manipulation Toolkit
+
+
+<p align="center">
+  <img src="assets/images/VCFX.png" alt="VCFX Logo" width="180"/>
+</p>
+
+# Comprehensive VCF Manipulation Toolkit
+
 
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://ieeta-pt.github.io/VCFX/)
 [![Bioconda](https://img.shields.io/conda/vn/bioconda/vcfx.svg)](https://anaconda.org/bioconda/vcfx)
