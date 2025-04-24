@@ -29,7 +29,29 @@ conda install vcfx
 
 This method automatically handles all dependencies and provides a ready-to-use installation of VCFX.
 
-### Method 2: Building from Source
+### Method 2: Using Docker
+
+The simplest way to use VCFX is with Docker, which requires no compilation:
+
+```bash
+# Pull the VCFX Docker image (only needed once)
+docker pull ghcr.io/ieeta-pt/vcfx:latest
+
+# Run a VCFX tool
+docker run --rm ghcr.io/ieeta-pt/vcfx:latest VCFX_tool_name [options]
+
+# Process files by mounting a directory with your data
+docker run --rm -v /path/to/your/data:/data ghcr.io/ieeta-pt/vcfx:latest 'cat /data/input.vcf | VCFX_tool_name > /data/output.tsv'
+```
+
+This method is ideal for:
+- Quick testing without installing anything locally
+- Running VCFX in any environment with Docker
+- Ensuring consistent tool behavior across different systems
+
+For more advanced Docker usage, see the [Docker Guide](../DOCKER.md).
+
+### Method 3: Building from Source
 
 This method ensures you have the latest version of VCFX.
 
@@ -56,7 +78,7 @@ This method ensures you have the latest version of VCFX.
 
 After installation, you should be able to run VCFX tools from your terminal.
 
-### Method 3: Building Individual Tools
+### Method 4: Building Individual Tools
 
 If you only need specific tools, you can build them individually:
 
@@ -67,9 +89,38 @@ make VCFX_tool_name
 
 Replace `VCFX_tool_name` with the actual tool name (e.g., `VCFX_allele_freq_calc`).
 
-### Method 4: Using Docker (Coming Soon)
+### Method 5: Building Your Own Docker Image
 
-We are working on providing Docker images for VCFX to simplify the installation process.
+If you need to customize the Docker image, you can build it yourself:
+
+1. Clone the VCFX repository:
+
+   ```bash
+   git clone https://github.com/ieeta-pt/VCFX.git
+   cd VCFX
+   ```
+
+2. Build the Docker image:
+
+   ```bash
+   docker build -t vcfx:local .
+   ```
+
+   Or use docker-compose:
+
+   ```bash
+   docker-compose build
+   ```
+
+3. Run a VCFX tool:
+
+   ```bash
+   # Using docker directly
+   docker run --rm -v $(pwd)/data:/data vcfx:local VCFX_tool_name [options]
+   
+   # Using docker-compose
+   docker-compose run --rm vcfx VCFX_tool_name [options]
+   ```
 
 ## Verifying Installation
 
