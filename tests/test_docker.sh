@@ -72,7 +72,7 @@ echo "🎉 All Docker tests completed successfully!"
 echo "📊 Generated files in ${TEMP_OUTPUT}:"
 ls -la "${TEMP_OUTPUT}" | sed 's/^/  /'
 echo ""
-echo "📚 For more information on how to use VCFX with Docker, see the DOCKER.md file."
+echo "📚 For more information on how to use VCFX with Docker, see the documentation at https://ieeta-pt.github.io/VCFX/docker/"
 
 # Clean up temporary files
 echo "🧹 Cleaning up..."
