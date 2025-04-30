@@ -150,6 +150,20 @@ See the [tools overview page](tools_overview.md#common-usage-patterns) for more 
 - [Issue Tracker](https://github.com/ieeta-pt/VCFX/issues)
 - [Contributing Guidelines](CONTRIBUTING.md)
 
+## Citation
+
+If you use VCFX in your research, please cite:
+
+```bibtex
+@inproceedings{silva2025vcfx,
+  title={VCFX: A Minimalist, Modular Toolkit for Streamlined Variant Analysis},
+  author={Silva, Jorge Miguel and Oliveira, Jos{\'e} Luis},
+  booktitle={12th International Work-Conference on Bioinformatics and Biomedical Engineering (IWBBIO 2025)},
+  year={2025},
+  organization={Springer}
+}
+```
+
 ## License
 
 VCFX is available under MIT License. See the [LICENSE](LICENSE.md) file for details. 

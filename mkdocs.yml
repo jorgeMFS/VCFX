@@ -137,4 +137,5 @@ nav:
       - VCFX_haplotype_phaser: VCFX_haplotype_phaser.md
       - VCFX_haplotype_extractor: VCFX_haplotype_extractor.md
   - Contributing: CONTRIBUTING.md
+  - Citation: citation.md
   - License: LICENSE.md 

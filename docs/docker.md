@@ -157,4 +157,20 @@ If the container can't find VCFX commands, ensure they were properly built in th
 ```bash
 # List available VCFX tools in the container
 docker run --rm ghcr.io/ieeta-pt/vcfx:latest 'ls -1 /usr/local/bin/VCFX_*'
-``` 
+```
+
+## Citation
+
+If you use VCFX with Docker in your research, please cite:
+
+```bibtex
+@inproceedings{silva2025vcfx,
+  title={VCFX: A Minimalist, Modular Toolkit for Streamlined Variant Analysis},
+  author={Silva, Jorge Miguel and Oliveira, Jos{\'e} Luis},
+  booktitle={12th International Work-Conference on Bioinformatics and Biomedical Engineering (IWBBIO 2025)},
+  year={2025},
+  organization={Springer}
+}
+```
+
+For more citation formats and information, see the [Citation page](../citation.md). 

@@ -33,6 +33,7 @@ LABEL org.opencontainers.image.url="https://github.com/ieeta-pt/VCFX"
 LABEL org.opencontainers.image.documentation="https://ieeta-pt.github.io/VCFX/"
 LABEL org.opencontainers.image.source="https://github.com/ieeta-pt/VCFX"
 LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.citation="Silva, J.M., Oliveira, J.L. (2025). VCFX: A Minimalist, Modular Toolkit for Streamlined Variant Analysis. IWBBIO 2025."
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
