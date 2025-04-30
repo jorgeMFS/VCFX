@@ -96,6 +96,20 @@ ctest --verbose
 
 Contributions are welcome! Please see [CONTRIBUTING.md](docs/CONTRIBUTING.md) for details.
 
+## Citation
+
+If you use VCFX in your research, please cite:
+
+```
+@inproceedings{silva2025vcfx,
+  title={VCFX: A Minimalist, Modular Toolkit for Streamlined Variant Analysis},
+  author={Silva, Jorge Miguel and Oliveira, Jos{\'e} Luis},
+  booktitle={12th International Work-Conference on Bioinformatics and Biomedical Engineering (IWBBIO 2025)},
+  year={2025},
+  organization={Springer}
+}
+```
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
