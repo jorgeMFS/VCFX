@@ -31,6 +31,9 @@ public:
     // If true, we do a minimal consistency check across variants
     void setCheckPhaseConsistency(bool b) { checkPhaseConsistency = b; }
 
+    // Enable or disable debug messages
+    void setDebug(bool b) { debugMode = b; }
+
 private:
     std::vector<std::string> sampleNames;
     size_t numSamples = 0;
@@ -40,6 +43,9 @@ private:
 
     // If true, we do a simplistic cross-variant check for consistent phasing
     bool checkPhaseConsistency = false;
+
+    // If true, print verbose debugging information
+    bool debugMode = false;
 
     // Parses the #CHROM line to extract sample names
     bool parseHeader(const std::string& headerLine);
