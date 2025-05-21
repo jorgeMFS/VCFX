@@ -1,8 +1,8 @@
 #include "VCFX_merger.h"
 #include <getopt.h>
 #include <fstream>
-#include <algorithm>
-#include <map>
+#include <sstream>
+#include <queue>
 #include <iostream>
 #include <cstdlib>
 
@@ -62,85 +62,94 @@ void VCFXMerger::displayHelp() {
 }
 
 void VCFXMerger::mergeVCF(const std::vector<std::string>& inputFiles, std::ostream& out) {
-    std::vector<std::vector<std::string>> allVariants;
-    std::vector<std::string> allHeaders;
+    struct FileState {
+        std::ifstream stream;
+        std::string currentLine;
+        std::string chrom;
+        long pos = 0;
+        bool hasVariant = false;
+    };
+
+    std::vector<FileState> states;
+    std::vector<std::string> headers;
+    bool headersCaptured = false;
 
     for (const auto& file : inputFiles) {
-        std::vector<std::vector<std::string>> variants;
-        std::vector<std::string> headerLines;
-        parseVCF(file, variants, headerLines);
-
-        // If no headers yet, copy the first file's headers
-        if (allHeaders.empty()) {
-            allHeaders = headerLines;
-        }
-
-        // Append all variants
-        allVariants.insert(allVariants.end(), variants.begin(), variants.end());
-    }
-
-    // Sort all variants by chromosome and position
-    std::sort(
-        allVariants.begin(),
-        allVariants.end(),
-        [this](const std::vector<std::string>& a, const std::vector<std::string>& b) {
-            if (a[0] == b[0]) {
-                return std::stoi(a[1]) < std::stoi(b[1]);
-            }
-            return a[0] < b[0];
-        }
-    );
-
-    // Output headers
-    for (const auto& header : allHeaders) {
-        out << header << "\n";
-    }
-
-    // Output merged variants
-    for (const auto& variant : allVariants) {
-        for (size_t i = 0; i < variant.size(); ++i) {
-            out << variant[i];
-            if (i < variant.size() - 1) {
-                out << "\t";
-            }
-        }
-        out << "\n";
-    }
-}
-
-void VCFXMerger::parseVCF(const std::string& filename,
-                          std::vector<std::vector<std::string>>& variants,
-                          std::vector<std::string>& headerLines) {
-    std::ifstream infile(filename);
-    if (!infile.is_open()) {
-        std::cerr << "Failed to open file: " << filename << "\n";
-        return;
-    }
-
-    std::string line;
-    while (std::getline(infile, line)) {
-        if (line.empty()) continue;
-
-        if (line[0] == '#') {
-            headerLines.push_back(line);
+        FileState fs;
+        fs.stream.open(file);
+        if (!fs.stream.is_open()) {
+            std::cerr << "Failed to open file: " << file << "\n";
             continue;
         }
 
-        // Split by tab
-        std::vector<std::string> fields;
-        std::string field;
-        size_t pos = 0;
-        while ((pos = line.find('\t')) != std::string::npos) {
-            field = line.substr(0, pos);
-            fields.push_back(field);
-            line.erase(0, pos + 1);
-        }
-        fields.push_back(line);
+        std::string line;
+        while (std::getline(fs.stream, line)) {
+            if (line.empty())
+                continue;
+            if (line[0] == '#') {
+                if (!headersCaptured)
+                    headers.push_back(line);
+                continue;
+            }
 
-        variants.push_back(fields);
+            std::istringstream ss(line);
+            std::getline(ss, fs.chrom, '\t');
+            std::string pos_str;
+            std::getline(ss, pos_str, '\t');
+            fs.pos = std::strtol(pos_str.c_str(), nullptr, 10);
+            fs.currentLine = line;
+            fs.hasVariant = true;
+            break;
+        }
+
+        if (fs.hasVariant)
+            states.push_back(std::move(fs));
+
+        if (!headersCaptured && !headers.empty())
+            headersCaptured = true;
     }
-    infile.close();
+
+    for (const auto& h : headers) {
+        out << h << '\n';
+    }
+
+    auto cmp = [&](size_t a, size_t b) {
+        const auto& sa = states[a];
+        const auto& sb = states[b];
+        if (sa.chrom == sb.chrom) return sa.pos > sb.pos;
+        return sa.chrom > sb.chrom;
+    };
+    std::priority_queue<size_t, std::vector<size_t>, decltype(cmp)> pq(cmp);
+
+    for (size_t i = 0; i < states.size(); ++i) {
+        if (states[i].hasVariant)
+            pq.push(i);
+    }
+
+    while (!pq.empty()) {
+        size_t idx = pq.top();
+        pq.pop();
+        out << states[idx].currentLine << '\n';
+
+        std::string line;
+        while (std::getline(states[idx].stream, line)) {
+            if (line.empty())
+                continue;
+            if (line[0] == '#')
+                continue;
+
+            std::istringstream ss(line);
+            std::getline(ss, states[idx].chrom, '\t');
+            std::string pos_str;
+            std::getline(ss, pos_str, '\t');
+            states[idx].pos = std::strtol(pos_str.c_str(), nullptr, 10);
+            states[idx].currentLine = line;
+            pq.push(idx);
+            break;
+        }
+    }
 }
+
 
 int main(int argc, char* argv[]) {
     VCFXMerger merger;
