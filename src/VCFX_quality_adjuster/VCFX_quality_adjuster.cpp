@@ -157,7 +157,14 @@ void VCFXQualityAdjuster::adjustQualityScores(std::istream &in, std::ostream &ou
             // clamp large values
             if(newQual>1e12) newQual= 1e12;
         }
-        fields[5]= std::to_string(newQual);
+        std::string qualStr;
+        if(std::isnan(newQual)){
+            // ensure consistent representation for NaN
+            qualStr = "nan";
+        } else {
+            qualStr = std::to_string(newQual);
+        }
+        fields[5]= qualStr;
         std::ostringstream oss;
         for(size_t i=0; i<fields.size(); i++){
             if(i>0) oss<<"\t";
