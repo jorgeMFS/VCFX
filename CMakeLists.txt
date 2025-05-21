@@ -16,7 +16,18 @@ project(VCFX
 option(BUILD_WASM "Build with emscripten toolchain" OFF)
 
 if(BUILD_WASM)
-    set(CMAKE_TOOLCHAIN_FILE "/path/to/emscripten.cmake" CACHE FILEPATH "Emscripten toolchain" FORCE)
+    if(NOT CMAKE_TOOLCHAIN_FILE)
+        if(DEFINED ENV{EMSDK} AND EXISTS "$ENV{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake")
+            set(CMAKE_TOOLCHAIN_FILE "$ENV{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" CACHE FILEPATH "Emscripten toolchain" FORCE)
+        elseif(DEFINED ENV{EMSCRIPTEN} AND EXISTS "$ENV{EMSCRIPTEN}/cmake/Modules/Platform/Emscripten.cmake")
+            set(CMAKE_TOOLCHAIN_FILE "$ENV{EMSCRIPTEN}/cmake/Modules/Platform/Emscripten.cmake" CACHE FILEPATH "Emscripten toolchain" FORCE)
+        endif()
+    endif()
+
+    if(NOT EXISTS "${CMAKE_TOOLCHAIN_FILE}")
+        message(FATAL_ERROR "Emscripten toolchain file not found. Please set CMAKE_TOOLCHAIN_FILE or EMSDK.")
+    endif()
+
     message(STATUS "Building for WebAssembly (Emscripten).")
 endif()
 

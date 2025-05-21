@@ -81,7 +81,7 @@ If you have [Emscripten](https://emscripten.org/) installed:
 
 ```bash
 mkdir build_wasm && cd build_wasm
-cmake -DBUILD_WASM=ON ..
+emcmake cmake -DBUILD_WASM=ON ..
 cmake --build .
 ```
 
