@@ -4,8 +4,12 @@ set -e
 mkdir -p build_wasm
 cd build_wasm
 
-# Turn on BUILD_WASM
-cmake -DBUILD_WASM=ON ..
+# Turn on BUILD_WASM using emcmake if available
+if command -v emcmake >/dev/null 2>&1; then
+    emcmake cmake -DBUILD_WASM=ON ..
+else
+    cmake -DBUILD_WASM=ON ..
+fi
 
 cmake --build .
 
