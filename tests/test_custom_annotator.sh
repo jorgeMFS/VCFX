@@ -125,10 +125,11 @@ for i in $(seq 1 1000); do
     echo "1	$i	A	G	Annotation$i"
 done > "$SCRIPT_DIR/data/large_annotations.txt"
 # Add VCF header
-sed -i '' '1i\
+sed -i '1i\
 ##fileformat=VCFv4.2\
 ##contig=<ID=1,length=1000>\
-#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE1' "$SCRIPT_DIR/data/large_input.vcf"
+#CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT  SAMPLE1\
+' "$SCRIPT_DIR/data/large_input.vcf"
 
 time "$ROOT_DIR/build/src/VCFX_custom_annotator/VCFX_custom_annotator" --add-annotation "$SCRIPT_DIR/data/large_annotations.txt" < "$SCRIPT_DIR/data/large_input.vcf" > "$SCRIPT_DIR/data/large_output.vcf"
 if [ $? -eq 0 ]; then
@@ -139,3 +140,4 @@ else
 fi
 
 echo "All tests for VCFX_custom_annotator passed!" 
+
