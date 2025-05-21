@@ -32,7 +32,7 @@ while IFS= read -r -d '' toolExec; do
     if [[ ":$TOOL_DIRS:" != *":$toolDir:"* ]]; then
         TOOL_DIRS="${TOOL_DIRS}:${toolDir}"
     fi
-done < <(find "${BUILD_SRC_DIR}" -type f -perm +111 -name 'VCFX_*' -print0 2>/dev/null)
+done < <(find "${BUILD_SRC_DIR}" -type f -perm /111 -name 'VCFX_*' -print0 2>/dev/null)
 
 # If empty (no tools found), bail out
 if [ -z "$TOOL_DIRS" ]; then
