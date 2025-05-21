@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <queue>
+#include <algorithm>
 #include <iostream>
 #include <cstdlib>
 
@@ -62,28 +63,25 @@ void VCFXMerger::displayHelp() {
 }
 
 void VCFXMerger::mergeVCF(const std::vector<std::string>& inputFiles, std::ostream& out) {
-    struct FileState {
-        std::ifstream stream;
-        std::string currentLine;
+    struct Variant {
         std::string chrom;
         long pos = 0;
-        bool hasVariant = false;
+        std::string line;
     };
 
-    std::vector<FileState> states;
+    std::vector<Variant> variants;
     std::vector<std::string> headers;
     bool headersCaptured = false;
 
     for (const auto& file : inputFiles) {
-        FileState fs;
-        fs.stream.open(file);
-        if (!fs.stream.is_open()) {
+        std::ifstream stream(file);
+        if (!stream.is_open()) {
             std::cerr << "Failed to open file: " << file << "\n";
             continue;
         }
 
         std::string line;
-        while (std::getline(fs.stream, line)) {
+        while (std::getline(stream, line)) {
             if (line.empty())
                 continue;
             if (line[0] == '#') {
@@ -93,17 +91,14 @@ void VCFXMerger::mergeVCF(const std::vector<std::string>& inputFiles, std::ostre
             }
 
             std::istringstream ss(line);
-            std::getline(ss, fs.chrom, '\t');
+            Variant v;
+            std::getline(ss, v.chrom, '\t');
             std::string pos_str;
             std::getline(ss, pos_str, '\t');
-            fs.pos = std::strtol(pos_str.c_str(), nullptr, 10);
-            fs.currentLine = line;
-            fs.hasVariant = true;
-            break;
+            v.pos = std::strtol(pos_str.c_str(), nullptr, 10);
+            v.line = line;
+            variants.push_back(std::move(v));
         }
-
-        if (fs.hasVariant)
-            states.push_back(std::move(fs));
 
         if (!headersCaptured && !headers.empty())
             headersCaptured = true;
@@ -113,40 +108,13 @@ void VCFXMerger::mergeVCF(const std::vector<std::string>& inputFiles, std::ostre
         out << h << '\n';
     }
 
-    auto cmp = [&](size_t a, size_t b) {
-        const auto& sa = states[a];
-        const auto& sb = states[b];
-        if (sa.chrom == sb.chrom) return sa.pos > sb.pos;
-        return sa.chrom > sb.chrom;
-    };
-    std::priority_queue<size_t, std::vector<size_t>, decltype(cmp)> pq(cmp);
+    std::sort(variants.begin(), variants.end(), [](const Variant& a, const Variant& b) {
+        if (a.chrom == b.chrom) return a.pos < b.pos;
+        return a.chrom < b.chrom;
+    });
 
-    for (size_t i = 0; i < states.size(); ++i) {
-        if (states[i].hasVariant)
-            pq.push(i);
-    }
-
-    while (!pq.empty()) {
-        size_t idx = pq.top();
-        pq.pop();
-        out << states[idx].currentLine << '\n';
-
-        std::string line;
-        while (std::getline(states[idx].stream, line)) {
-            if (line.empty())
-                continue;
-            if (line[0] == '#')
-                continue;
-
-            std::istringstream ss(line);
-            std::getline(ss, states[idx].chrom, '\t');
-            std::string pos_str;
-            std::getline(ss, pos_str, '\t');
-            states[idx].pos = std::strtol(pos_str.c_str(), nullptr, 10);
-            states[idx].currentLine = line;
-            pq.push(idx);
-            break;
-        }
+    for (const auto& v : variants) {
+        out << v.line << '\n';
     }
 }
 
