@@ -55,15 +55,8 @@ int VCFXAlignmentChecker::run(int argc, char* argv[]) {
         return 1;
     }
 
-    // Open reference genome file
-    std::ifstream refStream(refFile);
-    if (!refStream.is_open()) {
-        std::cerr << "Error: Unable to open reference genome file: " << refFile << "\n";
-        return 1;
-    }
-
-    // Load reference genome into memory
-    if (!loadReferenceGenome(refStream)) {
+    // Load reference genome index
+    if (!loadReferenceGenome(refFile)) {
         std::cerr << "Error: Failed to load reference genome.\n";
         return 1;
     }
@@ -85,70 +78,108 @@ void VCFXAlignmentChecker::displayHelp() {
               << "  VCFX_alignment_checker --alignment-discrepancy input.vcf reference.fasta > discrepancies.txt\n";
 }
 
-bool VCFXAlignmentChecker::loadReferenceGenome(std::istream& in) {
+bool VCFXAlignmentChecker::loadReferenceGenome(const std::string& path) {
+    referencePath = path;
+    referenceIndex.clear();
+
+    referenceStream.open(path, std::ios::in);
+    if (!referenceStream.is_open()) {
+        std::cerr << "Error: Unable to open reference genome file: " << path << "\n";
+        return false;
+    }
+
     std::string line;
     std::string currentChrom;
-    std::string seq;
+    FastaIndexEntry entry;
+    std::size_t seqLen = 0;
 
-    while (std::getline(in, line)) {
+    // record file offset where we will read sequence lines
+    while (std::getline(referenceStream, line)) {
         if (line.empty()) {
             continue;
         }
         if (line[0] == '>') {
-            // If we already had a chromosome loaded, store its sequence
             if (!currentChrom.empty()) {
-                referenceGenome[normalizeChromosome(currentChrom)] = seq;
+                entry.length = seqLen;
+                referenceIndex[normalizeChromosome(currentChrom)] = entry;
             }
-            // Start a new chromosome
-            seq.clear();
-            // Grab chromosome name (up to first space)
-            size_t pos = line.find(' ');
+
+            currentChrom.clear();
+            seqLen = 0;
+            entry = FastaIndexEntry();
+
+            std::size_t pos = line.find(' ');
             if (pos != std::string::npos) {
                 currentChrom = line.substr(1, pos - 1);
             } else {
                 currentChrom = line.substr(1);
             }
+
+            entry.offset = referenceStream.tellg();
+            entry.basesPerLine = 0;
+            entry.bytesPerLine = 0;
         } else {
-            // Append this line to the sequence (uppercase)
-            std::transform(line.begin(), line.end(), line.begin(), ::toupper);
-            seq += line;
+            if (entry.basesPerLine == 0) {
+                entry.basesPerLine = line.size();
+                entry.bytesPerLine = line.size() + 1; // assume single '\n'
+            }
+            seqLen += line.size();
         }
     }
 
-    // Store the last chromosome read
     if (!currentChrom.empty()) {
-        referenceGenome[normalizeChromosome(currentChrom)] = seq;
+        entry.length = seqLen;
+        referenceIndex[normalizeChromosome(currentChrom)] = entry;
     }
 
+    referenceStream.clear();
+    referenceStream.seekg(0);
     return true;
 }
 
 std::string VCFXAlignmentChecker::normalizeChromosome(const std::string& chrom) {
-    // NOTE: This logic may cause mismatches if your reference is named "1" but your VCF says "chr1".
-    // You may want to adjust this to match your actual naming conventions.
     std::string norm = chrom;
-    if (norm.find("chr") != 0 && 
-        !(norm == "X" || norm == "Y" || norm == "MT" ||
-          std::all_of(norm.begin(), norm.end(), ::isdigit))) 
-    {
-        norm = "chr" + norm;
+    // convert to upper and drop leading "CHR" if present
+    if (norm.size() >= 3 && (norm.rfind("chr", 0) == 0 || norm.rfind("CHR", 0) == 0)) {
+        norm = norm.substr(3);
     }
+    std::transform(norm.begin(), norm.end(), norm.begin(), ::toupper);
     return norm;
 }
 
 std::string VCFXAlignmentChecker::getReferenceBases(const std::string& chrom, int pos, int length) {
-    auto it = referenceGenome.find(normalizeChromosome(chrom));
-    if (it == referenceGenome.end()) {
+    auto it = referenceIndex.find(normalizeChromosome(chrom));
+    if (it == referenceIndex.end()) {
         return "";
     }
 
-    const std::string& seq = it->second;
-    // Convert VCF 1-based 'pos' to a 0-based index into the string
-    size_t startIndex = static_cast<size_t>(pos - 1);
-    if (pos < 1 || (startIndex + length) > seq.size()) {
+    const FastaIndexEntry& entry = it->second;
+    if (pos < 1 || static_cast<std::size_t>(pos - 1) >= entry.length) {
         return "";
     }
-    return seq.substr(startIndex, length);
+
+    int remaining = length;
+    std::size_t currPos = static_cast<std::size_t>(pos - 1);
+    std::string result;
+    result.reserve(length);
+
+    while (remaining > 0 && currPos < entry.length) {
+        std::size_t lineIdx = currPos / entry.basesPerLine;
+        std::size_t lineOffset = currPos % entry.basesPerLine;
+        std::size_t chunk = std::min<std::size_t>(entry.basesPerLine - lineOffset, remaining);
+
+        std::streampos filePos = entry.offset + static_cast<std::streampos>(lineIdx * entry.bytesPerLine + lineOffset);
+        referenceStream.clear();
+        referenceStream.seekg(filePos);
+        std::string buf(chunk, '\0');
+        referenceStream.read(&buf[0], chunk);
+        result += buf;
+
+        currPos += chunk;
+        remaining -= static_cast<int>(chunk);
+    }
+
+    return result;
 }
 
 void VCFXAlignmentChecker::checkDiscrepancies(std::istream& vcfIn, std::ostream& out) {
