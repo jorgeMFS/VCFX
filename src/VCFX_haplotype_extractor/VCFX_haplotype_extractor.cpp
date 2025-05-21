@@ -16,9 +16,10 @@ void printHelp() {
               << "Usage: VCFX_haplotype_extractor [OPTIONS]\n\n"
               << "Options:\n"
               << "  --help, -h                 Display this help message and exit.\n"
-              << "  --block-size <int>         Maximum distance for grouping consecutive variants (default 100000).\n"
-              << "  --check-phase-consistency  If set, try a minimal check across variants.\n\n"
-              << "Description:\n"
+             << "  --block-size <int>         Maximum distance for grouping consecutive variants (default 100000).\n"
+             << "  --check-phase-consistency  If set, try a minimal check across variants.\n"
+             << "  --debug                   Output verbose debug information.\n\n"
+             << "Description:\n"
               << "  Extracts phased haplotype blocks from genotype data in a VCF file. "
               << "It reconstructs haplotypes for each sample by analyzing phased genotype fields.\n\n"
               << "Examples:\n"
@@ -86,8 +87,10 @@ bool HaplotypeExtractor::phaseIsConsistent(const HaplotypeBlock& block,
         return false;
     }
     
-    // Debug the whole process
-    std::cerr << "Checking phase consistency\n";
+    // Optional debugging output
+    if (debugMode) {
+        std::cerr << "Checking phase consistency\n";
+    }
 
     for (size_t s=0; s<block.haplotypes.size(); s++) {
         // block's haplotypes[s] is a big string with variants separated by '|', e.g. "0|1|0|1"
@@ -111,7 +114,9 @@ bool HaplotypeExtractor::phaseIsConsistent(const HaplotypeBlock& block,
             }
         }
         
-        std::cerr << "Sample " << s << " last GT: " << lastGT << " new GT: " << newGenotypes[s] << "\n";
+        if (debugMode) {
+            std::cerr << "Sample " << s << " last GT: " << lastGT << " new GT: " << newGenotypes[s] << "\n";
+        }
 
         // compare lastGT with newGenotypes[s]
         // if they differ in a 2-allele reversed manner, we might call it inconsistent
@@ -128,19 +133,25 @@ bool HaplotypeExtractor::phaseIsConsistent(const HaplotypeBlock& block,
         char newAllele1 = newGenotypes[s][0];
         char newAllele2 = newGenotypes[s][2];
         
-        std::cerr << "Comparing alleles: " << lastAllele1 << "|" << lastAllele2 
-                  << " vs " << newAllele1 << "|" << newAllele2 << "\n";
+        if (debugMode) {
+            std::cerr << "Comparing alleles: " << lastAllele1 << "|" << lastAllele2
+                      << " vs " << newAllele1 << "|" << newAllele2 << "\n";
+        }
         
         // If e.g. lastGT=="0|1", newGenotypes=="1|0" => inconsistent
         // Check for phase flips - when both alleles flip positions
         if (lastAllele1 != newAllele1 && lastAllele2 != newAllele2 && 
             lastAllele1 == newAllele2 && lastAllele2 == newAllele1) {
-            std::cerr << "Phase flip detected in sample " << s << "\n";
+            if (debugMode) {
+                std::cerr << "Phase flip detected in sample " << s << "\n";
+            }
             return false;
         }
     }
 
-    std::cerr << "All phases consistent\n";
+    if (debugMode) {
+        std::cerr << "All phases consistent\n";
+    }
     return true;
 }
 
@@ -318,6 +329,7 @@ bool HaplotypeExtractor::extractHaplotypes(std::istream& in, std::ostream& out) 
 int main(int argc, char* argv[]) {
     int blockSize = 100000;
     bool doCheck = false;
+    bool debug = false;
 
     // simple arg parse
     for (int i=1; i<argc; i++) {
@@ -329,12 +341,15 @@ int main(int argc, char* argv[]) {
             blockSize = std::stoi(argv[++i]);
         } else if (a=="--check-phase-consistency") {
             doCheck = true;
+        } else if (a=="--debug") {
+            debug = true;
         }
     }
 
     HaplotypeExtractor extractor;
     extractor.setBlockDistanceThreshold(blockSize);
     extractor.setCheckPhaseConsistency(doCheck);
+    extractor.setDebug(debug);
 
     bool ok = extractor.extractHaplotypes(std::cin, std::cout);
     return (ok ? 0 : 1);
