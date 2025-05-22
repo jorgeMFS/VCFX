@@ -2,7 +2,7 @@
 # This script tests the VCFX Docker image using the existing test files from the tests directory
 # Docker image to use for the tests. CI may override this when using a locally
 # built image.
-VCFX_IMAGE="${VCFX_IMAGE:-ghcr.io/jorgeMFS/vcfx:latest}"
+VCFX_IMAGE="${VCFX_IMAGE:-ghcr.io/jorgemfs/vcfx:latest}"
 
 # Function to check if command succeeded
 check_success() {
