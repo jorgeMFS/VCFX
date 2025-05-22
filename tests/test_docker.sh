@@ -4,6 +4,10 @@
 # built image.
 VCFX_IMAGE="${VCFX_IMAGE:-ghcr.io/jorgemfs/vcfx:latest}"
 
+# Directory paths
+TESTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+REPO_ROOT="$(dirname "$TESTS_DIR")"
+
 # Function to check if command succeeded
 check_success() {
   if [ $? -ne 0 ]; then
@@ -28,13 +32,10 @@ if docker pull "$VCFX_IMAGE"; then
   check_success "Pulled VCFX Docker image"
 else
   echo "⚠️  Unable to pull $VCFX_IMAGE. Building Docker image locally..."
-  docker build -t vcfx:local .
+  docker build -t vcfx:local "${REPO_ROOT}"
   check_success "Built local Docker image"
   VCFX_IMAGE="vcfx:local"
 fi
-
-# Get the directory of this script (tests directory)
-TESTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 echo "🔍 Using test files from: ${TESTS_DIR}"
 
@@ -56,7 +57,7 @@ check_success "Validated valid.vcf file"
 # Test 3: Allele frequency calculator test
 echo "🧮 Testing VCFX_allele_freq_calc..."
 docker run --rm -v "${TESTS_DIR}:/tests" -v "${TEMP_OUTPUT}:/output" \
-  $VCFX_IMAGE 'cat /tests/data/allele_freq_calc/test_input.vcf | VCFX_allele_freq_calc > /output/allele_freqs.tsv'
+  $VCFX_IMAGE 'cat /tests/data/allele_freq_calc/simple.vcf | VCFX_allele_freq_calc > /output/allele_freqs.tsv'
 check_success "Calculated allele frequencies"
 
 # Test 4: Sample extractor test
