@@ -46,14 +46,15 @@ COPY --from=builder /app/build/src /usr/local/bin/
 # Create a directory for data
 WORKDIR /data
 
-# Add the script that adds tools to PATH
+# Add the helper scripts
 COPY add_vcfx_tools_to_path.sh /usr/local/bin/
+COPY docker_entrypoint.sh /usr/local/bin/
 
-# Make the script executable
-RUN chmod +x /usr/local/bin/add_vcfx_tools_to_path.sh
+# Make them executable
+RUN chmod +x /usr/local/bin/add_vcfx_tools_to_path.sh /usr/local/bin/docker_entrypoint.sh
 
-# Set the entry point
-ENTRYPOINT ["/bin/bash", "-c"]
+# Use a custom entrypoint that sets up PATH for the tools
+ENTRYPOINT ["/usr/local/bin/docker_entrypoint.sh"]
 
 # Default command shows available tools
-CMD ["echo 'VCFX Toolkit is ready. Run any VCFX tool by name, for example:' && ls -1 /usr/local/bin/VCFX_* | xargs -n1 basename"] 
+CMD ["bash", "-c", "echo 'VCFX Toolkit is ready. Run any VCFX tool by name, for example:' && ls -1 /usr/local/bin/VCFX_* | xargs -n1 basename"]
