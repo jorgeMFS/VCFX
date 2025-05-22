@@ -11,6 +11,12 @@ public:
 private:
     // If we add advanced checks for e.g. "strict" mode, we store a bool
     bool strictMode = false;
+    // Number of columns in the #CHROM header line
+    int headerColumnCount = 0;
+    // Whether the header includes FORMAT/sample columns
+    bool headerHasFormat = false;
+    // Number of sample columns
+    int sampleCount = 0;
 
     // Show usage
     void displayHelp();
