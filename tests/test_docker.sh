@@ -21,7 +21,7 @@ echo "🧬 Testing VCFX Docker image with official test files..."
 
 # Pull the latest VCFX image
 echo "📥 Pulling the latest VCFX Docker image..."
-docker pull ghcr.io/ieeta-pt/vcfx:latest
+docker pull ghcr.io/jorgemfs/vcfx:latest
 check_success "Pulled VCFX Docker image"
 
 # Get the directory of this script (tests directory)
@@ -36,36 +36,36 @@ check_success "Created temporary output directory"
 
 # Test 1: List available tools
 echo "📋 Listing available VCFX tools..."
-docker run --rm ghcr.io/ieeta-pt/vcfx:latest 'ls -1 /usr/local/bin/VCFX_* | xargs -n1 basename'
+docker run --rm ghcr.io/jorgemfs/vcfx:latest 'ls -1 /usr/local/bin/VCFX_* | xargs -n1 basename'
 check_success "Listed available tools"
 
 # Test 2: Validator test
 echo "🔍 Testing VCFX_validator..."
-docker run --rm -v "${TESTS_DIR}:/tests" ghcr.io/ieeta-pt/vcfx:latest 'cat /tests/data/valid.vcf | VCFX_validator'
+docker run --rm -v "${TESTS_DIR}:/tests" ghcr.io/jorgemfs/vcfx:latest 'cat /tests/data/valid.vcf | VCFX_validator'
 check_success "Validated valid.vcf file"
 
 # Test 3: Allele frequency calculator test
 echo "🧮 Testing VCFX_allele_freq_calc..."
 docker run --rm -v "${TESTS_DIR}:/tests" -v "${TEMP_OUTPUT}:/output" \
-  ghcr.io/ieeta-pt/vcfx:latest 'cat /tests/data/allele_freq_calc/test_input.vcf | VCFX_allele_freq_calc > /output/allele_freqs.tsv'
+  ghcr.io/jorgemfs/vcfx:latest 'cat /tests/data/allele_freq_calc/test_input.vcf | VCFX_allele_freq_calc > /output/allele_freqs.tsv'
 check_success "Calculated allele frequencies"
 
 # Test 4: Sample extractor test
 echo "👥 Testing VCFX_sample_extractor..."
 docker run --rm -v "${TESTS_DIR}:/tests" -v "${TEMP_OUTPUT}:/output" \
-  ghcr.io/ieeta-pt/vcfx:latest 'cat /tests/data/valid.vcf | VCFX_sample_extractor --samples SAMPLE1 > /output/sample1.vcf'
+  ghcr.io/jorgemfs/vcfx:latest 'cat /tests/data/valid.vcf | VCFX_sample_extractor --samples SAMPLE1 > /output/sample1.vcf'
 check_success "Extracted sample"
 
 # Test 5: Variant classifier test
 echo "🔬 Testing VCFX_variant_classifier..."
 docker run --rm -v "${TESTS_DIR}:/tests" -v "${TEMP_OUTPUT}:/output" \
-  ghcr.io/ieeta-pt/vcfx:latest 'cat /tests/data/classifier_mixed.vcf | VCFX_variant_classifier --append-info > /output/classified.vcf'
+  ghcr.io/jorgemfs/vcfx:latest 'cat /tests/data/classifier_mixed.vcf | VCFX_variant_classifier --append-info > /output/classified.vcf'
 check_success "Classified variants"
 
 # Test 6: Testing a pipeline of commands
 echo "🔄 Testing a pipeline of VCFX tools..."
 docker run --rm -v "${TESTS_DIR}:/tests" -v "${TEMP_OUTPUT}:/output" \
-  ghcr.io/ieeta-pt/vcfx:latest 'cat /tests/data/valid.vcf | VCFX_validator | VCFX_variant_classifier --append-info | VCFX_allele_freq_calc > /output/pipeline_output.tsv'
+  ghcr.io/jorgemfs/vcfx:latest 'cat /tests/data/valid.vcf | VCFX_validator | VCFX_variant_classifier --append-info | VCFX_allele_freq_calc > /output/pipeline_output.tsv'
 check_success "Executed pipeline of tools"
 
 echo "🎉 All Docker tests completed successfully!"
