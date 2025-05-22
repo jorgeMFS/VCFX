@@ -58,11 +58,16 @@ make
 
 ### Running Tests
 
-After building the project, run the tests to ensure everything is working correctly:
+After building the project, run the test suite from the `build` directory:
 
 ```bash
-cd build
-ctest --verbose
+ctest --output-on-failure
+```
+
+You can still run all shell tests directly if needed:
+
+```bash
+bash ../tests/test_all.sh
 ```
 
 ## Coding Standards
