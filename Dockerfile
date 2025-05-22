@@ -40,8 +40,9 @@ RUN apt-get update && apt-get install -y \
     libz1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the built executables from builder stage
-COPY --from=builder /app/build/src /usr/local/bin/
+# Copy only the compiled VCFX executables from builder stage
+# (each tool is built under build/src/VCFX_<tool>/<executable>)
+COPY --from=builder /app/build/src/VCFX_*/VCFX_* /usr/local/bin/
 
 # Create a directory for data
 WORKDIR /data
