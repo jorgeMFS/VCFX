@@ -87,9 +87,16 @@ cmake --build .
 
 ## Running Tests
 
+From your build directory, run:
+
 ```bash
-cd build
-ctest --verbose
+ctest --output-on-failure
+```
+
+You can also execute all shell scripts directly with:
+
+```bash
+bash ../tests/test_all.sh
 ```
 
 ## Contributing
