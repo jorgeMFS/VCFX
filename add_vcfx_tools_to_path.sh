@@ -6,37 +6,41 @@
 # Usage:
 #   source ./add_vcfx_tools_to_path.sh
 
-# Where is the root of this script? (i.e., your VCFX repository root)
-# Adjust if needed; for example if you keep this script in the top-level dir:
+# Determine potential base directories that may contain VCFX tools.
+# When running from the build tree this will be build/src, but inside the
+# Docker image the tools reside in /usr/local/bin/VCFX_*/.
 REPO_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Our compiled tools should be under build/src
+BASE_DIRS=()
 BUILD_SRC_DIR="${REPO_ROOT}/build/src"
+if [ -d "${BUILD_SRC_DIR}" ]; then
+    BASE_DIRS+=("${BUILD_SRC_DIR}")
+fi
 
-# Check that this path exists:
-if [ ! -d "${BUILD_SRC_DIR}" ]; then
-    echo "Error: build/src directory not found at: ${BUILD_SRC_DIR}"
-    echo "Make sure you have run 'cmake .. && make' inside ./build"
+# Also check the standard installation prefix used in the Docker image
+if compgen -G "/usr/local/bin/VCFX_*" > /dev/null; then
+    BASE_DIRS+=("/usr/local/bin")
+fi
+
+if [ ${#BASE_DIRS[@]} -eq 0 ]; then
+    echo "Warning: No VCFX tool directories found."
     return 1
 fi
 
-# We'll gather a list of directories under build/src/VCFX_*
-# that actually contain an executable matching the pattern "VCFX_*"
-# Then add those directories to PATH.
-
+# Gather directories containing executables named VCFX_*
 TOOL_DIRS=""
-while IFS= read -r -d '' toolExec; do
-    # 'toolExec' is something like: build/src/VCFX_af_subsetter/VCFX_af_subsetter
-    toolDir=$(dirname "$toolExec")
-    # Only add it once if not present
-    if [[ ":$TOOL_DIRS:" != *":$toolDir:"* ]]; then
-        TOOL_DIRS="${TOOL_DIRS}:${toolDir}"
-    fi
-done < <(find "${BUILD_SRC_DIR}" -type f -perm /111 -name 'VCFX_*' -print0 2>/dev/null)
+for base in "${BASE_DIRS[@]}"; do
+    while IFS= read -r -d '' toolExec; do
+        toolDir=$(dirname "$toolExec")
+        if [[ ":$TOOL_DIRS:" != *":$toolDir:"* ]]; then
+            TOOL_DIRS="${TOOL_DIRS}:${toolDir}"
+        fi
+    done < <(find "$base" -type f -perm /111 -name 'VCFX_*' -print0 2>/dev/null)
+done
 
 # If empty (no tools found), bail out
 if [ -z "$TOOL_DIRS" ]; then
-    echo "Warning: No VCFX tools found in ${BUILD_SRC_DIR}. Did you run 'make'?"
+    echo "Warning: No VCFX tools found."
 else
     # Remove leading colon
     TOOL_DIRS="${TOOL_DIRS#:}"
