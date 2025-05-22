@@ -1838,6 +1838,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#strict-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Strict Mode
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2804,6 +2813,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#strict-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Strict Mode
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2993,7 +3011,7 @@
 </tr>
 <tr>
 <td><code>-s</code>, <code>--strict</code></td>
-<td>Enable stricter validation checks (reserved for future implementation)</td>
+<td>Enable stricter validation checks</td>
 </tr>
 </tbody>
 </table>
@@ -3040,16 +3058,27 @@
 <li>FILTER: Must not be empty</li>
 <li>INFO: Must be '.' or contain valid key-value pairs or flags:</li>
 <li>If not '.', must contain at least one valid entry</li>
-<li>Key-value pairs must have a non-empty key</li>
-<li>Flags (without '=') are allowed</li>
+<li>
+<p>Key-value pairs must have a non-empty key</p>
+</li>
+<li>
+<p>Flags (without '=') are allowed</p>
+</li>
 </ul>
+<h3 id="strict-mode">Strict Mode<a class="headerlink" href="#strict-mode" title="Permanent link">&para;</a></h3>
+<p>When <code>--strict</code> is used, additional checks are applied:
+- The number of columns in every data line must exactly match the <code>#CHROM</code> header.
+- If FORMAT/sample columns are present, each sample field must contain the same
+  number of sub-fields as specified in the FORMAT column.
+- Any warning that would normally be emitted is treated as an error and causes
+  the validator to exit with a non-zero status.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <h3 id="basic-validation">Basic Validation<a class="headerlink" href="#basic-validation" title="Permanent link">&para;</a></h3>
 <p>Check if a VCF file is valid:
 <div class="highlight"><pre><span></span><code>VCFX_validator<span class="w"> </span>&lt;<span class="w"> </span>input.vcf
 </code></pre></div></p>
 <h3 id="using-strict-mode">Using Strict Mode<a class="headerlink" href="#using-strict-mode" title="Permanent link">&para;</a></h3>
-<p>Enable stricter validation (note: additional strict checks are reserved for future implementation):
+<p>Enable stricter validation with additional checks:
 <div class="highlight"><pre><span></span><code>VCFX_validator<span class="w"> </span>--strict<span class="w"> </span>&lt;<span class="w"> </span>input.vcf
 </code></pre></div></p>
 <h3 id="redirecting-error-messages">Redirecting Error Messages<a class="headerlink" href="#redirecting-error-messages" title="Permanent link">&para;</a></h3>
