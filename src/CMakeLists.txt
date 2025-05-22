@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.14)
 # Build the core library from your shared code
 add_library(vcfx_core STATIC vcfx_core.cpp)
 target_include_directories(vcfx_core PUBLIC ${CMAKE_CURRENT_LIST_DIR}/../include)
+target_link_libraries(vcfx_core PUBLIC ZLIB::ZLIB)
 
 # Add all tool subdirectories
 add_subdirectory(VCFX_header_parser)
