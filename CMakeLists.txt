@@ -53,9 +53,8 @@ enable_testing()
 # Add top-level 'src' subdirectory, which in turn references each tool subdirectory
 add_subdirectory(src)
 
-# Add a tests subdir if you have tests
-# Comment out this line since we don't have a CMakeLists.txt file in the tests directory
-# add_subdirectory(tests)
+# Add the test suite
+add_subdirectory(tests)
 
 # Installation configuration
 include(GNUInstallDirs)
