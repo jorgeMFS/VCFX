@@ -6,6 +6,7 @@ target_include_directories(vcfx_core PUBLIC ${CMAKE_CURRENT_LIST_DIR}/../include
 target_link_libraries(vcfx_core PUBLIC ZLIB::ZLIB)
 
 # Add all tool subdirectories
+add_subdirectory(vcfx_wrapper)
 add_subdirectory(VCFX_header_parser)
 add_subdirectory(VCFX_record_filter)
 add_subdirectory(VCFX_field_extractor)
@@ -74,6 +75,7 @@ install(TARGETS vcfx_core
 
 # Define a list of all tool executables for installation
 set(VCFX_TOOLS
+    vcfx
     VCFX_header_parser
     VCFX_record_filter
     VCFX_field_extractor
