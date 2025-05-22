@@ -7,12 +7,20 @@
 #include <unistd.h>
 
 static std::string trim(const std::string &s){
-    size_t start=0; 
+    size_t start=0;
     while(start<s.size() && std::isspace((unsigned char)s[start])) start++;
     if(start== s.size()) return "";
     size_t end= s.size()-1;
     while(end> start && std::isspace((unsigned char)s[end])) end--;
     return s.substr(start, end-start+1);
+}
+
+static std::vector<std::string> split(const std::string &s, char delim){
+    std::vector<std::string> out;
+    std::stringstream ss(s);
+    std::string item;
+    while(std::getline(ss, item, delim)) out.push_back(item);
+    return out;
 }
 
 int VCFXValidator::run(int argc, char* argv[]){
@@ -51,14 +59,18 @@ void VCFXValidator::displayHelp(){
 "  VCFX_validator [options] < input.vcf\n\n"
 "Options:\n"
 "  -h, --help     Show this help.\n"
-"  -s, --strict   Enable stricter checks (not fully implemented, but reserved).\n\n"
+"  -s, --strict   Enable stricter checks.\n\n"
 "Description:\n"
 "  Validates:\n"
 "   * All '##' lines are recognized as meta lines.\n"
-"   * #CHROM line is present, has at least 8 columns.\n"
+"   * #CHROM line is present and well formed.\n"
 "   * Each data line has >=8 columns, checks CHROM non-empty, POS>0,\n"
 "     REF/ALT non-empty, QUAL is '.' or non-negative float, FILTER non-empty,\n"
-"     INFO is minimal check. Logs errors/warnings.\n"
+"     INFO is minimally checked.\n"
+"  In strict mode additional checks are performed:\n"
+"   * Data line column count must match the #CHROM header.\n"
+"   * Sample columns must match the FORMAT field structure.\n"
+"   * Any warning is treated as an error.\n"
 "  Exits 0 if pass, 1 if fail.\n";
 }
 
@@ -86,10 +98,23 @@ bool VCFXValidator::validateChromHeader(const std::string &line, int lineNumber)
         std::cerr<<"Error: #CHROM line at "<< lineNumber <<" has <8 columns.\n";
         return false;
     }
-    // typically #CHROM, POS, ID, REF, ALT, QUAL, FILTER, INFO, (FORMAT?), ...
     if(f[0]!="#CHROM"){
         std::cerr<<"Error: #CHROM line doesn't start with '#CHROM' at line "<< lineNumber <<".\n";
         return false;
+    }
+
+    headerColumnCount = static_cast<int>(f.size());
+    headerHasFormat = (headerColumnCount > 8);
+    sampleCount = headerHasFormat ? headerColumnCount - 9 : 0;
+
+    if(headerHasFormat && f[8] != "FORMAT"){
+        std::string msg = "Warning: column 9 of #CHROM header is not 'FORMAT'.";
+        if(strictMode){
+            std::cerr << "Error: " << msg << "\n";
+            return false;
+        } else {
+            std::cerr << msg << "\n";
+        }
     }
     return true;
 }
@@ -107,6 +132,16 @@ bool VCFXValidator::validateDataLine(const std::string &line, int lineNumber){
     if(f.size()<8){
         std::cerr<<"Error: line "<< lineNumber <<" has <8 columns.\n";
         return false;
+    }
+    if(headerColumnCount>0){
+        if(strictMode && static_cast<int>(f.size()) != headerColumnCount){
+            std::cerr << "Error: line "<<lineNumber<<" has "<<f.size()
+                      <<" columns but header specifies "<<headerColumnCount<<".\n";
+            return false;
+        } else if(static_cast<int>(f.size()) != headerColumnCount){
+            std::cerr << "Warning: line "<<lineNumber<<" column count "<<f.size()
+                      <<" differs from header ("<<headerColumnCount<<").\n";
+        }
     }
     // CHROM
     if(f[0].empty()){
@@ -187,6 +222,37 @@ bool VCFXValidator::validateDataLine(const std::string &line, int lineNumber){
             return false;
         }
     }
+
+    if(headerHasFormat){
+        if(f.size()<9){
+            std::cerr<<"Error: line "<<lineNumber<<" missing FORMAT/sample columns."<<"\n";
+            return false;
+        }
+        std::vector<std::string> formatParts = split(f[8], ':');
+        for(size_t i=9;i<f.size();++i){
+            if(f[i]=="." || f[i].empty()) continue;
+            std::vector<std::string> sampleParts = split(f[i], ':');
+            if(sampleParts.size()!=formatParts.size()){
+                std::string msg = "Warning: sample column " + std::to_string(i-8) +
+                    " does not match FORMAT field";
+                if(strictMode){
+                    std::cerr<<"Error: "<<msg<<" on line "<<lineNumber<<".\n";
+                    return false;
+                } else {
+                    std::cerr<<msg<<" on line "<<lineNumber<<".\n";
+                }
+            }
+        }
+    } else if(f.size()>8){
+        std::string msg = "Warning: data line has sample columns but header lacks FORMAT";
+        if(strictMode){
+            std::cerr<<"Error: "<<msg<<" on line "<<lineNumber<<".\n";
+            return false;
+        } else {
+            std::cerr<<msg<<" on line "<<lineNumber<<".\n";
+        }
+    }
+
     return true;
 }
 
