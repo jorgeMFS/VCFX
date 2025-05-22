@@ -155,6 +155,17 @@ if [ ! -f data/variant_counter_empty.vcf ]; then
 EOF
 fi
 
+# Create gzipped versions of VCFs
+if [ ! -f data/variant_counter_normal.vcf.gz ]; then
+  gzip -c data/variant_counter_normal.vcf > data/variant_counter_normal.vcf.gz
+fi
+if [ ! -f data/variant_counter_invalid.vcf.gz ]; then
+  gzip -c data/variant_counter_invalid.vcf > data/variant_counter_invalid.vcf.gz
+fi
+if [ ! -f data/variant_counter_empty.vcf.gz ]; then
+  gzip -c data/variant_counter_empty.vcf > data/variant_counter_empty.vcf.gz
+fi
+
 # Test 1: Count variants in a normal VCF file (strict mode)
 run_test 1 "Counting variants in a normal VCF file (strict mode)" \
   "cat data/variant_counter_normal.vcf | $VCFX_EXECUTABLE --strict" \
@@ -212,4 +223,10 @@ diff -u expected/variant_counter_large.txt out/variant_counter_large.txt || {
 }
 echo "  Test 8 passed."
 
-echo "All VCFX_variant_counter tests passed!" 
+# Test 9: Gzipped normal VCF
+run_test 9 "Counting variants in a gzipped VCF file" \
+  "cat data/variant_counter_normal.vcf.gz | $VCFX_EXECUTABLE" \
+  "expected/variant_counter_normal_nonstrict.txt" \
+  "out/variant_counter_normal_gz.txt"
+
+echo "All VCFX_variant_counter tests passed!"

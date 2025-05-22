@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include "vcfx_core.h"
 
 void VCFXVariantCounter::displayHelp(){
     std::cout <<
@@ -55,7 +56,13 @@ int VCFXVariantCounter::run(int argc, char* argv[]){
         return 0;
     }
     
-    int total= countVariants(std::cin);
+    std::string plainInput;
+    if(!vcfx::read_maybe_compressed(std::cin, plainInput)){
+        std::cerr << "Error: failed to read input" << std::endl;
+        return 1;
+    }
+    std::istringstream inStream(plainInput);
+    int total= countVariants(inStream);
     if(total<0){
         // indicates an error if strict
         return 1;
