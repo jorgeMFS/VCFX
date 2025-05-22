@@ -8,16 +8,16 @@ VCFX is available as a pre-built Docker image on GitHub Container Registry:
 
 ```bash
 # Pull the image (only needed once)
-docker pull ghcr.io/ieeta-pt/vcfx:latest
+docker pull ghcr.io/jorgemfs/vcfx:latest
 
 # Run a VCFX tool
-docker run --rm ghcr.io/ieeta-pt/vcfx:latest VCFX_tool_name [options]
+docker run --rm ghcr.io/jorgemfs/vcfx:latest VCFX_tool_name [options]
 
 # Mount a directory with your data
-docker run --rm -v /path/to/your/data:/data ghcr.io/ieeta-pt/vcfx:latest VCFX_tool_name [options]
+docker run --rm -v /path/to/your/data:/data ghcr.io/jorgemfs/vcfx:latest VCFX_tool_name [options]
 
 # Example: Process a VCF file (using tests/data/valid.vcf as an example)
-docker run --rm -v $(pwd)/tests/data:/data ghcr.io/ieeta-pt/vcfx:latest 'cat /data/valid.vcf | VCFX_allele_freq_calc > /data/output.tsv'
+docker run --rm -v $(pwd)/tests/data:/data ghcr.io/jorgemfs/vcfx:latest 'cat /data/valid.vcf | VCFX_allele_freq_calc > /data/output.tsv'
 ```
 
 Using the pre-built image is recommended for most users as it:
@@ -65,19 +65,19 @@ There are several ways to run VCFX tools with Docker:
 
 ```bash
 # With the pre-built image
-docker run --rm ghcr.io/ieeta-pt/vcfx:latest VCFX_tool_name [options]
+docker run --rm ghcr.io/jorgemfs/vcfx:latest VCFX_tool_name [options]
 
 # With a locally built image
 docker run --rm vcfx:local VCFX_tool_name [options]
 
 # Mount the tests/data directory to access test files
-docker run --rm -v $(pwd)/tests/data:/data ghcr.io/ieeta-pt/vcfx:latest VCFX_tool_name [options]
+docker run --rm -v $(pwd)/tests/data:/data ghcr.io/jorgemfs/vcfx:latest VCFX_tool_name [options]
 
 # Process files in the tests/data directory
-docker run --rm -v $(pwd)/tests/data:/data ghcr.io/ieeta-pt/vcfx:latest 'cat /data/valid.vcf | VCFX_validator'
+docker run --rm -v $(pwd)/tests/data:/data ghcr.io/jorgemfs/vcfx:latest 'cat /data/valid.vcf | VCFX_validator'
 
 # Example: Calculate allele frequencies for a VCF file
-docker run --rm -v $(pwd)/tests/data:/data ghcr.io/ieeta-pt/vcfx:latest 'cat /data/valid.vcf | VCFX_allele_freq_calc > /data/output.tsv'
+docker run --rm -v $(pwd)/tests/data:/data ghcr.io/jorgemfs/vcfx:latest 'cat /data/valid.vcf | VCFX_allele_freq_calc > /data/output.tsv'
 ```
 
 ### Using Docker Compose
@@ -98,7 +98,7 @@ docker-compose run --rm vcfx 'cat /data/valid.vcf | VCFX_allele_freq_calc > /dat
 When using Docker directly, you need to mount a directory to access your files:
 
 ```bash
-docker run --rm -v $(pwd)/tests/data:/data ghcr.io/ieeta-pt/vcfx:latest VCFX_tool_name [options]
+docker run --rm -v $(pwd)/tests/data:/data ghcr.io/jorgemfs/vcfx:latest VCFX_tool_name [options]
 ```
 
 When using Docker Compose, the `tests/data` directory is mounted by default:
@@ -115,7 +115,7 @@ You can modify the docker-compose.yml file to mount a different directory if nee
 You can create complex pipelines by chaining VCFX tools:
 
 ```bash
-docker run --rm -v $(pwd)/tests/data:/data ghcr.io/ieeta-pt/vcfx:latest 'cat /data/classifier_mixed.vcf | VCFX_variant_classifier --append-info | grep "VCF_CLASS=SNP" | VCFX_allele_freq_calc > /data/snp_frequencies.tsv'
+docker run --rm -v $(pwd)/tests/data:/data ghcr.io/jorgemfs/vcfx:latest 'cat /data/classifier_mixed.vcf | VCFX_variant_classifier --append-info | grep "VCF_CLASS=SNP" | VCFX_allele_freq_calc > /data/snp_frequencies.tsv'
 ```
 
 ### Creating Shell Scripts
@@ -126,7 +126,7 @@ For complex workflows, consider creating a shell script:
 #!/bin/bash
 # save as vcfx_workflow.sh
 
-docker run --rm -v $(pwd)/tests/data:/data ghcr.io/ieeta-pt/vcfx:latest 'cat /data/valid.vcf | \
+docker run --rm -v $(pwd)/tests/data:/data ghcr.io/jorgemfs/vcfx:latest 'cat /data/valid.vcf | \
   VCFX_validator | \
   VCFX_variant_classifier --append-info | \
   VCFX_allele_freq_calc > /data/pipeline_output.tsv'
@@ -147,7 +147,7 @@ If you encounter permission issues with files created in the container:
 
 ```bash
 # Run the container with your user ID
-docker run --rm -v $(pwd)/tests/data:/data -u $(id -u):$(id -g) ghcr.io/ieeta-pt/vcfx:latest VCFX_tool_name [options]
+docker run --rm -v $(pwd)/tests/data:/data -u $(id -u):$(id -g) ghcr.io/jorgemfs/vcfx:latest VCFX_tool_name [options]
 ```
 
 ### Container Not Finding Commands
@@ -156,7 +156,7 @@ If the container can't find VCFX commands, ensure they were properly built in th
 
 ```bash
 # List available VCFX tools in the container
-docker run --rm ghcr.io/ieeta-pt/vcfx:latest 'ls -1 /usr/local/bin/VCFX_*'
+docker run --rm ghcr.io/jorgemfs/vcfx:latest 'ls -1 /usr/local/bin/VCFX_*'
 ```
 
 ## Citation
