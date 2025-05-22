@@ -23,9 +23,15 @@ fi
 echo "🧬 Testing VCFX Docker image with official test files..."
 
 # Pull the latest VCFX image
-echo "📥 Pulling the latest VCFX Docker image..."
-docker pull $VCFX_IMAGE
-check_success "Pulled VCFX Docker image"
+echo "📥 Pulling the latest VCFX Docker image ($VCFX_IMAGE)..."
+if docker pull "$VCFX_IMAGE"; then
+  check_success "Pulled VCFX Docker image"
+else
+  echo "⚠️  Unable to pull $VCFX_IMAGE. Building Docker image locally..."
+  docker build -t vcfx:local .
+  check_success "Built local Docker image"
+  VCFX_IMAGE="vcfx:local"
+fi
 
 # Get the directory of this script (tests directory)
 TESTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
