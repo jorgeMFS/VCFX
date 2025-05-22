@@ -13,5 +13,5 @@ fi
 
 cmake --build .
 
-echo "All VCFX tools built for WebAssembly in build_wasm/."
+echo "All VCFX tools and the vcfx wrapper built for WebAssembly in build_wasm/."
 echo "Use 'ls -R build_wasm' to see output. If you want .html or .js from Emscripten, you can adjust linking flags or suffixes."
