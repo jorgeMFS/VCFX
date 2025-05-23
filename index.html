@@ -2962,7 +2962,7 @@ cat<span class="w"> </span>input.vcf<span class="w"> </span><span class="p">|</s
 <div class="highlight"><pre><span></span><code><span class="c1"># Extract phased variants, filter by quality, and calculate allele frequencies</span>
 cat<span class="w"> </span>input.vcf<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>VCFX_phase_checker<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>VCFX_phred_filter<span class="w"> </span>--min-qual<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>VCFX_phred_filter<span class="w"> </span>--phred-filter<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>VCFX_allele_freq_calc<span class="w"> </span>&gt;<span class="w"> </span>result.tsv
 </code></pre></div>
 <h3 id="sample-selection-and-comparison">Sample Selection and Comparison<a class="headerlink" href="#sample-selection-and-comparison" title="Permanent link">&para;</a></h3>

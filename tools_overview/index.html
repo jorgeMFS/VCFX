@@ -2939,7 +2939,7 @@ Every tool also accepts <code>--version</code> to display the build version.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Extract phased variants, filter by quality, and calculate allele frequencies</span>
 cat<span class="w"> </span>input.vcf<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>VCFX_phase_checker<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>VCFX_phred_filter<span class="w"> </span>--min-qual<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>VCFX_phred_filter<span class="w"> </span>--phred-filter<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>VCFX_allele_freq_calc<span class="w"> </span>&gt;<span class="w"> </span>result.tsv
 </code></pre></div>
 <h3 id="variant-classification-and-filtering">Variant Classification and Filtering<a class="headerlink" href="#variant-classification-and-filtering" title="Permanent link">&para;</a></h3>
@@ -2947,7 +2947,7 @@ cat<span class="w"> </span>input.vcf<span class="w"> </span><span class="p">|</s
 cat<span class="w"> </span>input.vcf<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>VCFX_variant_classifier<span class="w"> </span>--append-info<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>grep<span class="w"> </span><span class="s1">&#39;VCF_CLASS=SNP&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>VCFX_phred_filter<span class="w"> </span>--min-qual<span class="w"> </span><span class="m">30</span><span class="w"> </span>&gt;<span class="w"> </span>high_quality_snps.vcf
+<span class="w">  </span>VCFX_phred_filter<span class="w"> </span>--phred-filter<span class="w"> </span><span class="m">30</span><span class="w"> </span>&gt;<span class="w"> </span>high_quality_snps.vcf
 </code></pre></div>
 <h3 id="sample-extraction-and-comparison">Sample Extraction and Comparison<a class="headerlink" href="#sample-extraction-and-comparison" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Extract samples and check concordance</span>
@@ -2977,7 +2977,7 @@ cat<span class="w"> </span>input.vcf<span class="w"> </span><span class="p">|</s
 <span class="w">  </span>VCFX_validator<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>VCFX_variant_classifier<span class="w"> </span>--append-info<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>VCFX_missing_detector<span class="w"> </span>--max-missing<span class="w"> </span><span class="m">0</span>.1<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>VCFX_phred_filter<span class="w"> </span>--min-qual<span class="w"> </span><span class="m">20</span><span class="w"> </span>&gt;<span class="w"> </span>qc_passed.vcf
+<span class="w">  </span>VCFX_phred_filter<span class="w"> </span>--phred-filter<span class="w"> </span><span class="m">20</span><span class="w"> </span>&gt;<span class="w"> </span>qc_passed.vcf
 </code></pre></div>
 
 

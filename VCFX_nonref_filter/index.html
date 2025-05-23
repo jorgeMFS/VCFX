@@ -2855,7 +2855,7 @@ VCFX_nonref_filter<span class="w"> </span>&gt;<span class="w"> </span>high_quali
 <div class="highlight"><pre><span></span><code><span class="c1"># Create a pipeline of filters</span>
 cat<span class="w"> </span>input.vcf<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
 VCFX_nonref_filter<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
-VCFX_phred_filter<span class="w"> </span>--min-quality<span class="w"> </span><span class="m">30</span><span class="w"> </span>&gt;<span class="w"> </span>filtered.vcf
+VCFX_phred_filter<span class="w"> </span>--phred-filter<span class="w"> </span><span class="m">30</span><span class="w"> </span>&gt;<span class="w"> </span>filtered.vcf
 </code></pre></div>
 <h2 id="homozygous-reference-detection">Homozygous Reference Detection<a class="headerlink" href="#homozygous-reference-detection" title="Permanent link">&para;</a></h2>
 <p>The tool uses comprehensive logic to identify homozygous reference genotypes:</p>
