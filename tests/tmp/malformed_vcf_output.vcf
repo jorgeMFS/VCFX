@@ -1,3 +1,0 @@
-==== START OF TEST: malformed_vcf ====
-##fileformat=VCFv4.2
-#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
