@@ -14,6 +14,7 @@ VCFX_info_aggregator [OPTIONS] < input.vcf > output.vcf
 
 - `-a`, `--aggregate-info <fields>`: Comma-separated list of INFO fields to aggregate (required).
 - `-h`, `--help`: Display help message and exit.
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

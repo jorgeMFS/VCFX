@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_merger.h"
 #include <getopt.h>
 #include <fstream>
@@ -120,6 +121,7 @@ void VCFXMerger::mergeVCF(const std::vector<std::string>& inputFiles, std::ostre
 
 
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_merger")) return 0;
     VCFXMerger merger;
     return merger.run(argc, argv);
 }

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cstring>
 
 namespace vcfx {
 
@@ -17,6 +18,26 @@ std::vector<std::string> split(const std::string& str, char delimiter);
 void print_error(const std::string& msg, std::ostream& os = std::cerr);
 void print_version(const std::string& tool, const std::string& version,
                    std::ostream& os = std::cout);
+
+inline std::string get_version() {
+#ifdef VCFX_VERSION
+    return VCFX_VERSION;
+#else
+    return "unknown";
+#endif
+}
+
+inline bool handle_version_flag(int argc, char* argv[], const std::string& tool,
+                                std::ostream& os = std::cout) {
+    for (int i = 1; i < argc; ++i) {
+        if (std::strcmp(argv[i], "--version") == 0 ||
+            std::strcmp(argv[i], "-v") == 0) {
+            print_version(tool, get_version(), os);
+            return true;
+        }
+    }
+    return false;
+}
 
 // Read entire input stream, automatically decompressing if gzip/BGZF
 // compressed. Returns true on success and stores the resulting text in

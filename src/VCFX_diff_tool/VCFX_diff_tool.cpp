@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -205,6 +206,7 @@ int VCFXDiffTool::run(int argc, char* argv[]) {
 // main
 // ----------------------------------------------------------------------
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_diff_tool")) return 0;
     VCFXDiffTool diffTool;
     return diffTool.run(argc, argv);
 }

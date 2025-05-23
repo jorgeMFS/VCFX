@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_dosage_calculator.h"
 #include <getopt.h>
 #include <sstream>
@@ -216,6 +217,7 @@ std::vector<std::string> VCFXDosageCalculator::split(const std::string& str, cha
 }
 
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_dosage_calculator")) return 0;
     VCFXDosageCalculator dosageCalculator;
     return dosageCalculator.run(argc, argv);
 }

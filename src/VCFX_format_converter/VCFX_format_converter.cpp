@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_format_converter.h"
 #include <sstream>
 #include <algorithm>
@@ -184,6 +185,7 @@ void convertVCFtoCSV(std::istream& in, std::ostream& out) {
 // main
 // -----------------------------------------------------------------------
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_format_converter")) return 0;
     OutputFormat format;
     bool valid = parseArguments(argc, argv, format);
 

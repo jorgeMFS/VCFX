@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_sorter.h"
 #include <getopt.h>
 #include <iostream>
@@ -218,6 +219,7 @@ void VCFXSorter::outputVCF(std::ostream &out){
 }
 
 int main(int argc, char* argv[]){
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_sorter")) return 0;
     VCFXSorter app;
     return app.run(argc, argv);
 }

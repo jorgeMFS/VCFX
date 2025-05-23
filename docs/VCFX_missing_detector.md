@@ -15,6 +15,7 @@ VCFX_missing_detector [OPTIONS] < input.vcf > flagged.vcf
 | Option | Description |
 |--------|-------------|
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

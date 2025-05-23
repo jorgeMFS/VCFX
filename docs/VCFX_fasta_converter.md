@@ -15,6 +15,7 @@ VCFX_fasta_converter [OPTIONS] < input.vcf > output.fasta
 | Option | Description |
 |--------|-------------|
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

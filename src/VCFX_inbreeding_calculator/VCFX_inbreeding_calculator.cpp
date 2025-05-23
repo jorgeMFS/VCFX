@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_inbreeding_calculator.h"
 #include <getopt.h>
 #include <sstream>
@@ -351,6 +352,7 @@ int VCFXInbreedingCalculator::run(int argc, char* argv[]){
 // -------------------------------------------------------------------------
 // main entry point
 int main(int argc, char* argv[]){
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_inbreeding_calculator")) return 0;
     VCFXInbreedingCalculator calc;
     return calc.run(argc, argv);
 }

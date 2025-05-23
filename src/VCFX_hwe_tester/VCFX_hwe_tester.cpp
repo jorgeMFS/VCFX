@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_hwe_tester.h"
 #include <getopt.h>
 #include <sstream>
@@ -255,6 +256,7 @@ void VCFXHWETester::performHWE(std::istream& in){
 
 // actual main
 int main(int argc, char* argv[]){
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_hwe_tester")) return 0;
     VCFXHWETester tester;
     return tester.run(argc, argv);
 }

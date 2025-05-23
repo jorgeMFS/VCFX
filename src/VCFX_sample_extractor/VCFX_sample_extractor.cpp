@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_sample_extractor.h"
 #include <getopt.h>
 #include <sstream>
@@ -215,6 +216,7 @@ void VCFXSampleExtractor::extractSamples(std::istream &in, std::ostream &out,
 }
 
 int main(int argc, char* argv[]){
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_sample_extractor")) return 0;
     VCFXSampleExtractor app;
     return app.run(argc, argv);
 }
