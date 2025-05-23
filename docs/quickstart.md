@@ -62,10 +62,10 @@ cat input.vcf | \
 
 ### Example 4: Quality Control
 
-Check concordance between two VCF files:
+Check concordance between two samples in a single VCF file:
 
 ```bash
-VCFX_concordance_checker --vcf1 sample1.vcf --vcf2 sample2.vcf > concordance_report.tsv
+cat sample.vcf | VCFX_concordance_checker --samples "SAMPLE1 SAMPLE2" > concordance_report.tsv
 ```
 
 ## Working with Compressed Files
@@ -126,12 +126,8 @@ cat input.vcf | \
 ### Sample Comparison
 
 ```bash
-# Extract common samples
-VCFX_sample_extractor --samples SAMPLE1,SAMPLE2 < input1.vcf > samples1.vcf
-VCFX_sample_extractor --samples SAMPLE1,SAMPLE2 < input2.vcf > samples2.vcf
-
-# Check concordance
-VCFX_concordance_checker --vcf1 samples1.vcf --vcf2 samples2.vcf > concordance.tsv
+# Check concordance between two samples in a single VCF
+cat input.vcf | VCFX_concordance_checker --samples "SAMPLE1 SAMPLE2" > concordance.tsv
 ```
 
 ### Population Structure Analysis

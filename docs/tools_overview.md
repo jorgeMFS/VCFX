@@ -60,7 +60,7 @@ Tools for converting or reformatting VCF data:
 
 Tools for validating and checking data quality:
 
-- [VCFX_concordance_checker](VCFX_concordance_checker.md) - Check concordance between VCF files
+- [VCFX_concordance_checker](VCFX_concordance_checker.md) - Check concordance between samples in a VCF file
 - [VCFX_missing_detector](VCFX_missing_detector.md) - Detect and report missing data
 - [VCFX_outlier_detector](VCFX_outlier_detector.md) - Detect outlier samples or variants
 - [VCFX_alignment_checker](VCFX_alignment_checker.md) - Check alignment of variants
@@ -126,12 +126,11 @@ cat input.vcf | \
   VCFX_phred_filter --phred-filter 30 > high_quality_snps.vcf
 ```
 
-### Sample Extraction and Comparison
+### Sample Comparison
 
 ```bash
-# Extract samples and check concordance
-cat input.vcf | VCFX_sample_extractor --samples SAMPLE1,SAMPLE2 > samples.vcf
-cat samples.vcf reference.vcf | VCFX_concordance_checker > concordance_report.tsv
+# Check concordance between two samples in a single VCF
+cat input.vcf | VCFX_concordance_checker --samples "SAMPLE1 SAMPLE2" > concordance.tsv
 ```
 
 ### Linkage Disequilibrium Analysis

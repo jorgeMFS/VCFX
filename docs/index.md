@@ -84,7 +84,7 @@ Tools for converting or reformatting VCF data:
 
 Tools for validating and checking data quality:
 
-- [VCFX_concordance_checker](VCFX_concordance_checker.md) - Check concordance between VCF files
+- [VCFX_concordance_checker](VCFX_concordance_checker.md) - Check concordance between samples in a VCF file
 - [VCFX_missing_detector](VCFX_missing_detector.md) - Detect and report missing data
 - [VCFX_validator](VCFX_validator.md) - Validate VCF format compliance
 - [View all quality control tools...](tools_overview.md#quality-control)
@@ -131,15 +131,11 @@ cat input.vcf | \
   VCFX_allele_freq_calc > result.tsv
 ```
 
-### Sample Selection and Comparison
+### Sample Comparison
 
 ```bash
-# Extract samples and check concordance
-cat input.vcf | \
-  VCFX_sample_extractor --samples SAMPLE1,SAMPLE2 > samples.vcf
-
-cat samples.vcf reference.vcf | \
-  VCFX_concordance_checker > concordance_report.tsv
+# Check concordance between two samples in a single VCF
+cat input.vcf | VCFX_concordance_checker --samples "SAMPLE1 SAMPLE2" > concordance_report.tsv
 ```
 
 See the [tools overview page](tools_overview.md#common-usage-patterns) for more usage examples.
