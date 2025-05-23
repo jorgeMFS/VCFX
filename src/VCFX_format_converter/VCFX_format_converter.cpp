@@ -112,8 +112,9 @@ static std::string csvEscape(const std::string &field) {
     tmp.push_back('"');
     for (char c : field) {
         if (c == '"') {
-            // double it
-            tmp += "\"\"";
+            // double it by writing two quotes
+            tmp.push_back('"');
+            tmp.push_back('"');
         } else {
             tmp.push_back(c);
         }
