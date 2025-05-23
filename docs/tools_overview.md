@@ -139,7 +139,7 @@ cat samples.vcf reference.vcf | VCFX_concordance_checker > concordance_report.ts
 ```bash
 # Calculate LD in a specific region after filtering for common variants
 cat input.vcf | \
-  VCFX_af_subsetter --min-af 0.05 | \
+  VCFX_af_subsetter --af-filter '0.05-1.0' | \
   VCFX_ld_calculator --region chr1:10000-20000 > ld_matrix.txt
 ```
 
