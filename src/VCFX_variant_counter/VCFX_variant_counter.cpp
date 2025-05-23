@@ -5,6 +5,8 @@
 #include <sstream>
 #include <vector>
 #include "vcfx_core.h"
+#include <zlib.h>
+#include <cstring>
 
 void VCFXVariantCounter::displayHelp(){
     std::cout <<
@@ -56,13 +58,28 @@ int VCFXVariantCounter::run(int argc, char* argv[]){
         return 0;
     }
     
-    std::string plainInput;
-    if(!vcfx::read_maybe_compressed(std::cin, plainInput)){
-        std::cerr << "Error: failed to read input" << std::endl;
-        return 1;
+    auto peek1 = std::cin.peek();
+    bool isEmpty = (peek1 == EOF);
+    bool isGzip = false;
+    if(!isEmpty){
+        int c1 = std::cin.get();
+        int c2 = std::cin.get();
+        if(c2 != EOF){
+            isGzip = (static_cast<unsigned char>(c1) == 0x1f &&
+                      static_cast<unsigned char>(c2) == 0x8b);
+            std::cin.putback(static_cast<char>(c2));
+        }
+        std::cin.putback(static_cast<char>(c1));
     }
-    std::istringstream inStream(plainInput);
-    int total= countVariants(inStream);
+
+    int total = -1;
+    if(isEmpty){
+        total = 0;
+    } else if(isGzip){
+        total = countVariantsGzip(std::cin);
+    } else {
+        total = countVariants(std::cin);
+    }
     if(total<0){
         // indicates an error if strict
         return 1;
@@ -71,36 +88,90 @@ int VCFXVariantCounter::run(int argc, char* argv[]){
     return 0;
 }
 
+bool VCFXVariantCounter::processLine(const std::string &line, int lineNumber, int &count){
+    if(line.empty()) return true;
+    if(line[0]=='#') return true;
+    std::stringstream ss(line);
+    std::vector<std::string> fields;
+    {
+        std::string col;
+        while(std::getline(ss,col,'\t')){
+            fields.push_back(col);
+        }
+    }
+    if(fields.size()<8){
+        if(strictMode){
+            std::cerr<<"Error: line "<< lineNumber <<" has <8 columns.\n";
+            return false;
+        } else {
+            std::cerr<<"Warning: skipping line "<<lineNumber<<" with <8 columns.\n";
+            return true;
+        }
+    }
+    count++;
+    return true;
+}
+
 int VCFXVariantCounter::countVariants(std::istream &in){
     int count=0;
     int lineNumber=0;
     std::string line;
-    while(true){
-        if(!std::getline(in,line)) break;
+    while(std::getline(in,line)){
         lineNumber++;
-        if(line.empty()) continue;
-        if(line[0]=='#') continue; 
-        // parse columns
-        std::stringstream ss(line);
-        std::vector<std::string> fields;
-        {
-            std::string col;
-            while(std::getline(ss,col,'\t')){
-                fields.push_back(col);
-            }
-        }
-        if(fields.size()<8){
-            if(strictMode){
-                std::cerr<<"Error: line "<< lineNumber <<" has <8 columns.\n";
-                return -1; // indicates error
-            } else {
-                std::cerr<<"Warning: skipping line "<<lineNumber<<" with <8 columns.\n";
-                continue;
-            }
-        }
-        // if we get here => count it
-        count++;
+        if(!processLine(line, lineNumber, count)) return -1;
     }
+    return count;
+}
+
+int VCFXVariantCounter::countVariantsGzip(std::istream &in){
+    constexpr int CHUNK = 16384;
+    char inBuf[CHUNK];
+    char outBuf[CHUNK];
+    z_stream strm; std::memset(&strm,0,sizeof(strm));
+    if(inflateInit2(&strm,15+32)!=Z_OK){
+        std::cerr<<"Error: inflateInit2 failed.\n";
+        return -1;
+    }
+    int count=0; int lineNumber=0; std::string buffer; int ret=Z_OK;
+    do {
+        in.read(inBuf, CHUNK);
+        strm.avail_in = static_cast<uInt>(in.gcount());
+        if(strm.avail_in==0 && in.eof()) break;
+        strm.next_in = reinterpret_cast<Bytef*>(inBuf);
+        do {
+            strm.avail_out = CHUNK;
+            strm.next_out = reinterpret_cast<Bytef*>(outBuf);
+            ret = inflate(&strm, Z_NO_FLUSH);
+            if (ret == Z_STREAM_ERROR || ret == Z_NEED_DICT || ret == Z_DATA_ERROR || ret == Z_MEM_ERROR){
+                std::cerr<<"Error: decompression failed.\n";
+                inflateEnd(&strm);
+                return -1;
+            }
+            size_t have = CHUNK - strm.avail_out;
+            if(have>0){
+                buffer.append(outBuf, have);
+                size_t pos;
+                while((pos = buffer.find('\n')) != std::string::npos){
+                    std::string line = buffer.substr(0,pos);
+                    buffer.erase(0,pos+1);
+                    lineNumber++;
+                    if(!processLine(line,lineNumber,count)){
+                        inflateEnd(&strm);
+                        return -1;
+                    }
+                }
+            }
+        } while(strm.avail_out==0);
+    } while(ret != Z_STREAM_END);
+
+    if(!buffer.empty()){
+        lineNumber++;
+        if(!processLine(buffer,lineNumber,count)){
+            inflateEnd(&strm);
+            return -1;
+        }
+    }
+    inflateEnd(&strm);
     return count;
 }
 
