@@ -2824,7 +2824,7 @@
 
 <h1 id="vcfx_indexer">VCFX_indexer<a class="headerlink" href="#vcfx_indexer" title="Permanent link">&para;</a></h1>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<p><code>VCFX_indexer</code> is a utility tool for creating a byte-offset index of a VCF file. It generates a simple tab-delimited index file that maps chromosome and position to the exact byte offset in the original file, enabling efficient random access to variants without scanning the entire file.</p>
+<p><code>VCFX_indexer</code> is a utility tool for creating a byte-offset index of a VCF file. It generates a simple tab-delimited index file that maps chromosome and position to the exact byte offset in the original file, enabling efficient random access to variants without scanning the entire file. The index uses 64-bit integers for both the position and the byte offset so very large coordinates are fully supported.</p>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>VCFX_indexer<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>&lt;<span class="w"> </span>input.vcf<span class="w"> </span>&gt;<span class="w"> </span>index.tsv
 </code></pre></div>
@@ -2855,10 +2855,12 @@
 <li>For each variant line:</li>
 <li>Extracting the chromosome (CHROM) and position (POS) values</li>
 <li>Calculating the precise byte offset from the start of the file</li>
-<li>Writing a three-column index to standard output with:</li>
+<li>Writing a three-column index to standard output with:<ul>
 <li>CHROM: The chromosome identifier from the VCF</li>
-<li>POS: The position value from the VCF</li>
-<li>FILE_OFFSET: The byte offset to the start of the line in the source file</li>
+<li>POS: The position value from the VCF (stored as a 64-bit integer)</li>
+<li>FILE_OFFSET: The byte offset to the start of the line in the source file (also 64-bit)</li>
+</ul>
+</li>
 </ol>
 <p>This index enables efficient random access to specific variants in large VCF files by allowing tools to seek directly to a byte offset rather than scanning the entire file. It's particularly useful for building tools that need to query specific regions of a VCF file.</p>
 <h2 id="output-format">Output Format<a class="headerlink" href="#output-format" title="Permanent link">&para;</a></h2>
@@ -2871,8 +2873,8 @@
 <p>Where:</p>
 <ul>
 <li><code>CHROM</code> is the chromosome identifier from the VCF</li>
-<li><code>POS</code> is the genomic position from the VCF</li>
-<li><code>FILE_OFFSET</code> is the byte offset from the start of the VCF file</li>
+<li><code>POS</code> is the genomic position from the VCF (64-bit integer)</li>
+<li><code>FILE_OFFSET</code> is the byte offset from the start of the VCF file (64-bit integer)</li>
 </ul>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <h3 id="basic-usage">Basic Usage<a class="headerlink" href="#basic-usage" title="Permanent link">&para;</a></h3>
