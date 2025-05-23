@@ -31,12 +31,19 @@ jobs:
 
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
+        shell: pwsh
         run: |
-          choco install -y cmake zlib
+          choco install -y cmake
+          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install zlib
 
       - name: Configure
-        run: cmake -S . -B build
         shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+          else
+            cmake -S . -B build
+          fi
 
       - name: Build
         run: cmake --build build -- -j
