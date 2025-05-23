@@ -4,6 +4,9 @@ cmake_minimum_required(VERSION 3.14)
 add_library(vcfx_core STATIC vcfx_core.cpp)
 target_include_directories(vcfx_core PUBLIC ${CMAKE_CURRENT_LIST_DIR}/../include)
 target_link_libraries(vcfx_core PUBLIC ZLIB::ZLIB)
+if(WIN32)
+    target_link_libraries(vcfx_core PUBLIC getopt)
+endif()
 
 # Add all tool subdirectories
 add_subdirectory(vcfx_wrapper)

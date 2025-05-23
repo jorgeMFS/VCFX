@@ -36,6 +36,7 @@ jobs:
           choco install -y cmake
           & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install zlib
 
+
       - name: Configure
         shell: bash
         run: |
