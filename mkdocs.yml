@@ -29,8 +29,8 @@ theme:
         icon: material/brightness-7
         name: Switch to dark mode
     - scheme: slate
-      primary: indigo
-      accent: indigo
+      primary: blue grey
+      accent: light blue
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -44,6 +44,8 @@ extra:
       link: https://github.com/ieeta-pt/VCFX
     - icon: fontawesome/brands/twitter
       link: https://twitter.com/MiguelFSilva1
+extra_css:
+  - styles/custom.css
 
 # Extensions
 markdown_extensions:
