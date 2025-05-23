@@ -12,6 +12,7 @@ add_subdirectory(vcfx_wrapper)
 # build/install them.
 set(VCFX_TOOLS vcfx)
 file(GLOB TOOL_DIRS RELATIVE ${CMAKE_CURRENT_LIST_DIR} VCFX_*)
+list(REMOVE_ITEM TOOL_DIRS vcfx_wrapper) # avoid duplicate on case-insensitive filesystems
 foreach(dir ${TOOL_DIRS})
     if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${dir}")
         add_subdirectory(${dir})
