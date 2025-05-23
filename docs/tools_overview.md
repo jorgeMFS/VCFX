@@ -167,7 +167,6 @@ cat eur.vcf | VCFX_allele_freq_calc > eur_afs.tsv
 cat input.vcf | \
   VCFX_validator | \
   VCFX_variant_classifier --append-info | \
-  VCFX_missing_detector | \
-  grep -v 'MISSING_GENOTYPES=1' | \
+  VCFX_missing_detector --max-missing 0.1 | \
   VCFX_phred_filter --phred-filter 20 > qc_passed.vcf
 ``` 
