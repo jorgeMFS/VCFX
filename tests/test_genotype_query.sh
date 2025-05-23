@@ -23,9 +23,9 @@ TOOL="../build/src/VCFX_genotype_query/VCFX_genotype_query"
 
 # Directories for test data, expected outputs, and actual output:
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-TMP_DATA_DIR="${SCRIPT_DIR}/tests/data/genotype_query"
-TMP_EXP_DIR="${SCRIPT_DIR}/tests/expected/genotype_query"
-TMP_OUT_DIR="${SCRIPT_DIR}/tests/tmp_genoquout/genotype_query"
+TMP_DATA_DIR="${SCRIPT_DIR}/data/genotype_query"
+TMP_EXP_DIR="${SCRIPT_DIR}/expected/genotype_query"
+TMP_OUT_DIR="${SCRIPT_DIR}/tmp/genotype_query"
 
 mkdir -p "$TMP_DATA_DIR" "$TMP_EXP_DIR" "$TMP_OUT_DIR"
 
