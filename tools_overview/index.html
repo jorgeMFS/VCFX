@@ -2957,7 +2957,7 @@ cat<span class="w"> </span>samples.vcf<span class="w"> </span>reference.vcf<span
 <h3 id="linkage-disequilibrium-analysis">Linkage Disequilibrium Analysis<a class="headerlink" href="#linkage-disequilibrium-analysis" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Calculate LD in a specific region after filtering for common variants</span>
 cat<span class="w"> </span>input.vcf<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>VCFX_af_subsetter<span class="w"> </span>--min-af<span class="w"> </span><span class="m">0</span>.05<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>VCFX_af_subsetter<span class="w"> </span>--af-filter<span class="w"> </span><span class="s1">&#39;0.05-1.0&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>VCFX_ld_calculator<span class="w"> </span>--region<span class="w"> </span>chr1:10000-20000<span class="w"> </span>&gt;<span class="w"> </span>ld_matrix.txt
 </code></pre></div>
 <h3 id="normalization-and-splitting">Normalization and Splitting<a class="headerlink" href="#normalization-and-splitting" title="Permanent link">&para;</a></h3>
