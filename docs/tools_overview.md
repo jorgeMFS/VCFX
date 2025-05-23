@@ -139,7 +139,7 @@ cat samples.vcf reference.vcf | VCFX_concordance_checker > concordance_report.ts
 ```bash
 # Calculate LD in a specific region after filtering for common variants
 cat input.vcf | \
-  VCFX_af_subsetter --min-af 0.05 | \
+  VCFX_af_subsetter --af-filter '0.05-1.0' | \
   VCFX_ld_calculator --region chr1:10000-20000 > ld_matrix.txt
 ```
 
@@ -167,6 +167,7 @@ cat eur.vcf | VCFX_allele_freq_calc > eur_afs.tsv
 cat input.vcf | \
   VCFX_validator | \
   VCFX_variant_classifier --append-info | \
-  VCFX_missing_detector --max-missing 0.1 | \
+  VCFX_missing_detector | \
+  grep -v 'MISSING_GENOTYPES=1' | \ 
   VCFX_phred_filter --min-qual 20 > qc_passed.vcf
-``` 
+```

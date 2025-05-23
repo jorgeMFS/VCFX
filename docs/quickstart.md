@@ -119,7 +119,8 @@ Here are some common workflows that combine multiple VCFX tools:
 cat input.vcf | \
   VCFX_validator | \
   VCFX_variant_classifier --append-info | \
-  VCFX_missing_detector --max-missing 0.1 | \
+  VCFX_missing_detector | \
+  grep -v 'MISSING_GENOTYPES=1' | \
   VCFX_phred_filter --min-qual 20 > qc_passed.vcf
 ```
 
@@ -154,4 +155,4 @@ After becoming familiar with the basic usage of VCFX tools, you can:
 2. Check the [installation guide](installation.md) if you need to install additional tools
 3. Browse through the example VCF files in the repository to practice
 
-For more complex workflows and advanced examples, refer to the individual tool documentation pages. 
+For more complex workflows and advanced examples, refer to the individual tool documentation pages.

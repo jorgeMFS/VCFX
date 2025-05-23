@@ -78,7 +78,7 @@ VCFX_ld_calculator --region chr1:10000-20000 < input.vcf > ld_matrix.txt
 Filter for common variants first, then calculate LD:
 
 ```bash
-cat input.vcf | VCFX_af_subsetter --min-af 0.05 | VCFX_ld_calculator > common_variants_ld.txt
+cat input.vcf | VCFX_af_subsetter --af-filter '0.05-1.0' | VCFX_ld_calculator > common_variants_ld.txt
 ```
 
 ## Handling Special Cases
@@ -102,4 +102,4 @@ cat input.vcf | VCFX_af_subsetter --min-af 0.05 | VCFX_ld_calculator > common_va
 - Requires diploid genotypes; haploid genotypes will be treated as missing data
 - Assumes standard VCF format with GT field in the FORMAT column
 - Does not support phased vs. unphased distinction; both "/" and "|" separators are treated the same
-- No built-in visualization of LD patterns; additional tools would be needed for heatmap creation 
+- No built-in visualization of LD patterns; additional tools would be needed for heatmap creation
