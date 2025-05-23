@@ -28,12 +28,12 @@ int VCFXOutlierDetector::run(int argc, char* argv[]){
         {"help", no_argument, 0, 'h'},
         {"metric", required_argument, 0, 'm'},
         {"threshold", required_argument, 0, 't'},
-        {"variant", no_argument, 0, 'v'},
+        {"variant", no_argument, 0, 'V'},
         {"sample", no_argument, 0, 's'},
         {0,0,0,0}
     };
     while(true){
-        int c= getopt_long(argc, argv, "hm:t:vs", long_opts, nullptr);
+        int c= getopt_long(argc, argv, "hm:t:Vs", long_opts, nullptr);
         if(c==-1) break;
         switch(c){
             case 'h':
@@ -50,7 +50,7 @@ int VCFXOutlierDetector::run(int argc, char* argv[]){
                     return 1;
                 }
                 break;
-            case 'v':
+            case 'V':
                 isVariantMode= true;
                 break;
             case 's':
@@ -78,7 +78,7 @@ void VCFXOutlierDetector::displayHelp(){
 "  --help, -h           Print this help.\n"
 "  --metric, -m <KEY>   Name of the metric to use (e.g. AF, DP, GQ...).\n"
 "  --threshold, -t <VAL> Numeric threshold.\n"
-"  --variant, -v        Evaluate each variant's <KEY> in INFO>threshold => print.\n"
+"  --variant, -V        Evaluate each variant's <KEY> in INFO>threshold => print.\n"
 "  --sample, -s         Evaluate sample averages of <KEY> in genotype subfield => print outliers.\n\n"
 "Examples:\n"
 "  1) Outlier variants with AF>0.05:\n"
