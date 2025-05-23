@@ -34,7 +34,7 @@ jobs:
         shell: pwsh
         run: |
           choco install -y cmake
-          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install zlib
+          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install zlib getopt
 
 
       - name: Configure
