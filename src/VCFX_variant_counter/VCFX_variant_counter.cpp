@@ -105,6 +105,7 @@ int VCFXVariantCounter::countVariants(std::istream &in){
 }
 
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_variant_counter")) return 0;
     VCFXVariantCounter app;
     return app.run(argc, argv);
 }

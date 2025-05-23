@@ -16,6 +16,7 @@ VCFX_ref_comparator --reference <reference.fasta> < input.vcf > annotated.vcf
 |--------|-------------|
 | `-r`, `--reference` <FASTA> | Required. Path to reference genome in FASTA format |
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

@@ -17,6 +17,7 @@ VCFX_phred_filter [OPTIONS] < input.vcf > filtered.vcf
 | `-p`, `--phred-filter` <THRESHOLD> | Set PHRED quality score threshold (default: 30.0) |
 | `-k`, `--keep-missing-qual` | Keep variants with missing quality values (represented as ".") |
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

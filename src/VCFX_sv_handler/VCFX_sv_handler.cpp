@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_sv_handler.h"
 #include <getopt.h>
 #include <sstream>
@@ -205,6 +206,7 @@ void VCFXSvHandler::handleStructuralVariants(std::istream &in, std::ostream &out
 }
 
 int main(int argc, char* argv[]){
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_sv_handler")) return 0;
     VCFXSvHandler app;
     return app.run(argc, argv);
 }

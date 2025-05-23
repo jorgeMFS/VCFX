@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_indel_normalizer.h"
 #include <getopt.h>
 #include <sstream>
@@ -253,6 +254,7 @@ void VCFXIndelNormalizer::normalizeIndels(std::istream& in, std::ostream& out) {
 }
 
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_indel_normalizer")) return 0;
     VCFXIndelNormalizer norm;
     return norm.run(argc, argv);
 }

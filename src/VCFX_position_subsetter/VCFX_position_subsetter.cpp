@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_position_subsetter.h"
 #include <getopt.h>
 #include <sstream>
@@ -146,6 +147,7 @@ bool VCFXPositionSubsetter::subsetVCFByPosition(std::istream &in,
 }
 
 int main(int argc, char* argv[]){
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_position_subsetter")) return 0;
     VCFXPositionSubsetter subsetter;
     return subsetter.run(argc, argv);
 }

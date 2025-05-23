@@ -15,6 +15,7 @@ VCFX_hwe_tester [OPTIONS] < input.vcf > hwe_results.txt
 | Option | Description |
 |--------|-------------|
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

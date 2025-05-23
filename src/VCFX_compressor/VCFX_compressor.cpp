@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include <iostream>
 #include <string>
 #include <zlib.h>
@@ -149,6 +150,7 @@ static bool compressDecompressVCF(std::istream& in, std::ostream& out, bool comp
 // main
 // ---------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_compressor")) return 0;
     bool compress = false;
     bool decompress = false;
 

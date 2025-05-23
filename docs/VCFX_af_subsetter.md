@@ -13,6 +13,7 @@ VCFX_af_subsetter --af-filter "MIN-MAX" < input.vcf > filtered.vcf
 |--------|-------------|
 | `-a`, `--af-filter <MIN-MAX>` | Required. Allele frequency range for filtering (e.g., `0.01-0.05`) |
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 `VCFX_af_subsetter` processes VCF files line by line and filters variants based on their allele frequency (AF) values from the INFO field. The tool:

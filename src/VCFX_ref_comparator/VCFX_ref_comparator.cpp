@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_ref_comparator.h"
 #include <getopt.h>
 #include <fstream>
@@ -273,6 +274,7 @@ void VCFXRefComparator::compareVCF(std::istream &vcfIn, std::ostream &vcfOut){
 }
 
 int main(int argc, char* argv[]){
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_ref_comparator")) return 0;
     VCFXRefComparator refComp;
     return refComp.run(argc, argv);
 }

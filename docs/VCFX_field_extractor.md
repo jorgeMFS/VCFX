@@ -13,6 +13,7 @@ VCFX_field_extractor --fields "FIELD1,FIELD2,..." [OPTIONS] < input.vcf > output
 |--------|-------------|
 | `-f`, `--fields` | Required. Comma-separated list of fields to extract (no spaces between fields) |
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 `VCFX_field_extractor` processes a VCF file and extracts only the specified fields for each variant. The tool:

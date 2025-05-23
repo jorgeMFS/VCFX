@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -238,6 +239,7 @@ static void calculateConcordance(std::istream &in, std::ostream &out) {
 // Command-line parsing + main
 // --------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_cross_sample_concordance")) return 0;
     bool showHelp = false;
 
     static struct option longOpts[] = {

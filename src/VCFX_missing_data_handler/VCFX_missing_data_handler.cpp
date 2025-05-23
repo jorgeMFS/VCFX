@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_missing_data_handler.h"
 #include <getopt.h>
 #include <sstream>
@@ -259,6 +260,7 @@ nextFile:
  * @return int Exit status.
  */
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_missing_data_handler")) return 0;
     Arguments args;
     parseArguments(argc, argv, args);
 

@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_nonref_filter.h"
 #include <getopt.h>
 #include <iostream>
@@ -132,6 +133,7 @@ void VCFXNonRefFilter::filterNonRef(std::istream& in, std::ostream& out){
 }
 
 int main(int argc, char* argv[]){
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_nonref_filter")) return 0;
     VCFXNonRefFilter app;
     return app.run(argc, argv);
 }

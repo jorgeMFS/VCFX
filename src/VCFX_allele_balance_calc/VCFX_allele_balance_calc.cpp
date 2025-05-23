@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 // VCFX_allele_balance_calc.cpp
 
 #include <iostream>
@@ -224,6 +225,7 @@ bool calculateAlleleBalance(std::istream& in, std::ostream& out, const AlleleBal
 // main()
 // ---------------------------------------------------------------
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_allele_balance_calc")) return 0;
     AlleleBalanceArguments args;
     parseArguments(argc, argv, args);
 

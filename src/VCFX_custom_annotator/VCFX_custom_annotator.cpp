@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -282,6 +283,7 @@ int VCFXCustomAnnotator::run(int argc, char* argv[]) {
 // main
 // ---------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_custom_annotator")) return 0;
     VCFXCustomAnnotator annotator;
     return annotator.run(argc, argv);
 }

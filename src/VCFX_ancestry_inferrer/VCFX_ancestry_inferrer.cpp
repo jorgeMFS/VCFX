@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -58,6 +59,7 @@ private:
 // main() - create the inferrer and run
 // ----------------------------------------------------
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_ancestry_inferrer")) return 0;
     VCFXAncestryInferrer inferrer;
     return inferrer.run(argc, argv);
 }

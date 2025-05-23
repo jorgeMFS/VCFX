@@ -16,6 +16,7 @@ VCFX_custom_annotator --add-annotation <annotations.txt> [OPTIONS] < input.vcf >
 |--------|-------------|
 | `-a`, `--add-annotation <file>` | Required. Path to the annotation file containing the custom annotations |
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

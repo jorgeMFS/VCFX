@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_af_subsetter.h"
 #include <getopt.h>
 #include <sstream>
@@ -156,6 +157,7 @@ void VCFXAfSubsetter::subsetByAlleleFrequency(std::istream& in, std::ostream& ou
 // Typical main():
 //
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_af_subsetter")) return 0;
     VCFXAfSubsetter afSubsetter;
     return afSubsetter.run(argc, argv);
 }
