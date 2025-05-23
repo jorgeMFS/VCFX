@@ -15,6 +15,7 @@ VCFX_multiallelic_splitter [OPTIONS] < input.vcf > biallelic_output.vcf
 | Option | Description |
 |--------|-------------|
 | `--help`, `-h` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

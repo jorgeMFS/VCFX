@@ -15,6 +15,7 @@ VCFX_allele_freq_calc [OPTIONS] < input.vcf > allele_frequencies.tsv
 | Option      | Description                                |
 |-------------|--------------------------------------------|
 | `--help`, `-h` | Display help message and exit              |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

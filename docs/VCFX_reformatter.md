@@ -15,6 +15,7 @@ VCFX_reformatter [options] < input.vcf > output.vcf
 | Option | Description |
 |--------|-------------|
 | `-h, --help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 | `-c, --compress-info <keys>` | Remove specified INFO keys (comma-separated) |
 | `-f, --compress-format <keys>` | Remove specified FORMAT keys (comma-separated) |
 | `-i, --reorder-info <keys>` | Reorder INFO keys (comma-separated) |

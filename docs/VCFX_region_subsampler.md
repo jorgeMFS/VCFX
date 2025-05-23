@@ -15,6 +15,7 @@ VCFX_region_subsampler --region-bed FILE < input.vcf > output.vcf
 | Option | Description |
 |--------|-------------|
 | `-h, --help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 | `-b, --region-bed FILE` | BED file listing regions to keep |
 
 ## Description
