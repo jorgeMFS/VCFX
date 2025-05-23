@@ -119,7 +119,8 @@ Here are some common workflows that combine multiple VCFX tools:
 cat input.vcf | \
   VCFX_validator | \
   VCFX_variant_classifier --append-info | \
-  VCFX_missing_detector --max-missing 0.1 | \
+  VCFX_missing_detector | \
+  grep -v 'MISSING_GENOTYPES=1' | \
   VCFX_phred_filter --min-qual 20 > qc_passed.vcf
 ```
 
