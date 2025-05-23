@@ -160,9 +160,9 @@ fi
 echo "✓ Test 6 passed"
 
 ###############################################################################
-# Test 7: Windows (CRLF) line endings
+# Test 7: CRLF line endings
 ###############################################################################
-echo "Test 7: Windows CRLF line endings"
+echo "Test 7: CRLF line endings"
 cat > "${SCRIPT_DIR}/data/indexer/crlf_unix.vcf" <<EOF
 ##fileformat=VCFv4.2
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE

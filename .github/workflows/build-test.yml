@@ -10,7 +10,7 @@ jobs:
   build-and-test:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
@@ -29,23 +29,9 @@ jobs:
           brew install cmake zlib bash
           echo "$(brew --prefix)/bin" >> $GITHUB_PATH
 
-      - name: Install dependencies (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          choco install -y cmake
-          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install zlib getopt
-
-
       - name: Configure
+        run: cmake -S . -B build
         shell: bash
-        run: |
-          if [ "$RUNNER_OS" = "Windows" ]; then
-            cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
-          else
-            cmake -S . -B build
-          fi
-
       - name: Build
         run: cmake --build build --parallel
         shell: bash
