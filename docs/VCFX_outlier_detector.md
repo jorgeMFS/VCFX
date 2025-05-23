@@ -19,6 +19,7 @@ VCFX_outlier_detector --metric <KEY> --threshold <VAL> [--variant|--sample] < in
 | `--variant`, `-v` | Variant mode: identify variants with INFO field metrics above threshold |
 | `--sample`, `-s` | Sample mode: identify samples with average genotype metrics above threshold |
 | `--help`, `-h` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 
