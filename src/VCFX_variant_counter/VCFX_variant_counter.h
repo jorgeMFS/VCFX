@@ -17,6 +17,8 @@ private:
 
     // The actual counting function
     int countVariants(std::istream &in);
+    int countVariantsGzip(std::istream &in);
+    bool processLine(const std::string &line, int lineNumber, int &count);
 
 };
 
