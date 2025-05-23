@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_info_aggregator.h"
 #include <getopt.h>
 #include <sstream>
@@ -214,6 +215,7 @@ void VCFXInfoAggregator::aggregateInfo(std::istream& in,
 }
 
 int main(int argc, char* argv[]){
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_info_aggregator")) return 0;
     VCFXInfoAggregator app;
     return app.run(argc, argv);
 }

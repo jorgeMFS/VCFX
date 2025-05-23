@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_quality_adjuster.h"
 #include <getopt.h>
 #include <sstream>
@@ -175,6 +176,7 @@ void VCFXQualityAdjuster::adjustQualityScores(std::istream &in, std::ostream &ou
 }
 
 int main(int argc, char* argv[]){
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_quality_adjuster")) return 0;
     VCFXQualityAdjuster app;
     return app.run(argc, argv);
 }

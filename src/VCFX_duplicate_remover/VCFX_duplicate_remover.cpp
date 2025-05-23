@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_duplicate_remover.h"
 #include <sstream>
 #include <vector>
@@ -129,6 +130,7 @@ bool removeDuplicates(std::istream& in, std::ostream& out) {
 // main: Parse command-line arguments and call removeDuplicates.
 // ----------------------------------------------------------------------
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_duplicate_remover")) return 0;
     // Simple argument parsing: if --help or -h is provided, print help.
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];

@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_reformatter.h"
 #include <getopt.h>
 #include <sstream>
@@ -461,6 +462,7 @@ std::string VCFXReformatter::applyFormatReorderToSample(const std::string &sampl
 }
 
 int main(int argc, char* argv[]){
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_reformatter")) return 0;
     VCFXReformatter reformatter;
     return reformatter.run(argc, argv);
 }

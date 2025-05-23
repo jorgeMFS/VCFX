@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_outlier_detector.h"
 #include <getopt.h>
 #include <sstream>
@@ -304,6 +305,7 @@ void VCFXOutlierDetector::detectOutliers(std::istream &in,
 }
 
 int main(int argc, char* argv[]){
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_outlier_detector")) return 0;
     VCFXOutlierDetector app;
     return app.run(argc, argv);
 }

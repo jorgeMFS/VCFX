@@ -16,6 +16,7 @@ VCFX_info_summarizer --info "FIELD1,FIELD2,..." < input.vcf > summary_stats.tsv
 |--------|-------------|
 | `-i`, `--info <FIELDS>` | Required. Comma-separated list of INFO fields to analyze (e.g., "DP,AF,MQ") |
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

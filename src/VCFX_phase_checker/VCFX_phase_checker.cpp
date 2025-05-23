@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_phase_checker.h"
 #include <getopt.h>
 #include <sstream>
@@ -164,6 +165,7 @@ void VCFXPhaseChecker::processVCF(std::istream &in, std::ostream &out) {
 }
 
 int main(int argc, char* argv[]){
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_phase_checker")) return 0;
     VCFXPhaseChecker checker;
     return checker.run(argc, argv);
 }

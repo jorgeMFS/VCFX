@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_haplotype_extractor.h"
 #include <sstream>
 #include <algorithm>
@@ -327,6 +328,7 @@ bool HaplotypeExtractor::extractHaplotypes(std::istream& in, std::ostream& out) 
 // main
 // ---------------------------------------------------------------------
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_haplotype_extractor")) return 0;
     int blockSize = 100000;
     bool doCheck = false;
     bool debug = false;

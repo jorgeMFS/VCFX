@@ -14,6 +14,7 @@ VCFX_gl_filter --filter "<CONDITION>" [--mode <any|all>] < input.vcf > filtered.
 | `-f`, `--filter <CONDITION>` | Required. Filter condition (e.g., `GQ>20`, `DP>=10`, `PL<50`) |
 | `-m`, `--mode <any\|all>` | Optional. Determines if all samples must pass the condition (`all`, default) or at least one sample must pass (`any`) |
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 `VCFX_gl_filter` examines numeric fields in the FORMAT column of a VCF file and filters variant records based on whether the samples satisfy the specified condition. The tool:

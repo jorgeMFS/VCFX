@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_indexer.h"
 #include <getopt.h>
 #include <iostream>
@@ -189,6 +190,7 @@ void VCFXIndexer::createVCFIndex(std::istream &in, std::ostream &out) {
 
 // Optional main if you build as a single executable
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_indexer")) return 0;
     VCFXIndexer idx;
     return idx.run(argc, argv);
 }

@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -273,6 +274,7 @@ static void processVCF(std::istream &in, const AnnotationOptions &opts) {
 // main()
 // --------------------------------------------------------------
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_annotation_extractor")) return 0;
     AnnotationOptions opts;
     if (!parseArguments(argc, argv, opts)) {
         // parseArguments already printed help if needed

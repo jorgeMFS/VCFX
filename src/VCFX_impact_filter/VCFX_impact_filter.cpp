@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_impact_filter.h"
 #include <getopt.h>
 #include <sstream>
@@ -200,6 +201,7 @@ void VCFXImpactFilter::filterByImpact(std::istream& in,
 }
 
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_impact_filter")) return 0;
     VCFXImpactFilter filt;
     return filt.run(argc, argv);
 }

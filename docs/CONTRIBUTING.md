@@ -32,6 +32,7 @@ We welcome suggestions for new features or improvements to existing functionalit
 1. Fork the repository
 2. Create a new branch for your feature or bug fix
 3. Write your code, following our coding standards
+   (run `clang-format -i <files>` before committing)
 4. Add tests for your changes
 5. Ensure all tests pass
 6. Update documentation as needed
@@ -39,6 +40,17 @@ We welcome suggestions for new features or improvements to existing functionalit
 8. Submit a pull request
 
 ## Development Setup
+
+### Code Formatting
+
+We use `clang-format` to keep the C++ code style consistent. A basic configuration
+is provided in `.clang-format` at the repository root. Please run:
+
+```bash
+clang-format -i path/to/changed_file.cpp
+```
+
+before committing changes.
 
 ### Prerequisites
 

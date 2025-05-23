@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_region_subsampler.h"
 #include <getopt.h>
 #include <sstream>
@@ -254,6 +255,7 @@ void VCFXRegionSubsampler::processVCF(std::istream &in, std::ostream &out) {
 }
 
 int main(int argc, char* argv[]){
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_region_subsampler")) return 0;
     VCFXRegionSubsampler app;
     return app.run(argc, argv);
 }

@@ -17,6 +17,7 @@ VCFX_haplotype_extractor [OPTIONS] < input.vcf > haplotypes.tsv
 | `--block-size <SIZE>` | Maximum distance in base pairs between consecutive variants to be included in the same block (default: 100,000) |
 | `--check-phase-consistency` | Enable checks for phase consistency between adjacent variants in a block |
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

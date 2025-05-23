@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_record_filter.h"
 #include <getopt.h>
 #include <sstream>
@@ -320,6 +321,7 @@ void printHelp(){
 
 // main with typical argument parse
 int main(int argc, char* argv[]){
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_record_filter")) return 0;
     if(argc==1){
         printHelp();
         return 0;

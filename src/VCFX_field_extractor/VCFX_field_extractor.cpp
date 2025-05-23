@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_field_extractor.h"
 #include <sstream>
 #include <algorithm>
@@ -245,6 +246,7 @@ void extractFields(std::istream& in, std::ostream& out, const std::vector<std::s
 // main: parse arguments, call extractFields
 // ------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_field_extractor")) return 0;
     std::vector<std::string> fields;
     bool showHelp = false;
 

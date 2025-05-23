@@ -15,6 +15,7 @@ VCFX_distance_calculator [OPTIONS] < input.vcf > variant_distances.tsv
 | Option | Description |
 |--------|-------------|
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

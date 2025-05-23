@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_alignment_checker.h"
 #include <getopt.h>
 #include <sstream>
@@ -321,6 +322,7 @@ void VCFXAlignmentChecker::checkDiscrepancies(std::istream& vcfIn, std::ostream&
 
 // Typical main(), linking to run()
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_alignment_checker")) return 0;
     VCFXAlignmentChecker alignmentChecker;
     return alignmentChecker.run(argc, argv);
 }

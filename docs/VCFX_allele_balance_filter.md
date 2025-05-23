@@ -16,6 +16,7 @@ VCFX_allele_balance_filter --filter-allele-balance <THRESHOLD> < input.vcf > fil
 |--------|-------------|
 | `-f`, `--filter-allele-balance` <VAL> | Required. Allele balance threshold between 0.0 and 1.0 |
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

@@ -15,6 +15,7 @@ VCFX_dosage_calculator [OPTIONS] < input.vcf > dosage_output.txt
 | Option | Description |
 |--------|-------------|
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

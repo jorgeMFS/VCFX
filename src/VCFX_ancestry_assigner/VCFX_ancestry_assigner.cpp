@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -408,6 +409,7 @@ void VCFXAncestryAssigner::assignAncestry(std::istream& vcfIn, std::ostream& out
 // main() - just instantiate and run
 // ---------------------------------------------------------
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_ancestry_assigner")) return 0;
     VCFXAncestryAssigner assigner;
     return assigner.run(argc, argv);
 }
