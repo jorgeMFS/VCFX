@@ -75,14 +75,18 @@ When `--strict` is used, additional checks are applied:
 ### Basic Validation
 Check if a VCF file is valid:
 ```bash
-VCFX_validator < input.vcf
+VCFX_validator < input.vcf > validated.vcf
 ```
 
 ### Using Strict Mode
 Enable stricter validation with additional checks:
 ```bash
-VCFX_validator --strict < input.vcf
+VCFX_validator --strict < input.vcf > validated.vcf
 ```
+
+When the input is valid, the original VCF is written unchanged to standard output,
+allowing `VCFX_validator` to be used as a filter in processing pipelines. Informational
+messages such as `VCF file is valid.` are printed to standard error.
 
 ### Redirecting Error Messages
 Save validation errors to a file:

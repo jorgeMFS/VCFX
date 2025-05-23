@@ -260,6 +260,7 @@ bool VCFXValidator::validateVCF(std::istream &in){
     std::string line;
     int lineNum=0;
     bool foundChromLine= false;
+    std::vector<std::string> lines;
 
     while(true){
         if(!std::getline(in, line)) break;
@@ -290,12 +291,16 @@ bool VCFXValidator::validateVCF(std::istream &in){
             }
             if(!validateDataLine(line, lineNum)) return false;
         }
+        lines.push_back(line);
     }
     if(!foundChromLine){
         std::cerr<<"Error: no #CHROM line found in file.\n";
         return false;
     }
-    std::cout<<"VCF file is valid.\n";
+    for(const auto &l : lines){
+        std::cout << l << '\n';
+    }
+    std::cerr<<"VCF file is valid.\n";
     return true;
 }
 
