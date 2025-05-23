@@ -3,8 +3,16 @@ set -e
 
 echo "=== Testing VCFX_variant_counter ==="
 
-# Executable paths
-VCFX_EXECUTABLE="../build/src/VCFX_variant_counter/VCFX_variant_counter"
+# Determine script and repository locations so the test can be run from
+# anywhere.  This mirrors the approach used by other test scripts.
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ROOT_DIR="$( cd "$SCRIPT_DIR/.." && pwd )"
+
+# Ensure we run inside the script directory for predictable paths
+cd "$SCRIPT_DIR"
+
+# Path to the built executable
+VCFX_EXECUTABLE="$ROOT_DIR/build/src/VCFX_variant_counter/VCFX_variant_counter"
 
 # Check if executable exists
 if [ ! -f "$VCFX_EXECUTABLE" ]; then
