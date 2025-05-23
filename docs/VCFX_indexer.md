@@ -71,7 +71,7 @@ tail -c +23456 input.vcf | head -1
 
 ### File Format Detection
 
-- The tool automatically handles both Unix (LF) and Windows (CRLF) line endings
+- The tool automatically handles LF and CRLF line endings
 - Byte offsets are calculated correctly regardless of the line ending style
 
 ### Malformed VCF Files

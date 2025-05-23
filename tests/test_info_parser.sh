@@ -172,7 +172,7 @@ grep -q "^1[[:space:]]200" "${SCRIPT_DIR}/data/info_parser/invalid.out" || (echo
 echo "✓ Test 7 passed"
 
 ###############################################################################
-# Test 8: Windows CRLF line endings
+# Test 8: CRLF line endings
 ###############################################################################
 echo "Test 8: CRLF line endings"
 cat > "${SCRIPT_DIR}/data/info_parser/crlf_unix.vcf" <<EOF

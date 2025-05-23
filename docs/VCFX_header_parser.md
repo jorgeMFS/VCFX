@@ -87,7 +87,7 @@ The tool implements simple strategies for handling edge cases:
 1. **Empty files**: If the input file is empty, no output is produced
 2. **Files without headers**: If the file has no header lines, no output is produced
 3. **Malformed headers**: All lines starting with "#" are considered header lines, even if they don't follow VCF specifications
-4. **Line endings**: Both Unix (LF) and Windows (CRLF) line endings are handled correctly
+4. **Line endings**: LF and CRLF line endings are handled correctly
 5. **Partial headers**: If the file ends in the middle of the header section, all header lines up to that point are output
 
 ## Performance
