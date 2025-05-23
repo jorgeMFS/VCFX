@@ -174,10 +174,10 @@ fi
 echo "✓ Test 6 passed"
 
 ###############################################################################
-# Test 7: Windows (CRLF) line endings
+# Test 7: CRLF line endings
 # We will transform a normal VCF into CRLF and check offsets
 ###############################################################################
-echo "Test 7: Windows CRLF line endings"
+echo "Test 7: CRLF line endings"
 
 cat > "${SCRIPT_DIR}/data/indexer/crlf_unix.vcf" << 'EOF'
 ##fileformat=VCFv4.2
