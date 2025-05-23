@@ -98,6 +98,25 @@ Tools for handling VCF files:
 - [VCFX_compressor](VCFX_compressor.md) - Compress VCF files efficiently
 - [View all file management tools...](tools_overview.md#file-management)
 
+### Annotation and Reporting
+
+Tools for annotating and extracting information from VCF files:
+
+- [VCFX_custom_annotator](VCFX_custom_annotator.md) - Add custom annotations to VCF files
+- [VCFX_info_summarizer](VCFX_info_summarizer.md) - Summarize INFO fields
+- ... (include a few more key tools)
+- [View all annotation tools...](tools_overview.md#annotation-and-reporting)
+
+### Data Processing
+
+Tools for processing variants and samples:
+
+- [VCFX_missing_data_handler](VCFX_missing_data_handler.md) - Handle missing data
+- [VCFX_quality_adjuster](VCFX_quality_adjuster.md) - Adjust quality scores
+- [VCFX_haplotype_phaser](VCFX_haplotype_phaser.md) - Phase haplotypes
+- [VCFX_haplotype_extractor](VCFX_haplotype_extractor.md) - Extract haplotype information
+- [View all processing tools...](tools_overview.md#data-processing)
+
 For a complete list of all tools and detailed usage examples, see the [tools overview](tools_overview.md).
 
 ## Who Should Use VCFX?
