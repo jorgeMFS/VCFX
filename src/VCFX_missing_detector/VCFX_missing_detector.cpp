@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_missing_detector.h"
 #include <getopt.h>
 #include <sstream>
@@ -208,6 +209,7 @@ void VCFXMissingDetector::detectMissingGenotypes(std::istream& in, std::ostream&
 }
 
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_missing_detector")) return 0;
     VCFXMissingDetector missingDetector;
     return missingDetector.run(argc, argv);
 }

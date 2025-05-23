@@ -16,6 +16,7 @@ VCFX_info_parser --info "FIELD1,FIELD2,..." < input.vcf > extracted_info.tsv
 |--------|-------------|
 | `-i`, `--info <FIELDS>` | Required. Comma-separated list of INFO fields to extract (e.g., "DP,AF,SOMATIC") |
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

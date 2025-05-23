@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_metadata_summarizer.h"
 #include <getopt.h>
 #include <sstream>
@@ -155,6 +156,7 @@ void VCFXMetadataSummarizer::printSummary() const {
 }
 
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_metadata_summarizer")) return 0;
     VCFXMetadataSummarizer summarizer;
     return summarizer.run(argc, argv);
 }

@@ -13,6 +13,7 @@ VCFX_concordance_checker --samples "SAMPLE1 SAMPLE2" < input.vcf > concordance_r
 |--------|-------------|
 | `-s`, `--samples "SAMPLE1 SAMPLE2"` | Required. Names of the two samples to compare, separated by a space |
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 `VCFX_concordance_checker` analyzes a VCF file and compares the genotypes of two specified samples for each variant. The tool:

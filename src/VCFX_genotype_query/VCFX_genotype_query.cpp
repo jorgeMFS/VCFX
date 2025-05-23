@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_genotype_query.h"
 #include <sstream>
 #include <vector>
@@ -239,6 +240,7 @@ void genotypeQuery(std::istream& in, std::ostream& out,
 // main
 // ------------------------------------------------------------------
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_genotype_query")) return 0;
     std::string genotypeQueryStr;
     bool strictCompare = false;
     if (!parseArguments(argc, argv, genotypeQueryStr, strictCompare)) {

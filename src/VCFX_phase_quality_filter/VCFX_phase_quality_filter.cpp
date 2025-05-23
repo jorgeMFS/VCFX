@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_phase_quality_filter.h"
 #include <getopt.h>
 #include <sstream>
@@ -201,6 +202,7 @@ double VCFXPhaseQualityFilter::parsePQScore(const std::string &info) {
 }
 
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_phase_quality_filter")) return 0;
     VCFXPhaseQualityFilter f;
     return f.run(argc, argv);
 }

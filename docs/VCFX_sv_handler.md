@@ -12,6 +12,7 @@ VCFX_sv_handler [OPTIONS] < input.vcf > output.vcf
 | Option | Description |
 |--------|-------------|
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 | `-f`, `--sv-filter-only` | Keep only lines that have 'SVTYPE=' in their INFO field |
 | `-m`, `--sv-modify` | Modify the INFO field of structural variants to add additional annotations |
 

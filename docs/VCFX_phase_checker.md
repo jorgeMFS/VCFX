@@ -15,6 +15,7 @@ VCFX_phase_checker [OPTIONS] < input.vcf > phased_output.vcf
 | Option | Description |
 |--------|-------------|
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

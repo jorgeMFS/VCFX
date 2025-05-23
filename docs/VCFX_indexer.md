@@ -14,6 +14,7 @@ VCFX_indexer [OPTIONS] < input.vcf > index.tsv
 | Option | Description |
 |--------|-------------|
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

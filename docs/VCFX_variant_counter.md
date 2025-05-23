@@ -12,6 +12,7 @@ VCFX_variant_counter [OPTIONS] < input.vcf
 | Option | Description |
 |--------|-------------|
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 | `-s`, `--strict` | Fail on any data line with fewer than 8 columns |
 
 ## Description

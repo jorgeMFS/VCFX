@@ -15,6 +15,7 @@ VCFX_header_parser [OPTIONS] < input.vcf > header.txt
 | Option | Description |
 |--------|-------------|
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

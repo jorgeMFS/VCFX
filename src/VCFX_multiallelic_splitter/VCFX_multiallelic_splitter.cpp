@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_multiallelic_splitter.h"
 #include <sstream>
 #include <vector>
@@ -288,6 +289,7 @@ bool splitMultiAllelicVariants(std::istream &in, std::ostream &out){
 }
 
 int main(int argc, char* argv[]){
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_multiallelic_splitter")) return 0;
     for(int i=1; i< argc; i++){
         std::string arg= argv[i];
         if(arg=="--help"|| arg=="-h"){

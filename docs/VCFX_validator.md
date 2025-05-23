@@ -14,6 +14,7 @@ VCFX_validator [OPTIONS] < input.vcf
 | Option | Description |
 |--------|-------------|
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 | `-s`, `--strict` | Enable stricter validation checks |
 
 ## Description

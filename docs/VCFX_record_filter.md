@@ -14,6 +14,7 @@ VCFX_record_filter --filter "CRITERIA" [OPTIONS] < input.vcf > filtered.vcf
 | `-f`, `--filter <CRITERIA>` | Required. One or more filtering criteria separated by semicolons (e.g., `"POS>10000;QUAL>=30;AF<0.05"`) |
 | `-l`, `--logic <and\|or>` | Logic for combining multiple criteria: `and` (default) requires all criteria to pass, `or` requires any criterion to pass |
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 `VCFX_record_filter` evaluates each variant in a VCF file against specified criteria and outputs only variants that satisfy these criteria. The tool:
