@@ -594,9 +594,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#sample-selection-and-comparison" class="md-nav__link">
+  <a href="#sample-comparison" class="md-nav__link">
     <span class="md-ellipsis">
-      Sample Selection and Comparison
+      Sample Comparison
     </span>
   </a>
   
@@ -2839,9 +2839,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#sample-selection-and-comparison" class="md-nav__link">
+  <a href="#sample-comparison" class="md-nav__link">
     <span class="md-ellipsis">
-      Sample Selection and Comparison
+      Sample Comparison
     </span>
   </a>
   
@@ -2962,7 +2962,7 @@ cat<span class="w"> </span>input.vcf<span class="w"> </span><span class="p">|</s
 <h3 id="quality-control">Quality Control<a class="headerlink" href="#quality-control" title="Permanent link">&para;</a></h3>
 <p>Tools for validating and checking data quality:</p>
 <ul>
-<li><a href="VCFX_concordance_checker/">VCFX_concordance_checker</a> - Check concordance between VCF files</li>
+<li><a href="VCFX_concordance_checker/">VCFX_concordance_checker</a> - Check concordance between samples in a VCF file</li>
 <li><a href="VCFX_missing_detector/">VCFX_missing_detector</a> - Detect and report missing data</li>
 <li><a href="VCFX_validator/">VCFX_validator</a> - Validate VCF format compliance</li>
 <li><a href="tools_overview/#quality-control">View all quality control tools...</a></li>
@@ -3018,13 +3018,9 @@ cat<span class="w"> </span>input.vcf<span class="w"> </span><span class="p">|</s
 <span class="w">  </span>VCFX_phred_filter<span class="w"> </span>--phred-filter<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>VCFX_allele_freq_calc<span class="w"> </span>&gt;<span class="w"> </span>result.tsv
 </code></pre></div>
-<h3 id="sample-selection-and-comparison">Sample Selection and Comparison<a class="headerlink" href="#sample-selection-and-comparison" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Extract samples and check concordance</span>
-cat<span class="w"> </span>input.vcf<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>VCFX_sample_extractor<span class="w"> </span>--samples<span class="w"> </span>SAMPLE1,SAMPLE2<span class="w"> </span>&gt;<span class="w"> </span>samples.vcf
-
-cat<span class="w"> </span>samples.vcf<span class="w"> </span>reference.vcf<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>VCFX_concordance_checker<span class="w"> </span>&gt;<span class="w"> </span>concordance_report.tsv
+<h3 id="sample-comparison">Sample Comparison<a class="headerlink" href="#sample-comparison" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Check concordance between two samples in a single VCF</span>
+cat<span class="w"> </span>input.vcf<span class="w"> </span><span class="p">|</span><span class="w"> </span>VCFX_concordance_checker<span class="w"> </span>--samples<span class="w"> </span><span class="s2">&quot;SAMPLE1 SAMPLE2&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>concordance_report.tsv
 </code></pre></div>
 <p>See the <a href="tools_overview/#common-usage-patterns">tools overview page</a> for more usage examples.</p>
 <h2 id="community-and-support">Community and Support<a class="headerlink" href="#community-and-support" title="Permanent link">&para;</a></h2>

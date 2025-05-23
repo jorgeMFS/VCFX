@@ -2942,8 +2942,8 @@
 <span class="w">  </span>VCFX_multiallelic_splitter<span class="w"> </span>&gt;<span class="w"> </span>normalized_biallelic.vcf
 </code></pre></div>
 <h3 id="example-4-quality-control">Example 4: Quality Control<a class="headerlink" href="#example-4-quality-control" title="Permanent link">&para;</a></h3>
-<p>Check concordance between two VCF files:</p>
-<div class="highlight"><pre><span></span><code>VCFX_concordance_checker<span class="w"> </span>--vcf1<span class="w"> </span>sample1.vcf<span class="w"> </span>--vcf2<span class="w"> </span>sample2.vcf<span class="w"> </span>&gt;<span class="w"> </span>concordance_report.tsv
+<p>Check concordance between two samples in a single VCF file:</p>
+<div class="highlight"><pre><span></span><code>cat<span class="w"> </span>sample.vcf<span class="w"> </span><span class="p">|</span><span class="w"> </span>VCFX_concordance_checker<span class="w"> </span>--samples<span class="w"> </span><span class="s2">&quot;SAMPLE1 SAMPLE2&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>concordance_report.tsv
 </code></pre></div>
 <h2 id="working-with-compressed-files">Working with Compressed Files<a class="headerlink" href="#working-with-compressed-files" title="Permanent link">&para;</a></h2>
 <p>Most VCFX tools don't directly support compressed input/output. Use standard Unix tools:</p>
@@ -2980,12 +2980,8 @@ VCFX_tool_name<span class="w"> </span>&lt;<span class="w"> </span>input.vcf<span
 <span class="w">  </span>VCFX_phred_filter<span class="w"> </span>--phred-filter<span class="w"> </span><span class="m">20</span><span class="w"> </span>&gt;<span class="w"> </span>qc_passed.vcf
 </code></pre></div>
 <h3 id="sample-comparison">Sample Comparison<a class="headerlink" href="#sample-comparison" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Extract common samples</span>
-VCFX_sample_extractor<span class="w"> </span>--samples<span class="w"> </span>SAMPLE1,SAMPLE2<span class="w"> </span>&lt;<span class="w"> </span>input1.vcf<span class="w"> </span>&gt;<span class="w"> </span>samples1.vcf
-VCFX_sample_extractor<span class="w"> </span>--samples<span class="w"> </span>SAMPLE1,SAMPLE2<span class="w"> </span>&lt;<span class="w"> </span>input2.vcf<span class="w"> </span>&gt;<span class="w"> </span>samples2.vcf
-
-<span class="c1"># Check concordance</span>
-VCFX_concordance_checker<span class="w"> </span>--vcf1<span class="w"> </span>samples1.vcf<span class="w"> </span>--vcf2<span class="w"> </span>samples2.vcf<span class="w"> </span>&gt;<span class="w"> </span>concordance.tsv
+<div class="highlight"><pre><span></span><code><span class="c1"># Check concordance between two samples in a single VCF</span>
+cat<span class="w"> </span>input.vcf<span class="w"> </span><span class="p">|</span><span class="w"> </span>VCFX_concordance_checker<span class="w"> </span>--samples<span class="w"> </span><span class="s2">&quot;SAMPLE1 SAMPLE2&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>concordance.tsv
 </code></pre></div>
 <h3 id="population-structure-analysis">Population Structure Analysis<a class="headerlink" href="#population-structure-analysis" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Extract population-specific VCFs</span>
