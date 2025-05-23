@@ -14,6 +14,7 @@ VCFX_format_converter [OPTIONS] < input.vcf > output.file
 | `--to-bed` | Convert the input VCF file to BED format |
 | `--to-csv` | Convert the input VCF file to CSV format |
 | `--help`, `-h` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 `VCFX_format_converter` reads a VCF file from standard input and converts it to the specified output format. The tool:

@@ -17,6 +17,7 @@ VCFX_subsampler [options] < input.vcf > output.vcf
 | `-s, --subsample <N>` | Required: Number of variants to keep in the output |
 | `--seed <INT>` | Optional: Use a specific random seed for reproducible results |
 | `-h, --help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 
