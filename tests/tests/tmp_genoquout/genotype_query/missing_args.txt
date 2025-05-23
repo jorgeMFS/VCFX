@@ -1,2 +1,0 @@
-Usage: ../build/src/VCFX_genotype_query/VCFX_genotype_query --genotype-query "0/1" [--strict] < input.vcf > output.vcf
-Use --help for usage.
