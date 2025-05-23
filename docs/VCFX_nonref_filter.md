@@ -71,7 +71,7 @@ VCFX_nonref_filter > high_quality_nonref.vcf
 # Create a pipeline of filters
 cat input.vcf | \
 VCFX_nonref_filter | \
-VCFX_phred_filter --min-quality 30 > filtered.vcf
+VCFX_phred_filter --phred-filter 30 > filtered.vcf
 ```
 
 ## Homozygous Reference Detection
