@@ -127,7 +127,7 @@ VCFX tools are designed to be used in pipelines. Here are some common usage patt
 # Extract phased variants, filter by quality, and calculate allele frequencies
 cat input.vcf | \
   VCFX_phase_checker | \
-  VCFX_phred_filter --min-qual 30 | \
+  VCFX_phred_filter --phred-filter 30 | \
   VCFX_allele_freq_calc > result.tsv
 ```
 
