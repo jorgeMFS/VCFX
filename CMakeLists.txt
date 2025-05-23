@@ -16,6 +16,7 @@ project(VCFX
 
 # Optionally allow building for WebAssembly via Emscripten
 option(BUILD_WASM "Build with emscripten toolchain" OFF)
+option(PYTHON_BINDINGS "Build Python bindings" ON)
 
 if(BUILD_WASM)
     if(NOT CMAKE_TOOLCHAIN_FILE)
@@ -54,6 +55,10 @@ enable_testing()
 
 # Add top-level 'src' subdirectory, which in turn references each tool subdirectory
 add_subdirectory(src)
+
+if(PYTHON_BINDINGS)
+  add_subdirectory(python)
+endif()
 
 # Add the test suite
 add_subdirectory(tests)
