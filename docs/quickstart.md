@@ -37,7 +37,7 @@ Filter for high-quality SNPs:
 cat input.vcf | \
   VCFX_variant_classifier --append-info | \
   grep 'VCF_CLASS=SNP' | \
-  VCFX_phred_filter --min-qual 30 > high_quality_snps.vcf
+  VCFX_phred_filter --phred-filter 30 > high_quality_snps.vcf
 ```
 
 ### Example 2: Population Analysis
@@ -120,7 +120,7 @@ cat input.vcf | \
   VCFX_validator | \
   VCFX_variant_classifier --append-info | \
   VCFX_missing_detector --max-missing 0.1 | \
-  VCFX_phred_filter --min-qual 20 > qc_passed.vcf
+  VCFX_phred_filter --phred-filter 20 > qc_passed.vcf
 ```
 
 ### Sample Comparison
