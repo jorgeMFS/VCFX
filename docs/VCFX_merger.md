@@ -16,6 +16,7 @@ VCFX_merger --merge file1.vcf,file2.vcf,... [options] > merged.vcf
 |--------|-------------|
 | `-m, --merge` | Comma-separated list of VCF files to merge |
 | `-h, --help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

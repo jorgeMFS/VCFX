@@ -15,6 +15,7 @@ VCFX_metadata_summarizer [options] < input.vcf
 | Option | Description |
 |--------|-------------|
 | `-h, --help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 
