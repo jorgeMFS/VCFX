@@ -24,7 +24,7 @@ The VCFX toolkit was presented at the 12th International Work-Conference on Bioi
 
 ### Abstract
 
-VCFX is a collection of specialized C/C++ command-line tools designed for efficient manipulation, analysis, and transformation of VCF (Variant Call Format) files used in genomic research and bioinformatics. Each tool is an independent executable that follows the Unix philosophy: do one thing well and work seamlessly with other tools through standard input/output streams. The toolkit includes over 60 specialized utilities covering the entire lifecycle of variant data analysis from filtering and annotation to merging, phasing, and structural variant manipulation.
+VCFX is a collection of specialized C/C++ command-line tools designed for efficient manipulation, analysis, and transformation of VCF (Variant Call Format) files used in genomic research and bioinformatics. Each tool is an independent executable that follows the Unix philosophy: do one thing well and work seamlessly with other tools through standard input/output streams. The toolkit includes 60 specialized utilities covering the entire lifecycle of variant data analysis from filtering and annotation to merging, phasing, and structural variant manipulation.
 
 ## How to Cite in Different Formats
 
