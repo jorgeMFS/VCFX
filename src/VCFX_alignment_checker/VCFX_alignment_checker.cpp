@@ -208,6 +208,9 @@ void VCFXAlignmentChecker::checkDiscrepancies(std::istream& vcfIn, std::ostream&
                 while (std::getline(ss, field, '\t')) {
                     headers.push_back(field);
                 }
+                if (!headers.empty() && !headers[0].empty() && headers[0][0] == '#') {
+                    headers[0].erase(0, 1); // drop leading '#'
+                }
                 for (size_t i = 0; i < headers.size(); ++i) {
                     if (headers[i] == "CHROM") chrIndex = static_cast<int>(i);
                     else if (headers[i] == "POS")   posIndex = static_cast<int>(i);
@@ -280,11 +283,11 @@ void VCFXAlignmentChecker::checkDiscrepancies(std::istream& vcfIn, std::ostream&
                         << "\t" << allele << "\t" << "REF_MISMATCH"
                         << "\t" << ref_base << "\t" << ref << "\n";
                 }
-                // Compare ALT in VCF vs reference genome's same position
-                // (Often for a standard SNP, the reference base is the only thing in the FASTA.)
-                // This is somewhat conceptual: we're checking if the ALT base is the same as reference at that position.
+                // Compare ALT to the reference base at the same position.
+                // Here we flag a mismatch when the ALT allele is actually the
+                // same as the reference (i.e. not a true variant).
                 std::string alt_base = ref_base; // The reference at that position
-                if (allele != alt_base) {
+                if (allele == alt_base) {
                     out << chrom << "\t" << posVal << "\t" << id << "\t" << ref
                         << "\t" << allele << "\t" << "ALT_MISMATCH"
                         << "\t" << alt_base << "\t" << allele << "\n";
