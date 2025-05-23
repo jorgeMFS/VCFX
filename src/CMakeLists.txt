@@ -13,6 +13,12 @@ add_subdirectory(vcfx_wrapper)
 set(VCFX_TOOLS vcfx)
 file(GLOB TOOL_DIRS RELATIVE ${CMAKE_CURRENT_LIST_DIR} VCFX_*)
 foreach(dir ${TOOL_DIRS})
+    # On case-insensitive filesystems the glob may pick up directories such as
+    # "vcfx_wrapper". Ensure only directories that actually start with "VCFX_"
+    # are added to avoid duplicate add_subdirectory calls.
+    if(NOT "${dir}" MATCHES "^VCFX_")
+        continue()
+    endif()
     if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${dir}")
         add_subdirectory(${dir})
         list(APPEND VCFX_TOOLS ${dir})
