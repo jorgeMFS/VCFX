@@ -137,7 +137,8 @@ nav:
       - VCFX_missing_data_handler: VCFX_missing_data_handler.md
       - VCFX_quality_adjuster: VCFX_quality_adjuster.md
       - VCFX_haplotype_phaser: VCFX_haplotype_phaser.md
-      - VCFX_haplotype_extractor: VCFX_haplotype_extractor.md
+  - VCFX_haplotype_extractor: VCFX_haplotype_extractor.md
+  - Python API: python_api.md
   - Contributing: CONTRIBUTING.md
   - Citation: citation.md
-  - License: LICENSE.md 
+  - License: LICENSE.md
