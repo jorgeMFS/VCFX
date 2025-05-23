@@ -34,7 +34,8 @@ jobs:
         shell: pwsh
         run: |
           choco install -y cmake
-          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install zlib getopt-win32
+          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install zlib
+
 
       - name: Configure
         shell: bash
@@ -46,7 +47,7 @@ jobs:
           fi
 
       - name: Build
-        run: cmake --build build -- -j
+        run: cmake --build build --parallel
         shell: bash
 
       - name: Run tests
