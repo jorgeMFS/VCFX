@@ -1,7 +1,7 @@
 # VCFX_indexer
 
 ## Overview
-`VCFX_indexer` is a utility tool for creating a byte-offset index of a VCF file. It generates a simple tab-delimited index file that maps chromosome and position to the exact byte offset in the original file, enabling efficient random access to variants without scanning the entire file.
+`VCFX_indexer` is a utility tool for creating a byte-offset index of a VCF file. It generates a simple tab-delimited index file that maps chromosome and position to the exact byte offset in the original file, enabling efficient random access to variants without scanning the entire file. The index uses 64-bit integers for both the position and the byte offset so very large coordinates are fully supported.
 
 ## Usage
 
@@ -26,9 +26,9 @@ VCFX_indexer [OPTIONS] < input.vcf > index.tsv
    - Extracting the chromosome (CHROM) and position (POS) values
    - Calculating the precise byte offset from the start of the file
 4. Writing a three-column index to standard output with:
-   - CHROM: The chromosome identifier from the VCF
-   - POS: The position value from the VCF
-   - FILE_OFFSET: The byte offset to the start of the line in the source file
+    - CHROM: The chromosome identifier from the VCF
+    - POS: The position value from the VCF (stored as a 64-bit integer)
+    - FILE_OFFSET: The byte offset to the start of the line in the source file (also 64-bit)
 
 This index enables efficient random access to specific variants in large VCF files by allowing tools to seek directly to a byte offset rather than scanning the entire file. It's particularly useful for building tools that need to query specific regions of a VCF file.
 
@@ -45,8 +45,8 @@ CHROM   POS    FILE_OFFSET
 Where:
 
 - `CHROM` is the chromosome identifier from the VCF
-- `POS` is the genomic position from the VCF
-- `FILE_OFFSET` is the byte offset from the start of the VCF file
+- `POS` is the genomic position from the VCF (64-bit integer)
+- `FILE_OFFSET` is the byte offset from the start of the VCF file (64-bit integer)
 
 ## Examples
 

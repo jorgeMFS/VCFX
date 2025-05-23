@@ -130,9 +130,9 @@ void VCFXIndexer::createVCFIndex(std::istream &in, std::ostream &out) {
         const std::string &chrom = fields[0];
         const std::string &posStr = fields[1];
 
-        int posVal = 0;
+        std::int64_t posVal = 0;
         try {
-            posVal = std::stoi(posStr);
+            posVal = std::stoll(posStr);
         } catch (...) {
             // Not a valid integer => skip
             return;
