@@ -1,2 +1,0 @@
-Warning: invalid VCF line (<9 fields): 1	100	rs1	A	G	30	PASS	AF=0.25
-Warning: invalid VCF line (<9 fields): 1	200	rs2	C	T	40	PASS	AF=0.5
