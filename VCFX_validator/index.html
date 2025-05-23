@@ -3075,12 +3075,15 @@
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <h3 id="basic-validation">Basic Validation<a class="headerlink" href="#basic-validation" title="Permanent link">&para;</a></h3>
 <p>Check if a VCF file is valid:
-<div class="highlight"><pre><span></span><code>VCFX_validator<span class="w"> </span>&lt;<span class="w"> </span>input.vcf
+<div class="highlight"><pre><span></span><code>VCFX_validator<span class="w"> </span>&lt;<span class="w"> </span>input.vcf<span class="w"> </span>&gt;<span class="w"> </span>validated.vcf
 </code></pre></div></p>
 <h3 id="using-strict-mode">Using Strict Mode<a class="headerlink" href="#using-strict-mode" title="Permanent link">&para;</a></h3>
 <p>Enable stricter validation with additional checks:
-<div class="highlight"><pre><span></span><code>VCFX_validator<span class="w"> </span>--strict<span class="w"> </span>&lt;<span class="w"> </span>input.vcf
+<div class="highlight"><pre><span></span><code>VCFX_validator<span class="w"> </span>--strict<span class="w"> </span>&lt;<span class="w"> </span>input.vcf<span class="w"> </span>&gt;<span class="w"> </span>validated.vcf
 </code></pre></div></p>
+<p>When the input is valid, the original VCF is written unchanged to standard output,
+allowing <code>VCFX_validator</code> to be used as a filter in processing pipelines. Informational
+messages such as <code>VCF file is valid.</code> are printed to standard error.</p>
 <h3 id="redirecting-error-messages">Redirecting Error Messages<a class="headerlink" href="#redirecting-error-messages" title="Permanent link">&para;</a></h3>
 <p>Save validation errors to a file:
 <div class="highlight"><pre><span></span><code>VCFX_validator<span class="w"> </span>&lt;<span class="w"> </span>input.vcf<span class="w"> </span><span class="m">2</span>&gt;<span class="w"> </span>validation_errors.txt
