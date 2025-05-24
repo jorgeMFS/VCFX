@@ -31,6 +31,8 @@ The module exposes the following helpers:
   return a list of strings.
 - `read_file_maybe_compressed(path)` – read a plain or gzip/BGZF
   compressed file and return its contents as a string.
+- `read_maybe_compressed(data)` – decompress a bytes object if it is
+  gzip/BGZF compressed and return the resulting bytes.
 - `get_version()` – return the VCFX version string.
 
 ## Example Usage
@@ -43,6 +45,9 @@ print(vcfx.trim("  abc  "))
 
 print(vcfx.split("A,B,C", ","))
 # ['A', 'B', 'C']
+
+data = vcfx.read_maybe_compressed(b"hello")
+print(data)
 
 version = vcfx.get_version()
 print("VCFX version:", version)

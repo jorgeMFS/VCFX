@@ -20,5 +20,8 @@ import vcfx
 out = vcfx.trim("  hello  ")
 if out != "hello":
     raise SystemExit('trim failed')
+compressed = vcfx.read_maybe_compressed(b"hello")
+if compressed != b"hello":
+    raise SystemExit('read_maybe_compressed failed')
 print('Python bindings OK:', out)
 PY
