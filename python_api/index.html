@@ -2660,6 +2660,8 @@ automatically:</p>
   return a list of strings.</li>
 <li><code>read_file_maybe_compressed(path)</code> – read a plain or gzip/BGZF
   compressed file and return its contents as a string.</li>
+<li><code>read_maybe_compressed(data)</code> – decompress a bytes object if it is
+  gzip/BGZF compressed and return the resulting bytes.</li>
 <li><code>get_version()</code> – return the VCFX version string.</li>
 </ul>
 <h2 id="example-usage">Example Usage<a class="headerlink" href="#example-usage" title="Permanent link">&para;</a></h2>
@@ -2670,6 +2672,9 @@ automatically:</p>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">vcfx</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;A,B,C&quot;</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="p">))</span>
 <span class="c1"># [&#39;A&#39;, &#39;B&#39;, &#39;C&#39;]</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">read_maybe_compressed</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;hello&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
 <span class="n">version</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">get_version</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;VCFX version:&quot;</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
