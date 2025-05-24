@@ -5,9 +5,15 @@ from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
 def read_version():
+    """Extract the project version from the top-level CMakeLists.txt."""
     root = pathlib.Path(__file__).resolve().parent.parent / "CMakeLists.txt"
     text = root.read_text()
-    m = re.search(r"set\(VCFX_VERSION\s+\"([0-9.]+)\"\)", text)
+    major = re.search(r"set\(VCFX_VERSION_MAJOR\s+([0-9]+)\)", text)
+    minor = re.search(r"set\(VCFX_VERSION_MINOR\s+([0-9]+)\)", text)
+    patch = re.search(r"set\(VCFX_VERSION_PATCH\s+([0-9]+)\)", text)
+    if major and minor and patch:
+        return f"{major.group(1)}.{minor.group(1)}.{patch.group(1)}"
+    m = re.search(r"project\(VCFX.*VERSION\s+([0-9]+\.[0-9]+\.[0-9]+)\b", text)
     return m.group(1) if m else "0.0.0"
 
 class CMakeExtension(Extension):
@@ -33,7 +39,7 @@ setup(
     version=read_version(),
     packages=['vcfx'],
     package_dir={'vcfx': '.'},
-    ext_modules=[CMakeExtension('_vcfx')],
+    ext_modules=[CMakeExtension('vcfx._vcfx')],
     cmdclass={'build_ext': CMakeBuild},
     zip_safe=False,
     classifiers=[
