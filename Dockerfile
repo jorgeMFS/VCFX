@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y \
     cmake \
     git \
     libz-dev \
+    python3 \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a working directory
