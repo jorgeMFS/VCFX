@@ -26,8 +26,11 @@ This setup only needs to be done once. After this, the GitHub Actions workflow w
 
 Before pushing any changes, you should test the documentation site locally:
 
-1. Install the required dependencies:
+1. Install the required dependencies. It's best to use a Python virtual
+   environment because some systems mark the system Python as
+   "externally managed", which can interfere with installation:
    ```bash
+   python3 -m venv venv && source venv/bin/activate
    pip install mkdocs-material pymdown-extensions
    ```
 
