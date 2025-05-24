@@ -81,6 +81,7 @@ jobs:
       - name: Test Python wheel
         run: |
           pip install dist/*.whl
+          export PATH="$PWD/install/bin:$PATH"
           echo "$PWD/install/bin" >> $GITHUB_PATH
           cat <<'          EOF' | sed 's/^          //' | python3 -
           import vcfx
