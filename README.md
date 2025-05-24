@@ -75,6 +75,18 @@ cat input.vcf | \
   VCFX_allele_freq_calc > snp_frequencies.tsv
 ```
 
+### Listing Available Tools
+
+```bash
+vcfx list
+```
+
+### Show Tool Documentation
+
+```bash
+vcfx help allele_counter
+```
+
 ## Building for WebAssembly
 
 If you have [Emscripten](https://emscripten.org/) installed:
