@@ -16,9 +16,13 @@ make -j
 
 The compiled module will be placed in the `build/python` directory.
 You can also install the package via `pip` which will invoke CMake
-automatically:
+automatically. We recommend using a Python virtual environment because
+some systems mark the system Python as "externally managed", which can
+prevent direct installation. Create and activate a virtual environment
+before running `pip`:
 
 ```bash
+python3 -m venv venv && source venv/bin/activate
 pip install ./python
 ```
 
