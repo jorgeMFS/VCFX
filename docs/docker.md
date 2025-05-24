@@ -173,4 +173,4 @@ If you use VCFX with Docker in your research, please cite:
 }
 ```
 
-For more citation formats and information, see the [Citation page](../citation.md). 
+For more citation formats and information, see the [Citation page](citation.md). 
