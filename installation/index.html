@@ -2899,10 +2899,13 @@ cmake<span class="w"> </span>..
 make
 </code></pre></div>
 <ol>
-<li>(Optional) Install the tools to your system:
-   <div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>make<span class="w"> </span>install
+<li>(Optional) Install the tools:
+   <div class="highlight"><pre><span></span><code>make<span class="w"> </span>install
 </code></pre></div></li>
 </ol>
+<p>By default the tools are installed into <code>~/.local</code>, so no administrator
+   privileges are required. You can change the destination with
+   <code>cmake -DCMAKE_INSTALL_PREFIX=/your/path ..</code> if desired.</p>
 <p>After installation, you should be able to run VCFX tools from your terminal.</p>
 <h3 id="method-4-building-individual-tools">Method 4: Building Individual Tools<a class="headerlink" href="#method-4-building-individual-tools" title="Permanent link">&para;</a></h3>
 <p>If you only need specific tools, you can build them individually:</p>
