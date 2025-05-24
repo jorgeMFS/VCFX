@@ -2631,8 +2631,12 @@ make<span class="w"> </span>-j
 </code></pre></div>
 <p>The compiled module will be placed in the <code>build/python</code> directory.
 You can also install the package via <code>pip</code> which will invoke CMake
-automatically:</p>
-<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>./python
+automatically. We recommend using a Python virtual environment because
+some systems mark the system Python as "externally managed", which can
+prevent direct installation. Create and activate a virtual environment
+before running <code>pip</code>:</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>venv<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>venv/bin/activate
+pip<span class="w"> </span>install<span class="w"> </span>./python
 </code></pre></div>
 <h2 id="available-functions">Available Functions<a class="headerlink" href="#available-functions" title="Permanent link">&para;</a></h2>
 <p>The module exposes the following helpers:</p>
