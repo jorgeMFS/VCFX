@@ -2473,6 +2473,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#tool-wrappers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tool Wrappers
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2600,6 +2609,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#tool-wrappers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tool Wrappers
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2655,6 +2673,23 @@ automatically:</p>
 
 <span class="n">version</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">get_version</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;VCFX version:&quot;</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="tool-wrappers">Tool Wrappers<a class="headerlink" href="#tool-wrappers" title="Permanent link">&para;</a></h2>
+<p>Besides the helper functions, the package provides lightweight wrappers for
+all command line tools shipped with VCFX.  The wrappers simply invoke the
+corresponding <code>VCFX_*</code> executable via <code>subprocess</code>.</p>
+<p>Use <code>vcfx.available_tools()</code> to see which tools are accessible on your
+<code>PATH</code> and call them either via <code>vcfx.run_tool(name, *args)</code> or by using
+the tool name as a function:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">vcfx</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">vcfx</span><span class="o">.</span><span class="n">available_tools</span><span class="p">())</span>
+
+<span class="c1"># run through the generic helper</span>
+<span class="n">vcfx</span><span class="o">.</span><span class="n">run_tool</span><span class="p">(</span><span class="s2">&quot;alignment_checker&quot;</span><span class="p">,</span> <span class="s2">&quot;--help&quot;</span><span class="p">)</span>
+
+<span class="c1"># or directly by name (if available)</span>
+<span class="n">vcfx</span><span class="o">.</span><span class="n">alignment_checker</span><span class="p">(</span><span class="s2">&quot;--help&quot;</span><span class="p">)</span>
 </code></pre></div>
 
 
