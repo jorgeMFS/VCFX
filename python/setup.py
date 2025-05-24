@@ -1,7 +1,14 @@
 import pathlib
+import re
 import subprocess
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
+
+def read_version():
+    root = pathlib.Path(__file__).resolve().parent.parent / "CMakeLists.txt"
+    text = root.read_text()
+    m = re.search(r"set\(VCFX_VERSION\s+\"([0-9.]+)\"\)", text)
+    return m.group(1) if m else "0.0.0"
 
 class CMakeExtension(Extension):
     def __init__(self, name):
@@ -23,10 +30,15 @@ class CMakeBuild(build_ext):
 
 setup(
     name='vcfx',
-    version='0.0.0',
+    version=read_version(),
     packages=['vcfx'],
     package_dir={'vcfx': '.'},
     ext_modules=[CMakeExtension('_vcfx')],
     cmdclass={'build_ext': CMakeBuild},
     zip_safe=False,
+    classifiers=[
+        'Programming Language :: Python :: 3',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: POSIX :: Linux',
+    ],
 )

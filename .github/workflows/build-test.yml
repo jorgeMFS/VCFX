@@ -41,3 +41,53 @@ jobs:
           cd build
           ctest --output-on-failure
         shell: bash
+
+  python-wheels:
+    needs: build-and-test
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake libz-dev python3-pip
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install cmake zlib python@3 bash
+          echo "$(brew --prefix)/bin" >> $GITHUB_PATH
+
+      - name: Build project
+        run: |
+          cmake -S . -B build -DPYTHON_BINDINGS=ON
+          cmake --build build --parallel
+          cmake --install build --prefix $PWD/install
+        shell: bash
+
+      - name: Build wheel
+        run: |
+          python3 -m pip install --upgrade pip wheel
+          pip wheel ./python -w dist
+        shell: bash
+
+      - name: Test Python wheel
+        run: |
+          pip install dist/*.whl
+          echo "$PWD/install/bin" >> $GITHUB_PATH
+          python3 - <<'EOF'
+import vcfx
+print('version:', vcfx.get_version())
+tools = vcfx.available_tools()
+print('tools:', len(tools))
+if tools:
+    vcfx.run_tool(tools[0], '--help', check=False)
+EOF
+        shell: bash

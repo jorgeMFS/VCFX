@@ -17,8 +17,9 @@ set_target_properties(_vcfx PROPERTIES
 )
 
 configure_file(__init__.py "${CMAKE_BINARY_DIR}/python/vcfx/__init__.py" COPYONLY)
+configure_file(tools.py "${CMAKE_BINARY_DIR}/python/vcfx/tools.py" COPYONLY)
 
 install(TARGETS _vcfx
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/vcfx
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/vcfx)
-install(FILES __init__.py DESTINATION ${CMAKE_INSTALL_LIBDIR}/vcfx)
+install(FILES __init__.py tools.py DESTINATION ${CMAKE_INSTALL_LIBDIR}/vcfx)
