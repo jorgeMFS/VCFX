@@ -82,12 +82,12 @@ jobs:
         run: |
           pip install dist/*.whl
           echo "$PWD/install/bin" >> $GITHUB_PATH
-          python3 - <<'EOF'
-import vcfx
-print('version:', vcfx.get_version())
-tools = vcfx.available_tools()
-print('tools:', len(tools))
-if tools:
-    vcfx.run_tool(tools[0], '--help', check=False)
-EOF
+          cat <<'          EOF' | sed 's/^          //' | python3 -
+          import vcfx
+          print('version:', vcfx.get_version())
+          tools = vcfx.available_tools()
+          print('tools:', len(tools))
+          if tools:
+              vcfx.run_tool(tools[0], '--help', check=False)
+          EOF
         shell: bash
