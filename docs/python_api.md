@@ -47,3 +47,25 @@ print(vcfx.split("A,B,C", ","))
 version = vcfx.get_version()
 print("VCFX version:", version)
 ```
+
+## Tool Wrappers
+
+Besides the helper functions, the package provides lightweight wrappers for
+all command line tools shipped with VCFX.  The wrappers simply invoke the
+corresponding ``VCFX_*`` executable via ``subprocess``.
+
+Use ``vcfx.available_tools()`` to see which tools are accessible on your
+``PATH`` and call them either via ``vcfx.run_tool(name, *args)`` or by using
+the tool name as a function:
+
+```python
+import vcfx
+
+print(vcfx.available_tools())
+
+# run through the generic helper
+vcfx.run_tool("alignment_checker", "--help")
+
+# or directly by name (if available)
+vcfx.alignment_checker("--help")
+```
