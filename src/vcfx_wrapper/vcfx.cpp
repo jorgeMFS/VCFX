@@ -6,12 +6,17 @@
 #include <cstring>
 #include <dirent.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <limits.h>
+#include <fstream>
 #include <set>
 
 static void print_usage(){
     std::cout << "vcfx - unified interface for VCFX tools\n"
               << "Usage: vcfx [--help] [--list] <subcommand> [args]\n\n"
               << "  <subcommand>  Name of a VCFX tool without the 'VCFX_' prefix\n"
+              << "  list          Alias for --list\n"
+              << "  help <tool>   Show Markdown documentation for a tool if available\n"
               << "  --list        List available subcommands found in PATH\n"
               << "  --help        Show this help message\n";
 }
@@ -45,6 +50,43 @@ static void list_commands(){
     for(const auto& c : cmds){
         std::cout << c << '\n';
     }
+}
+
+static std::vector<std::string> get_doc_dirs(){
+    std::vector<std::string> dirs;
+    const char* env = std::getenv("VCFX_DOCS_DIR");
+    if(env) dirs.emplace_back(env);
+
+    char buf[PATH_MAX];
+    ssize_t len = readlink("/proc/self/exe", buf, sizeof(buf)-1);
+    if(len > 0){
+        buf[len] = '\0';
+        std::string exe(buf);
+        auto pos = exe.find_last_of('/');
+        if(pos != std::string::npos){
+            std::string base = exe.substr(0,pos);
+            dirs.push_back(base + "/../share/doc/VCFX");
+            dirs.push_back(base + "/../share/vcfx/docs");
+            dirs.push_back(base + "/../docs");
+            dirs.push_back(base + "/../../docs");
+        }
+    }
+    dirs.push_back("docs");
+    return dirs;
+}
+
+static int print_tool_doc(const std::string& tool){
+    std::string fname = "VCFX_" + tool + ".md";
+    for(const auto& dir : get_doc_dirs()){
+        std::string path = dir + "/" + fname;
+        std::ifstream in(path);
+        if(in){
+            std::cout << in.rdbuf();
+            return 0;
+        }
+    }
+    std::cerr << "Documentation for '" << tool << "' not found." << std::endl;
+    return 1;
 }
 
 int main(int argc, char* argv[]){
@@ -81,6 +123,20 @@ int main(int argc, char* argv[]){
     }
 
     std::string sub = argv[optind];
+
+    if(sub == "list"){
+        list_commands();
+        return 0;
+    }
+
+    if(sub == "help"){
+        if(optind + 1 >= argc){
+            print_usage();
+            return 0;
+        }
+        return print_tool_doc(argv[optind + 1]);
+    }
+
     std::string exec_name = "VCFX_" + sub;
 
     std::vector<char*> exec_args;
