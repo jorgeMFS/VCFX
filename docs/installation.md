@@ -71,10 +71,14 @@ This method ensures you have the latest version of VCFX.
    make
    ```
 
-3. (Optional) Install the tools to your system:
+3. (Optional) Install the tools:
    ```bash
-   sudo make install
+   make install
    ```
+
+   By default the tools are installed into `~/.local`, so no administrator
+   privileges are required. You can change the destination with
+   `cmake -DCMAKE_INSTALL_PREFIX=/your/path ..` if desired.
 
 After installation, you should be able to run VCFX tools from your terminal.
 

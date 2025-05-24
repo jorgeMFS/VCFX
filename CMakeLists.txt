@@ -8,11 +8,20 @@ set(VCFX_VERSION "${VCFX_VERSION_MAJOR}.${VCFX_VERSION_MINOR}.${VCFX_VERSION_PAT
 
 add_compile_definitions(VCFX_VERSION="${VCFX_VERSION}")
 
-project(VCFX 
+project(VCFX
   VERSION ${VCFX_VERSION}
   DESCRIPTION "A Comprehensive VCF Manipulation Toolkit"
   LANGUAGES CXX
 )
+
+# Set a user-friendly default install prefix when none is provided.
+# This prevents installation attempts into system directories when
+# running without root privileges.
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/.local" CACHE PATH "Install prefix" FORCE)
+endif()
+
+include(GNUInstallDirs)
 
 # Optionally allow building for WebAssembly via Emscripten
 option(BUILD_WASM "Build with emscripten toolchain" OFF)
@@ -64,7 +73,6 @@ endif()
 add_subdirectory(tests)
 
 # Installation configuration
-include(GNUInstallDirs)
 
 # Install header files
 install(FILES 
