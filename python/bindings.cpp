@@ -2,6 +2,7 @@
 #include "vcfx_core.h"
 #include <string>
 #include <vector>
+#include <sstream>
 
 // Helper to convert std::vector<std::string> to Python list
 static PyObject* to_py_list(const std::vector<std::string>& vec) {
@@ -52,11 +53,28 @@ static PyObject* py_get_version(PyObject*, PyObject*) {
     return PyUnicode_FromString(ver.c_str());
 }
 
+static PyObject* py_read_stream(PyObject*, PyObject* args) {
+    Py_buffer buf;
+    if (!PyArg_ParseTuple(args, "y*", &buf))
+        return nullptr;
+    std::string data(static_cast<const char*>(buf.buf), buf.len);
+    PyBuffer_Release(&buf);
+    std::istringstream ss(data);
+    std::string out;
+    if (!vcfx::read_maybe_compressed(ss, out)) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to read data");
+        return nullptr;
+    }
+    return PyBytes_FromStringAndSize(out.data(), out.size());
+}
+
 static PyMethodDef VcfxMethods[] = {
     {"trim", py_trim, METH_VARARGS, "Trim leading and trailing whitespace"},
     {"split", py_split, METH_VARARGS, "Split a string on the given delimiter"},
     {"read_file_maybe_compressed", py_read_file, METH_VARARGS,
      "Read a (possibly compressed) file and return its contents"},
+    {"read_maybe_compressed", py_read_stream, METH_VARARGS,
+     "Decompress bytes if needed and return the contents"},
     {"get_version", py_get_version, METH_NOARGS, "Return VCFX version string"},
     {nullptr, nullptr, 0, nullptr}
 };
