@@ -56,13 +56,13 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake libz-dev python3-pip
+          sudo apt-get install -y build-essential cmake libz-dev
 
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
           brew update
-          brew install cmake zlib python@3 bash
+          brew install cmake zlib bash
           echo "$(brew --prefix)/bin" >> $GITHUB_PATH
 
       - name: Build project
@@ -72,18 +72,23 @@ jobs:
           cmake --install build --prefix $PWD/install
         shell: bash
 
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
       - name: Build wheel
         run: |
-          python3 -m pip install --upgrade pip wheel
-          pip wheel ./python -w dist
+          python -m pip install --upgrade pip wheel
+          python -m pip wheel ./python -w dist
         shell: bash
 
       - name: Test Python wheel
         run: |
-          pip install dist/*.whl
+          python -m pip install dist/*.whl
           export PATH="$PWD/install/bin:$PATH"
           echo "$PWD/install/bin" >> $GITHUB_PATH
-          cat <<'          EOF' | sed 's/^          //' | python3 -
+          cat <<'          EOF' | sed 's/^          //' | python -
           import vcfx
           print('version:', vcfx.get_version())
           tools = vcfx.available_tools()
