@@ -88,12 +88,12 @@ jobs:
           python -m pip install dist/*.whl
           export PATH="$PWD/install/bin:$PATH"
           echo "$PWD/install/bin" >> $GITHUB_PATH
-          cat <<'          EOF' | sed 's/^          //' | python -
+          cat <<'EOF' | python -
           import vcfx
           print('version:', vcfx.get_version())
           tools = vcfx.available_tools()
           print('tools:', len(tools))
           if tools:
               vcfx.run_tool(tools[0], '--help', check=False)
-          EOF
+EOF
         shell: bash
