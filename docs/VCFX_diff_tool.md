@@ -17,6 +17,7 @@ VCFX_diff_tool --file1 <file1.vcf> --file2 <file2.vcf>
 | `-a`, `--file1 <FILE>` | Required. Path to the first VCF file |
 | `-b`, `--file2 <FILE>` | Required. Path to the second VCF file |
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

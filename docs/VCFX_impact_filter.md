@@ -16,6 +16,7 @@ VCFX_impact_filter --filter-impact <LEVEL> < input.vcf > filtered.vcf
 |--------|-------------|
 | `-i`, `--filter-impact <LEVEL>` | Required. Impact level threshold. Must be one of: HIGH, MODERATE, LOW, MODIFIER |
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

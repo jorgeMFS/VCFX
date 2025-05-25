@@ -12,6 +12,7 @@ VCFX_indel_normalizer [OPTIONS] < input.vcf > normalized.vcf
 | Option | Description |
 |--------|-------------|
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 `VCFX_indel_normalizer` processes a VCF file and normalizes indel variants by:

@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_duplicate_remover.h"
 #include <sstream>
 #include <vector>
@@ -64,26 +65,20 @@ static VariantKey generateVariantKey(const std::string& chrom,
         key.pos = 0;
     }
     key.ref = ref;
-    key.alt = "";  // Will be set to normalized ALT.
-    // Normalize ALT: sort multi-allelic entries.
-    key.alt = generateNormalizedVariantKey(chrom, pos, ref, alt).substr(chrom.size() + pos.size() + ref.size() + 3); // skip prefix "chrom:pos:ref:"
-    // Alternatively, simply:
-    key.alt = generateNormalizedVariantKey(chrom, pos, ref, alt);
-    // However, since generateNormalizedVariantKey already concatenates chrom:pos:ref:normalizedAlt,
-    // we extract the normalizedAlt portion if needed. For simplicity, we can just store the full key.
-    // For our VariantKey, we want: chrom, pos, ref, normalizedAlt.
-    // We'll do that by re-parsing:
-    std::vector<std::string> parts = splitString(generateNormalizedVariantKey(chrom, pos, ref, alt), ':');
-    if (parts.size() >= 4) {
-        key.chrom = parts[0];
-        try {
-            key.pos = std::stoi(parts[1]);
-        } catch (...) {
-            key.pos = 0;
+
+    // Normalize ALT: split multi-allelic values, sort them, then rejoin.  This
+    // avoids parsing the generated key string, which could break for ALT
+    // alleles containing ':' such as breakend notation.
+    std::vector<std::string> alts = splitString(alt, ',');
+    std::sort(alts.begin(), alts.end());
+    std::ostringstream oss;
+    for (size_t i = 0; i < alts.size(); ++i) {
+        if (i > 0) {
+            oss << ',';
         }
-        key.ref = parts[2];
-        key.alt = parts[3];
+        oss << alts[i];
     }
+    key.alt = oss.str();
     return key;
 }
 
@@ -129,6 +124,7 @@ bool removeDuplicates(std::istream& in, std::ostream& out) {
 // main: Parse command-line arguments and call removeDuplicates.
 // ----------------------------------------------------------------------
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_duplicate_remover")) return 0;
     // Simple argument parsing: if --help or -h is provided, print help.
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];

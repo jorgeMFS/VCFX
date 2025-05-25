@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_haplotype_phaser.h"
 #include <getopt.h>
 #include <sstream>
@@ -318,6 +319,7 @@ std::vector<std::vector<int>> VCFXHaplotypePhaser::groupVariants(const std::vect
 }
 
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_haplotype_phaser")) return 0;
     VCFXHaplotypePhaser hp;
     return hp.run(argc, argv);
 }

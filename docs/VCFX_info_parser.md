@@ -16,6 +16,7 @@ VCFX_info_parser --info "FIELD1,FIELD2,..." < input.vcf > extracted_info.tsv
 |--------|-------------|
 | `-i`, `--info <FIELDS>` | Required. Comma-separated list of INFO fields to extract (e.g., "DP,AF,SOMATIC") |
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 
@@ -82,7 +83,7 @@ The tool implements several strategies for handling edge cases:
 3. **Malformed lines**: Lines that don't conform to VCF format are skipped with a warning message
 4. **Empty input**: The tool correctly handles empty input files
 5. **Header lines**: VCF header lines (starting with #) are skipped
-6. **Line endings**: Both Unix (LF) and Windows (CRLF) line endings are supported
+6. **Line endings**: LF and CRLF line endings are supported
 7. **Partial final line**: Files without a final newline character are processed correctly
 
 ## Performance

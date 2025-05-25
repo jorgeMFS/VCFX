@@ -14,6 +14,7 @@ VCFX_info_aggregator [OPTIONS] < input.vcf > output.vcf
 
 - `-a`, `--aggregate-info <fields>`: Comma-separated list of INFO fields to aggregate (required).
 - `-h`, `--help`: Display help message and exit.
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 
@@ -79,7 +80,7 @@ The tool implements several strategies for handling edge cases:
 2. **Missing fields**: If a specified INFO field is not present in a particular variant, it is simply skipped for that variant.
 3. **Empty input**: The tool will process empty files correctly, reporting zeros for sums and averages.
 4. **Malformed VCF**: If a data line is encountered before the `#CHROM` header, an error is reported.
-5. **Line endings**: The tool correctly handles both Unix (LF) and Windows (CRLF) line endings.
+5. **Line endings**: The tool correctly handles LF and CRLF line endings.
 6. **Partial final line**: The tool properly processes files that do not end with a newline character.
 
 ## Performance

@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -183,6 +184,7 @@ static void calculateAlleleFrequency(std::istream& in, std::ostream& out) {
 // main()
 // ---------------------------------------------------------
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_allele_freq_calc")) return 0;
     // Parse arguments for help
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];

@@ -17,13 +17,14 @@ run_test_success() {
     local test_num=$1
     local description=$2
     local input_file=$3
+    local opts="$4"
     
     echo -n "Test $test_num: $description... "
     
     # Run the command using process substitution
     local output
     local exit_code
-    output=$($EXEC < "$input_file" 2>&1)
+    output=$($EXEC $opts < "$input_file" 2>&1)
     exit_code=$?
     
     if [ $exit_code -eq 0 ]; then
@@ -43,13 +44,14 @@ run_test_failure() {
     local description=$2
     local input_file=$3
     local expected_error=$4
+    local opts="$5"
     
     echo -n "Test $test_num: $description... "
     
     # Run the command using process substitution
     local output
     local exit_code
-    output=$($EXEC < "$input_file" 2>&1)
+    output=$($EXEC $opts < "$input_file" 2>&1)
     exit_code=$?
     
     if [ $exit_code -ne 0 ]; then
@@ -171,6 +173,23 @@ chr1	100	.	A	T	.	PASS	.
 chr2	200	rs456	G	C	80	PASS	NS=2;DP=15
 EOF
 
+# Header has one sample column but a data line includes two sample columns
+cat > data/mismatched_columns.vcf << EOF
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+EOF
+printf '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE1\n' >> data/mismatched_columns.vcf
+printf 'chr1\t100\t.\tA\tT\t60\tPASS\t.\tGT\t0/1\t0/0\n' >> data/mismatched_columns.vcf
+
+# FORMAT expects two entries but sample has three
+cat > data/format_mismatch.vcf << EOF
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
+EOF
+printf '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE1\n' >> data/format_mismatch.vcf
+printf 'chr1\t100\t.\tA\tT\t60\tPASS\t.\tGT:DP\t0/1:30:7\n' >> data/format_mismatch.vcf
+
 # Run each test separately and track failures
 failures=0
 
@@ -227,6 +246,18 @@ else
     echo "FAILED"
     failures=$((failures + 1))
 fi
+
+# Test 13 - strict mode valid file
+run_test_success 13 "Strict valid VCF" "data/valid.vcf" "--strict"
+[ $? -ne 0 ] && failures=$((failures + 1))
+
+# Test 14 - mismatched columns in strict mode
+run_test_failure 14 "Strict mismatched columns" "data/mismatched_columns.vcf" "columns" "--strict"
+[ $? -ne 0 ] && failures=$((failures + 1))
+
+# Test 15 - FORMAT/sample mismatch in strict mode
+run_test_failure 15 "Strict format mismatch" "data/format_mismatch.vcf" "FORMAT" "--strict"
+[ $? -ne 0 ] && failures=$((failures + 1))
 
 if [ $failures -eq 0 ]; then
     echo "All tests for VCFX_validator passed!"

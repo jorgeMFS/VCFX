@@ -42,3 +42,21 @@ Thumbs.db
 tools.md
 prompt.md
 names.md
+
+# Temporary outputs from genotype_query tests
+tests/tmp/genotype_query/
+tests/data/genotype_query/missing_malformed.vcf
+tests/data/genotype_query/multi_sample.vcf
+tests/data/genotype_query/single_sample.vcf
+tests/expected/genotype_query/missing_malformed_01.vcf
+tests/expected/genotype_query/multi_11_flexible.vcf
+tests/expected/genotype_query/multi_11_strict.vcf
+tests/expected/genotype_query/multi_12_flexible.vcf
+tests/expected/genotype_query/no_match.vcf
+tests/expected/genotype_query/single_sample_flex_01.vcf
+tests/expected/genotype_query/single_sample_strict_01.vcf
+
+# General temporary test output directories
+tests/tmp/
+tests/out/
+tmp/

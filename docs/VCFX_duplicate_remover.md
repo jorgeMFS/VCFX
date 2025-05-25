@@ -15,6 +15,7 @@ VCFX_duplicate_remover [OPTIONS] < input.vcf > deduplicated.vcf
 | Option | Description |
 |--------|-------------|
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

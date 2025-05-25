@@ -3,8 +3,16 @@ set -e
 
 echo "=== Testing VCFX_variant_counter ==="
 
-# Executable paths
-VCFX_EXECUTABLE="../build/src/VCFX_variant_counter/VCFX_variant_counter"
+# Determine script and repository locations so the test can be run from
+# anywhere.  This mirrors the approach used by other test scripts.
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ROOT_DIR="$( cd "$SCRIPT_DIR/.." && pwd )"
+
+# Ensure we run inside the script directory for predictable paths
+cd "$SCRIPT_DIR"
+
+# Path to the built executable
+VCFX_EXECUTABLE="$ROOT_DIR/build/src/VCFX_variant_counter/VCFX_variant_counter"
 
 # Check if executable exists
 if [ ! -f "$VCFX_EXECUTABLE" ]; then
@@ -155,6 +163,17 @@ if [ ! -f data/variant_counter_empty.vcf ]; then
 EOF
 fi
 
+# Create gzipped versions of VCFs
+if [ ! -f data/variant_counter_normal.vcf.gz ]; then
+  gzip -c data/variant_counter_normal.vcf > data/variant_counter_normal.vcf.gz
+fi
+if [ ! -f data/variant_counter_invalid.vcf.gz ]; then
+  gzip -c data/variant_counter_invalid.vcf > data/variant_counter_invalid.vcf.gz
+fi
+if [ ! -f data/variant_counter_empty.vcf.gz ]; then
+  gzip -c data/variant_counter_empty.vcf > data/variant_counter_empty.vcf.gz
+fi
+
 # Test 1: Count variants in a normal VCF file (strict mode)
 run_test 1 "Counting variants in a normal VCF file (strict mode)" \
   "cat data/variant_counter_normal.vcf | $VCFX_EXECUTABLE --strict" \
@@ -212,4 +231,10 @@ diff -u expected/variant_counter_large.txt out/variant_counter_large.txt || {
 }
 echo "  Test 8 passed."
 
-echo "All VCFX_variant_counter tests passed!" 
+# Test 9: Gzipped normal VCF
+run_test 9 "Counting variants in a gzipped VCF file" \
+  "cat data/variant_counter_normal.vcf.gz | $VCFX_EXECUTABLE" \
+  "expected/variant_counter_normal_nonstrict.txt" \
+  "out/variant_counter_normal_gz.txt"
+
+echo "All VCFX_variant_counter tests passed!"

@@ -37,7 +37,7 @@ Filter for high-quality SNPs:
 cat input.vcf | \
   VCFX_variant_classifier --append-info | \
   grep 'VCF_CLASS=SNP' | \
-  VCFX_phred_filter --min-qual 30 > high_quality_snps.vcf
+  VCFX_phred_filter --phred-filter 30 > high_quality_snps.vcf
 ```
 
 ### Example 2: Population Analysis
@@ -62,10 +62,10 @@ cat input.vcf | \
 
 ### Example 4: Quality Control
 
-Check concordance between two VCF files:
+Check concordance between two samples in a single VCF file:
 
 ```bash
-VCFX_concordance_checker --vcf1 sample1.vcf --vcf2 sample2.vcf > concordance_report.tsv
+cat sample.vcf | VCFX_concordance_checker --samples "SAMPLE1 SAMPLE2" > concordance_report.tsv
 ```
 
 ## Working with Compressed Files
@@ -120,18 +120,14 @@ cat input.vcf | \
   VCFX_validator | \
   VCFX_variant_classifier --append-info | \
   VCFX_missing_detector --max-missing 0.1 | \
-  VCFX_phred_filter --min-qual 20 > qc_passed.vcf
+  VCFX_phred_filter --phred-filter 20 > qc_passed.vcf
 ```
 
 ### Sample Comparison
 
 ```bash
-# Extract common samples
-VCFX_sample_extractor --samples SAMPLE1,SAMPLE2 < input1.vcf > samples1.vcf
-VCFX_sample_extractor --samples SAMPLE1,SAMPLE2 < input2.vcf > samples2.vcf
-
-# Check concordance
-VCFX_concordance_checker --vcf1 samples1.vcf --vcf2 samples2.vcf > concordance.tsv
+# Check concordance between two samples in a single VCF
+cat input.vcf | VCFX_concordance_checker --samples "SAMPLE1 SAMPLE2" > concordance.tsv
 ```
 
 ### Population Structure Analysis

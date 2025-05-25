@@ -6,17 +6,40 @@ set(VCFX_VERSION_MINOR 0)
 set(VCFX_VERSION_PATCH 2)
 set(VCFX_VERSION "${VCFX_VERSION_MAJOR}.${VCFX_VERSION_MINOR}.${VCFX_VERSION_PATCH}")
 
-project(VCFX 
+add_compile_definitions(VCFX_VERSION="${VCFX_VERSION}")
+
+project(VCFX
   VERSION ${VCFX_VERSION}
   DESCRIPTION "A Comprehensive VCF Manipulation Toolkit"
   LANGUAGES CXX
 )
 
+# Set a user-friendly default install prefix when none is provided.
+# This prevents installation attempts into system directories when
+# running without root privileges.
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/.local" CACHE PATH "Install prefix" FORCE)
+endif()
+
+include(GNUInstallDirs)
+
 # Optionally allow building for WebAssembly via Emscripten
 option(BUILD_WASM "Build with emscripten toolchain" OFF)
+option(PYTHON_BINDINGS "Build Python bindings" ON)
 
 if(BUILD_WASM)
-    set(CMAKE_TOOLCHAIN_FILE "/path/to/emscripten.cmake" CACHE FILEPATH "Emscripten toolchain" FORCE)
+    if(NOT CMAKE_TOOLCHAIN_FILE)
+        if(DEFINED ENV{EMSDK} AND EXISTS "$ENV{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake")
+            set(CMAKE_TOOLCHAIN_FILE "$ENV{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" CACHE FILEPATH "Emscripten toolchain" FORCE)
+        elseif(DEFINED ENV{EMSCRIPTEN} AND EXISTS "$ENV{EMSCRIPTEN}/cmake/Modules/Platform/Emscripten.cmake")
+            set(CMAKE_TOOLCHAIN_FILE "$ENV{EMSCRIPTEN}/cmake/Modules/Platform/Emscripten.cmake" CACHE FILEPATH "Emscripten toolchain" FORCE)
+        endif()
+    endif()
+
+    if(NOT EXISTS "${CMAKE_TOOLCHAIN_FILE}")
+        message(FATAL_ERROR "Emscripten toolchain file not found. Please set CMAKE_TOOLCHAIN_FILE or EMSDK.")
+    endif()
+
     message(STATUS "Building for WebAssembly (Emscripten).")
 endif()
 
@@ -42,12 +65,14 @@ enable_testing()
 # Add top-level 'src' subdirectory, which in turn references each tool subdirectory
 add_subdirectory(src)
 
-# Add a tests subdir if you have tests
-# Comment out this line since we don't have a CMakeLists.txt file in the tests directory
-# add_subdirectory(tests)
+if(PYTHON_BINDINGS)
+  add_subdirectory(python)
+endif()
+
+# Add the test suite
+add_subdirectory(tests)
 
 # Installation configuration
-include(GNUInstallDirs)
 
 # Install header files
 install(FILES 

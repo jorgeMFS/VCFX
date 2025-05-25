@@ -16,6 +16,7 @@ VCFX_ancestry_inferrer --frequency <freq_file> [OPTIONS] < input.vcf > ancestry_
 |--------|-------------|
 | `--frequency <FILE>` | Required. Path to a file containing population-specific allele frequencies |
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

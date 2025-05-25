@@ -35,13 +35,13 @@ The simplest way to use VCFX is with Docker, which requires no compilation:
 
 ```bash
 # Pull the VCFX Docker image (only needed once)
-docker pull ghcr.io/ieeta-pt/vcfx:latest
+docker pull ghcr.io/jorgemfs/vcfx:latest
 
 # Run a VCFX tool
-docker run --rm ghcr.io/ieeta-pt/vcfx:latest VCFX_tool_name [options]
+docker run --rm ghcr.io/jorgemfs/vcfx:latest VCFX_tool_name [options]
 
 # Process files by mounting a directory with your data
-docker run --rm -v /path/to/your/data:/data ghcr.io/ieeta-pt/vcfx:latest 'cat /data/input.vcf | VCFX_tool_name > /data/output.tsv'
+docker run --rm -v /path/to/your/data:/data ghcr.io/jorgemfs/vcfx:latest 'cat /data/input.vcf | VCFX_tool_name > /data/output.tsv'
 ```
 
 This method is ideal for:
@@ -71,10 +71,14 @@ This method ensures you have the latest version of VCFX.
    make
    ```
 
-3. (Optional) Install the tools to your system:
+3. (Optional) Install the tools:
    ```bash
-   sudo make install
+   make install
    ```
+
+   By default the tools are installed into `~/.local`, so no administrator
+   privileges are required. You can change the destination with
+   `cmake -DCMAKE_INSTALL_PREFIX=/your/path ..` if desired.
 
 After installation, you should be able to run VCFX tools from your terminal.
 

@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_gl_filter.h"
 #include <getopt.h>
 #include <regex>
@@ -263,6 +264,7 @@ void VCFXGLFilter::filterByGL(std::istream& in,
 }
 
 int main(int argc, char* argv[]){
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_gl_filter")) return 0;
     VCFXGLFilter app;
     return app.run(argc, argv);
 }

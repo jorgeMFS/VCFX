@@ -16,6 +16,7 @@ VCFX_sample_extractor [OPTIONS] < input.vcf > subset.vcf
 |--------|-------------|
 | `-s`, `--samples` LIST | Comma or space separated list of sample names to extract |
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

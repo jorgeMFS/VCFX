@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -275,6 +276,7 @@ static bool calculateConcordance(std::istream &in, std::ostream &out, const Conc
 // main
 // ---------------------------------------------------------
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_concordance_checker")) return 0;
     ConcordanceArguments args;
     if (!parseArguments(argc, argv, args)) {
         // parseArguments prints error/help if needed

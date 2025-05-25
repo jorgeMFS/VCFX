@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 // VCFX_distance_calculator.cpp
 #include "VCFX_distance_calculator.h"
 #include <sstream>
@@ -160,6 +161,7 @@ bool calculateDistances(std::istream& in, std::ostream& out) {
 // main: Parses command-line arguments and calls calculateDistances.
 // --------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_distance_calculator")) return 0;
     // Check for help option.
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];

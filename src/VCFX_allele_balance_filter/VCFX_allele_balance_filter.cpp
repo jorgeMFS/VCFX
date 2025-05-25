@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -197,6 +198,7 @@ double VCFXAlleleBalanceFilter::calculateAlleleBalance(const std::string& genoty
 // main() linking to class
 // ------------------------------------------------------
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_allele_balance_filter")) return 0;
     VCFXAlleleBalanceFilter alleleBalanceFilter;
     return alleleBalanceFilter.run(argc, argv);
 }
