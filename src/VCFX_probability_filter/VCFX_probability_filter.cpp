@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_probability_filter.h"
 #include <getopt.h>
 #include <sstream>
@@ -210,6 +211,7 @@ void VCFXProbabilityFilter::filterByProbability(std::istream& in, std::ostream& 
 }
 
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_probability_filter")) return 0;
     VCFXProbabilityFilter probabilityFilter;
     return probabilityFilter.run(argc, argv);
 }

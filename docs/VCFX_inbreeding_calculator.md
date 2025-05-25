@@ -18,6 +18,7 @@ VCFX_inbreeding_calculator [OPTIONS] < input.vcf > output.txt
 | `--skip-boundary` | Skip sites with boundary frequencies (p=0 or p=1) |
 | `--count-boundary-as-used` | Count boundary sites in usedCount even when skipping them |
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 

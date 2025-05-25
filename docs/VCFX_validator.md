@@ -14,7 +14,8 @@ VCFX_validator [OPTIONS] < input.vcf
 | Option | Description |
 |--------|-------------|
 | `-h`, `--help` | Display help message and exit |
-| `-s`, `--strict` | Enable stricter validation checks (reserved for future implementation) |
+| `-v`, `--version` | Show program version and exit |
+| `-s`, `--strict` | Enable stricter validation checks |
 
 ## Description
 `VCFX_validator` processes a VCF file to verify its structural validity by:
@@ -59,21 +60,34 @@ This tool is useful for validating VCF files before processing them with other t
 - INFO: Must be '.' or contain valid key-value pairs or flags:
   - If not '.', must contain at least one valid entry
   - Key-value pairs must have a non-empty key
+
   - Flags (without '=') are allowed
+
+### Strict Mode
+When `--strict` is used, additional checks are applied:
+- The number of columns in every data line must exactly match the `#CHROM` header.
+- If FORMAT/sample columns are present, each sample field must contain the same
+  number of sub-fields as specified in the FORMAT column.
+- Any warning that would normally be emitted is treated as an error and causes
+  the validator to exit with a non-zero status.
 
 ## Examples
 
 ### Basic Validation
 Check if a VCF file is valid:
 ```bash
-VCFX_validator < input.vcf
+VCFX_validator < input.vcf > validated.vcf
 ```
 
 ### Using Strict Mode
-Enable stricter validation (note: additional strict checks are reserved for future implementation):
+Enable stricter validation with additional checks:
 ```bash
-VCFX_validator --strict < input.vcf
+VCFX_validator --strict < input.vcf > validated.vcf
 ```
+
+When the input is valid, the original VCF is written unchanged to standard output,
+allowing `VCFX_validator` to be used as a filter in processing pipelines. Informational
+messages such as `VCF file is valid.` are printed to standard error.
 
 ### Redirecting Error Messages
 Save validation errors to a file:

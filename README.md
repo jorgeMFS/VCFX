@@ -75,21 +75,40 @@ cat input.vcf | \
   VCFX_allele_freq_calc > snp_frequencies.tsv
 ```
 
+### Listing Available Tools
+
+```bash
+vcfx list
+```
+
+### Show Tool Documentation
+
+```bash
+vcfx help allele_counter
+```
+
 ## Building for WebAssembly
 
 If you have [Emscripten](https://emscripten.org/) installed:
 
 ```bash
 mkdir build_wasm && cd build_wasm
-cmake -DBUILD_WASM=ON ..
+emcmake cmake -DBUILD_WASM=ON ..
 cmake --build .
 ```
 
 ## Running Tests
 
+From your build directory, run:
+
 ```bash
-cd build
-ctest --verbose
+ctest --output-on-failure
+```
+
+You can also execute all shell scripts directly with:
+
+```bash
+bash ../tests/test_all.sh
 ```
 
 ## Contributing

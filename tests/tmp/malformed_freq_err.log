@@ -1,3 +1,0 @@
-Warning: Invalid line in frequency file (#1): malformed data
-Error: No valid population frequencies loaded.
-Error: Failed to load population frequencies from tmp/malformed_freqs.txt

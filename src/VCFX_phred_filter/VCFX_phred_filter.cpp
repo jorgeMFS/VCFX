@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_phred_filter.h"
 #include <getopt.h>
 #include <iostream>
@@ -119,6 +120,7 @@ double VCFXPhredFilter::parseQUAL(const std::string &qualStr, bool keepMissingAs
 }
 
 int main(int argc, char* argv[]){
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_phred_filter")) return 0;
     VCFXPhredFilter pf;
     return pf.run(argc,argv);
 }

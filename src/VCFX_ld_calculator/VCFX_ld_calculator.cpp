@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_ld_calculator.h"
 #include <getopt.h>
 #include <sstream>
@@ -345,6 +346,7 @@ int VCFXLDCalculator::run(int argc, char* argv[]) {
 }
 
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_ld_calculator")) return 0;
     VCFXLDCalculator calc;
     return calc.run(argc, argv);
 }

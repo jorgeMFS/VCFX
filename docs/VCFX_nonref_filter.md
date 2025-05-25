@@ -15,6 +15,7 @@ VCFX_nonref_filter [OPTIONS] < input.vcf > filtered.vcf
 | Option | Description |
 |--------|-------------|
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 
@@ -70,7 +71,7 @@ VCFX_nonref_filter > high_quality_nonref.vcf
 # Create a pipeline of filters
 cat input.vcf | \
 VCFX_nonref_filter | \
-VCFX_phred_filter --min-quality 30 > filtered.vcf
+VCFX_phred_filter --phred-filter 30 > filtered.vcf
 ```
 
 ## Homozygous Reference Detection

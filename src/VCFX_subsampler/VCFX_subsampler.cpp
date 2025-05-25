@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_subsampler.h"
 #include <getopt.h>
 #include <iostream>
@@ -162,6 +163,7 @@ void VCFXSubsampler::subsampleLines(std::istream &in,
 }
 
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_subsampler")) return 0;
     VCFXSubsampler app;
     return app.run(argc, argv);
 }

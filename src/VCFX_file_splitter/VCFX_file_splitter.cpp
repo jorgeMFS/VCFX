@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_file_splitter.h"
 #include <getopt.h>
 #include <sstream>
@@ -159,6 +160,7 @@ void VCFXFileSplitter::splitVCFByChromosome(std::istream& in,
 }
 
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_file_splitter")) return 0;
     VCFXFileSplitter splitter;
     return splitter.run(argc, argv);
 }

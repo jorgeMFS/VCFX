@@ -178,9 +178,9 @@ echo "✓ Test 7 passed"
 
 
 ###############################################################################
-# Test 8: Windows CRLF line endings
+# Test 8: CRLF line endings
 ###############################################################################
-echo "Test 8: Windows CRLF line endings"
+echo "Test 8: CRLF line endings"
 cat > "${SCRIPT_DIR}/data/aggregator/crlf_unix.vcf" << EOF
 ##fileformat=VCFv4.2
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO

@@ -16,9 +16,12 @@ VCFX_outlier_detector --metric <KEY> --threshold <VAL> [--variant|--sample] < in
 |--------|-------------|
 | `--metric`, `-m` <KEY> | Name of the metric to use (e.g., AF, DP, GQ) |
 | `--threshold`, `-t` <VAL> | Numeric threshold value for outlier detection |
-| `--variant`, `-v` | Variant mode: identify variants with INFO field metrics above threshold |
+| `--variant`, `-V` | Variant mode: identify variants with INFO field metrics above threshold |
 | `--sample`, `-s` | Sample mode: identify samples with average genotype metrics above threshold |
 | `--help`, `-h` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
+
+**Note:** `-v` shows the version information. Use `--variant` or the short option `-V` to run in variant mode.
 
 ## Description
 

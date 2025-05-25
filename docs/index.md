@@ -84,7 +84,7 @@ Tools for converting or reformatting VCF data:
 
 Tools for validating and checking data quality:
 
-- [VCFX_concordance_checker](VCFX_concordance_checker.md) - Check concordance between VCF files
+- [VCFX_concordance_checker](VCFX_concordance_checker.md) - Check concordance between samples in a VCF file
 - [VCFX_missing_detector](VCFX_missing_detector.md) - Detect and report missing data
 - [VCFX_validator](VCFX_validator.md) - Validate VCF format compliance
 - [View all quality control tools...](tools_overview.md#quality-control)
@@ -97,6 +97,25 @@ Tools for handling VCF files:
 - [VCFX_file_splitter](VCFX_file_splitter.md) - Split VCF files into smaller chunks
 - [VCFX_compressor](VCFX_compressor.md) - Compress VCF files efficiently
 - [View all file management tools...](tools_overview.md#file-management)
+
+### Annotation and Reporting
+
+Tools for annotating and extracting information from VCF files:
+
+- [VCFX_custom_annotator](VCFX_custom_annotator.md) - Add custom annotations to VCF files
+- [VCFX_info_summarizer](VCFX_info_summarizer.md) - Summarize INFO fields
+- ... (include a few more key tools)
+- [View all annotation tools...](tools_overview.md#annotation-and-reporting)
+
+### Data Processing
+
+Tools for processing variants and samples:
+
+- [VCFX_missing_data_handler](VCFX_missing_data_handler.md) - Handle missing data
+- [VCFX_quality_adjuster](VCFX_quality_adjuster.md) - Adjust quality scores
+- [VCFX_haplotype_phaser](VCFX_haplotype_phaser.md) - Phase haplotypes
+- [VCFX_haplotype_extractor](VCFX_haplotype_extractor.md) - Extract haplotype information
+- [View all processing tools...](tools_overview.md#data-processing)
 
 For a complete list of all tools and detailed usage examples, see the [tools overview](tools_overview.md).
 
@@ -127,19 +146,15 @@ VCFX tools are designed to be used in pipelines. Here are some common usage patt
 # Extract phased variants, filter by quality, and calculate allele frequencies
 cat input.vcf | \
   VCFX_phase_checker | \
-  VCFX_phred_filter --min-qual 30 | \
+  VCFX_phred_filter --phred-filter 30 | \
   VCFX_allele_freq_calc > result.tsv
 ```
 
-### Sample Selection and Comparison
+### Sample Comparison
 
 ```bash
-# Extract samples and check concordance
-cat input.vcf | \
-  VCFX_sample_extractor --samples SAMPLE1,SAMPLE2 > samples.vcf
-
-cat samples.vcf reference.vcf | \
-  VCFX_concordance_checker > concordance_report.tsv
+# Check concordance between two samples in a single VCF
+cat input.vcf | VCFX_concordance_checker --samples "SAMPLE1 SAMPLE2" > concordance_report.tsv
 ```
 
 See the [tools overview page](tools_overview.md#common-usage-patterns) for more usage examples.

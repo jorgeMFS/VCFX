@@ -2,6 +2,9 @@
 
 VCFX is a collection of C/C++ tools for processing and analyzing VCF (Variant Call Format) files, with optional WebAssembly compatibility. Each tool is an independent command-line executable that can parse input from `stdin` and write to `stdout`, enabling flexible piping and integration into bioinformatics pipelines.
 
+The suite also includes a convenience wrapper `vcfx` so you can run commands as `vcfx <subcommand>`. For example, `vcfx variant_counter` is equivalent to running `VCFX_variant_counter`. Use `vcfx --list` or the alias `vcfx list` to see available subcommands. To view Markdown documentation for a tool, run `vcfx help <tool>`. All individual `VCFX_*` binaries remain available if you prefer calling them directly.
+Every tool also accepts `--version` to display the build version.
+
 ## Tool Categories
 
 ### Data Analysis
@@ -57,7 +60,7 @@ Tools for converting or reformatting VCF data:
 
 Tools for validating and checking data quality:
 
-- [VCFX_concordance_checker](VCFX_concordance_checker.md) - Check concordance between VCF files
+- [VCFX_concordance_checker](VCFX_concordance_checker.md) - Check concordance between samples in a VCF file
 - [VCFX_missing_detector](VCFX_missing_detector.md) - Detect and report missing data
 - [VCFX_outlier_detector](VCFX_outlier_detector.md) - Detect outlier samples or variants
 - [VCFX_alignment_checker](VCFX_alignment_checker.md) - Check alignment of variants
@@ -109,7 +112,7 @@ VCFX tools are designed to be combined in pipelines. Here are some common usage 
 # Extract phased variants, filter by quality, and calculate allele frequencies
 cat input.vcf | \
   VCFX_phase_checker | \
-  VCFX_phred_filter --min-qual 30 | \
+  VCFX_phred_filter --phred-filter 30 | \
   VCFX_allele_freq_calc > result.tsv
 ```
 
@@ -120,15 +123,14 @@ cat input.vcf | \
 cat input.vcf | \
   VCFX_variant_classifier --append-info | \
   grep 'VCF_CLASS=SNP' | \
-  VCFX_phred_filter --min-qual 30 > high_quality_snps.vcf
+  VCFX_phred_filter --phred-filter 30 > high_quality_snps.vcf
 ```
 
-### Sample Extraction and Comparison
+### Sample Comparison
 
 ```bash
-# Extract samples and check concordance
-cat input.vcf | VCFX_sample_extractor --samples SAMPLE1,SAMPLE2 > samples.vcf
-cat samples.vcf reference.vcf | VCFX_concordance_checker > concordance_report.tsv
+# Check concordance between two samples in a single VCF
+cat input.vcf | VCFX_concordance_checker --samples "SAMPLE1 SAMPLE2" > concordance.tsv
 ```
 
 ### Linkage Disequilibrium Analysis
@@ -136,7 +138,7 @@ cat samples.vcf reference.vcf | VCFX_concordance_checker > concordance_report.ts
 ```bash
 # Calculate LD in a specific region after filtering for common variants
 cat input.vcf | \
-  VCFX_af_subsetter --min-af 0.05 | \
+  VCFX_af_subsetter --af-filter '0.05-1.0' | \
   VCFX_ld_calculator --region chr1:10000-20000 > ld_matrix.txt
 ```
 
@@ -165,5 +167,5 @@ cat input.vcf | \
   VCFX_validator | \
   VCFX_variant_classifier --append-info | \
   VCFX_missing_detector --max-missing 0.1 | \
-  VCFX_phred_filter --min-qual 20 > qc_passed.vcf
+  VCFX_phred_filter --phred-filter 20 > qc_passed.vcf
 ``` 

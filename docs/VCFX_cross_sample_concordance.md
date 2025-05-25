@@ -12,6 +12,7 @@ VCFX_cross_sample_concordance [OPTIONS] < input.vcf > concordance_results.tsv
 | Option | Description |
 |--------|-------------|
 | `-h`, `--help` | Display help message and exit |
+| `-v`, `--version` | Show program version and exit |
 
 ## Description
 `VCFX_cross_sample_concordance` examines each variant in a multi-sample VCF file and determines if all samples with valid genotypes have the same normalized genotype. The tool:

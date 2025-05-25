@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_info_summarizer.h"
 #include <sstream>
 #include <algorithm>
@@ -225,6 +226,7 @@ bool summarizeInfoFields(std::istream& in, std::ostream& out, const std::vector<
 }
 
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_info_summarizer")) return 0;
     std::vector<std::string> info_fields;
 
     // parse arguments

@@ -1,3 +1,4 @@
+#include "vcfx_core.h"
 #include "VCFX_header_parser.h"
 #include <iostream>
 #include <sstream>
@@ -26,6 +27,7 @@ void processHeader(std::istream& in, std::ostream& out) {
 }
 
 int main(int argc, char* argv[]) {
+    if (vcfx::handle_version_flag(argc, argv, "VCFX_header_parser")) return 0;
     // Simple argument parsing
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];

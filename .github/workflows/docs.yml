@@ -29,23 +29,23 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install mkdocs-material pymdown-extensions
-      
+
       - name: Deploy to GitHub Pages
         run: |
           git config --global user.name "${GITHUB_ACTOR}"
           git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
           mkdocs gh-deploy --force
-  
+
   # Only for pull requests - just build to validate
   build:
     runs-on: ubuntu-latest
@@ -53,16 +53,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install mkdocs-material pymdown-extensions
-      
+
       - name: Build documentation
-        run: mkdocs build 
+        run: mkdocs build

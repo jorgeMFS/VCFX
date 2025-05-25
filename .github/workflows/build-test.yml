@@ -1,0 +1,99 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake libz-dev
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install cmake zlib bash
+          echo "$(brew --prefix)/bin" >> $GITHUB_PATH
+
+      - name: Configure
+        run: cmake -S . -B build
+        shell: bash
+      - name: Build
+        run: cmake --build build --parallel
+        shell: bash
+
+      - name: Run tests
+        run: |
+          cd build
+          ctest --output-on-failure
+        shell: bash
+
+  python-wheels:
+    needs: build-and-test
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake libz-dev
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install cmake zlib bash
+          echo "$(brew --prefix)/bin" >> $GITHUB_PATH
+
+      - name: Build project
+        run: |
+          cmake -S . -B build -DPYTHON_BINDINGS=ON
+          cmake --build build --parallel
+          cmake --install build --prefix $PWD/install
+        shell: bash
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Build wheel
+        run: |
+          python -m pip install --upgrade pip wheel
+          python -m pip wheel ./python -w dist
+        shell: bash
+
+      - name: Test Python wheel
+        run: |
+          python -m pip install dist/*.whl
+          export PATH="$PWD/install/bin:$PATH"
+          echo "$PWD/install/bin" >> $GITHUB_PATH
+          cat <<'EOF' | python -
+          import vcfx
+          print('version:', vcfx.get_version())
+          tools = vcfx.available_tools()
+          print('tools:', len(tools))
+          if tools:
+              vcfx.run_tool(tools[0], '--help', check=False)
+          EOF
+        shell: bash
