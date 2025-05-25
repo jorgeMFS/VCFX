@@ -95,5 +95,5 @@ jobs:
           print('tools:', len(tools))
           if tools:
               vcfx.run_tool(tools[0], '--help', check=False)
-EOF
+          EOF
         shell: bash
