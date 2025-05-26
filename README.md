@@ -65,6 +65,16 @@ cmake ..
 make
 ```
 
+#### Installing Python Bindings from a Local Checkout
+
+```bash
+python3 -m venv venv && source venv/bin/activate
+pip install --no-build-isolation ./python
+```
+
+When offline, ensure the `setuptools` and `cmake` packages are already installed
+because build isolation is disabled.
+
 ### Basic Usage Example
 
 ```bash
