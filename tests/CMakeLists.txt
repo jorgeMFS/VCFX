@@ -59,6 +59,7 @@ set(TEST_SCRIPTS
     test_validator.sh
     test_variant_classifier.sh
     test_variant_counter.sh
+    test_doc_lookup.sh
     test_python_bindings.sh
 )
 
