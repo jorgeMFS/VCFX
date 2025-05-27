@@ -149,8 +149,10 @@ static bool compressDecompressVCF(std::istream& in, std::ostream& out, bool comp
 // ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
+static void show_help() { printHelp(); }
+
 int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_compressor")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_compressor", show_help)) return 0;
     bool compress = false;
     bool decompress = false;
 

@@ -146,8 +146,10 @@ bool VCFXPositionSubsetter::subsetVCFByPosition(std::istream &in,
     return true;
 }
 
+static void show_help() { VCFXPositionSubsetter obj; char arg0[] = "VCFX_position_subsetter"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+
 int main(int argc, char* argv[]){
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_position_subsetter")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_position_subsetter", show_help)) return 0;
     VCFXPositionSubsetter subsetter;
     return subsetter.run(argc, argv);
 }
