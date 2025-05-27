@@ -603,6 +603,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#entrypoint-script-and-passing-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Entrypoint Script and Passing Commands
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#running-vcfx-tools" class="md-nav__link">
     <span class="md-ellipsis">
       Running VCFX Tools
@@ -2703,6 +2712,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#entrypoint-script-and-passing-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Entrypoint Script and Passing Commands
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#running-vcfx-tools" class="md-nav__link">
     <span class="md-ellipsis">
       Running VCFX Tools
@@ -2883,6 +2901,14 @@ docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </
 <span class="c1"># Using Docker Compose</span>
 docker-compose<span class="w"> </span>build
 </code></pre></div>
+<h2 id="entrypoint-script-and-passing-commands">Entrypoint Script and Passing Commands<a class="headerlink" href="#entrypoint-script-and-passing-commands" title="Permanent link">&para;</a></h2>
+<p>The image uses <code>/usr/local/bin/docker_entrypoint.sh</code> as its entrypoint. This script
+adds all VCFX tools to the <code>PATH</code> and then executes whatever command you pass to
+<code>docker run</code>.</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>ghcr.io/jorgemfs/vcfx:latest<span class="w"> </span>VCFX_variant_counter<span class="w"> </span>&lt;<span class="w"> </span>input.vcf
+</code></pre></div>
+<p>You can substitute <code>VCFX_variant_counter</code> with any other tool or quote a more
+complex shell command.</p>
 <h2 id="running-vcfx-tools">Running VCFX Tools<a class="headerlink" href="#running-vcfx-tools" title="Permanent link">&para;</a></h2>
 <p>There are several ways to run VCFX tools with Docker:</p>
 <h3 id="using-docker-directly">Using Docker Directly<a class="headerlink" href="#using-docker-directly" title="Permanent link">&para;</a></h3>
