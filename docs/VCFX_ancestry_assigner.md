@@ -15,8 +15,8 @@ VCFX_ancestry_assigner --assign-ancestry <freq_file> < input.vcf > ancestry_resu
 | Option | Description |
 |--------|-------------|
 | `-a`, `--assign-ancestry <FILE>` | Required. Path to a file containing population-specific allele frequencies |
-| `-h`, `--help` | Display help message and exit |
-| `-v`, `--version` | Show program version and exit |
+| `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
+| `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
 ## Description
 

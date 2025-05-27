@@ -14,8 +14,8 @@ VCFX_phase_quality_filter --filter-pq "PQ<OP><THRESHOLD>" < input.vcf > output.v
 
 | Option | Description |
 |--------|-------------|
-| `-h, --help` | Display help message and exit |
-| `-v`, `--version` | Show program version and exit |
+| `-h, --help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
+| `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 | `-f, --filter-pq` | Condition like 'PQ>30', 'PQ>=20', 'PQ!=10', etc. |
 
 ## Description

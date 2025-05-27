@@ -14,8 +14,8 @@ VCFX_variant_classifier [OPTIONS] < input.vcf > output.vcf_or_tsv
 
 | Option | Description |
 |--------|-------------|
-| `-h`, `--help` | Display help message and exit |
-| `-v`, `--version` | Show program version and exit |
+| `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
+| `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 | `-a`, `--append-info` | Instead of producing a TSV, output a valid VCF with a new 'VCF_CLASS' subfield in the INFO column |
 
 ## Description

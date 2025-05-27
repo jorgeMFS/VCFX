@@ -15,8 +15,8 @@ VCFX_ld_calculator [OPTIONS] < input.vcf > ld_matrix.txt
 | Option | Description |
 |--------|-------------|
 | `--region <chr:start-end>` | Only compute LD for variants in the specified region |
-| `-h`, `--help` | Display help message and exit |
-| `-v`, `--version` | Show program version and exit |
+| `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
+| `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
 ## Description
 

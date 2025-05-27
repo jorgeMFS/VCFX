@@ -11,8 +11,8 @@ VCFX_sorter [OPTIONS] < input.vcf > output.vcf
 ## Options
 | Option | Description |
 |--------|-------------|
-| `-h`, `--help` | Display help message and exit |
-| `-v`, `--version` | Show program version and exit |
+| `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
+| `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 | `-n`, `--natural-chr` | Use natural chromosome sorting (chr1 < chr2 < chr10) instead of lexicographic sorting |
 
 ## Description

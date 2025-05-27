@@ -12,8 +12,8 @@ VCFX_position_subsetter --region "CHR:START-END" < input.vcf > filtered.vcf
 | Option | Description |
 |--------|-------------|
 | `-r`, `--region <CHR:START-END>` | Required. Genomic region to extract in the format "chromosome:start-end" |
-| `-h`, `--help` | Display help message and exit |
-| `-v`, `--version` | Show program version and exit |
+| `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
+| `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
 ## Description
 `VCFX_position_subsetter` reads a VCF file from standard input and outputs only those variants that fall within the specified genomic region. The tool:
