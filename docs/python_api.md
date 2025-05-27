@@ -133,3 +133,30 @@ print(summary[0]["Mean"])  # '20.0000'
 fasta = vcfx.fasta_converter("tests/data/fasta_converter/basic.vcf")
 print(fasta.splitlines()[0])  # '>SAMPLE1'
 ```
+
+### Additional Wrappers
+
+```python
+# Calculate allele balance for all samples
+balance = vcfx.allele_balance_calc("tests/data/allele_balance_calc_A.vcf")
+print(balance[0]["Allele_Balance"])  # '1.000000'
+
+# Check concordance between two samples
+conc = vcfx.concordance_checker(
+    "tests/data/concordance_input.vcf",
+    "SAMPLE1",
+    "SAMPLE2",
+)
+print(conc[0]["Concordance"])  # 'Concordant'
+
+# Query variants with heterozygous genotypes
+filtered = vcfx.genotype_query(
+    "tests/data/genotype_query/sample.vcf",
+    "0/1",
+)
+print(filtered.startswith("##"))  # True
+
+# Remove duplicate records
+dedup = vcfx.duplicate_remover("tests/data/allele_balance_calc_A.vcf")
+print(dedup.splitlines()[0].startswith("#"))  # True
+```
