@@ -304,8 +304,10 @@ void VCFXOutlierDetector::detectOutliers(std::istream &in,
     }
 }
 
+static void show_help() { VCFXOutlierDetector obj; char arg0[] = "VCFX_outlier_detector"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+
 int main(int argc, char* argv[]){
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_outlier_detector")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_outlier_detector", show_help)) return 0;
     VCFXOutlierDetector app;
     return app.run(argc, argv);
 }

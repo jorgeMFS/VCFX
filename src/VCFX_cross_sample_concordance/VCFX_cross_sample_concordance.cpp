@@ -258,8 +258,10 @@ static void calculateConcordance(std::istream &in, std::ostream &out,
 // --------------------------------------------------------------------------
 // Command-line parsing + main
 // --------------------------------------------------------------------------
+static void show_help() { displayHelp(); }
+
 int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_cross_sample_concordance")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_cross_sample_concordance", show_help)) return 0;
     bool showHelp = false;
     std::string samplesArg;
 

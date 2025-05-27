@@ -324,8 +324,10 @@ void VCFXAlignmentChecker::checkDiscrepancies(std::istream& vcfIn, std::ostream&
 }
 
 // Typical main(), linking to run()
+static void show_help() { VCFXAlignmentChecker obj; char arg0[] = "VCFX_alignment_checker"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+
 int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_alignment_checker")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_alignment_checker", show_help)) return 0;
     VCFXAlignmentChecker alignmentChecker;
     return alignmentChecker.run(argc, argv);
 }

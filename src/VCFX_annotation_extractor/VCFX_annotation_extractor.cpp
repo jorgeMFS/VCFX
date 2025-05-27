@@ -273,8 +273,10 @@ static void processVCF(std::istream &in, const AnnotationOptions &opts) {
 // --------------------------------------------------------------
 // main()
 // --------------------------------------------------------------
+static void show_help() { printHelp(); }
+
 int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_annotation_extractor")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_annotation_extractor", show_help)) return 0;
     AnnotationOptions opts;
     if (!parseArguments(argc, argv, opts)) {
         // parseArguments already printed help if needed

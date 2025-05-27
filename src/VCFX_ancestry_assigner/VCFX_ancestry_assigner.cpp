@@ -408,8 +408,10 @@ void VCFXAncestryAssigner::assignAncestry(std::istream& vcfIn, std::ostream& out
 // ---------------------------------------------------------
 // main() - just instantiate and run
 // ---------------------------------------------------------
+static void show_help() { VCFXAncestryAssigner obj; char arg0[] = "VCFX_ancestry_assigner"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+
 int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_ancestry_assigner")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_ancestry_assigner", show_help)) return 0;
     VCFXAncestryAssigner assigner;
     return assigner.run(argc, argv);
 }

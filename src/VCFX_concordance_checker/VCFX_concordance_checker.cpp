@@ -275,8 +275,10 @@ static bool calculateConcordance(std::istream &in, std::ostream &out, const Conc
 // ---------------------------------------------------------
 // main
 // ---------------------------------------------------------
+static void show_help() { printHelp(); }
+
 int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_concordance_checker")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_concordance_checker", show_help)) return 0;
     ConcordanceArguments args;
     if (!parseArguments(argc, argv, args)) {
         // parseArguments prints error/help if needed

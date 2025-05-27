@@ -58,8 +58,10 @@ private:
 // ----------------------------------------------------
 // main() - create the inferrer and run
 // ----------------------------------------------------
+static void show_help() { VCFXAncestryInferrer obj; char arg0[] = "VCFX_ancestry_inferrer"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+
 int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_ancestry_inferrer")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_ancestry_inferrer", show_help)) return 0;
     VCFXAncestryInferrer inferrer;
     return inferrer.run(argc, argv);
 }
