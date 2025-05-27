@@ -2471,6 +2471,21 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Convenience Wrappers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#additional-wrappers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional Wrappers
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -2616,6 +2631,21 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Convenience Wrappers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#additional-wrappers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional Wrappers
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -2743,6 +2773,30 @@ objects instead of raw text strings.</p>
 <span class="c1"># Convert VCF to FASTA alignment</span>
 <span class="n">fasta</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">fasta_converter</span><span class="p">(</span><span class="s2">&quot;tests/data/fasta_converter/basic.vcf&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">fasta</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># &#39;&gt;SAMPLE1&#39;</span>
+</code></pre></div>
+<h3 id="additional-wrappers">Additional Wrappers<a class="headerlink" href="#additional-wrappers" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Calculate allele balance for all samples</span>
+<span class="n">balance</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">allele_balance_calc</span><span class="p">(</span><span class="s2">&quot;tests/data/allele_balance_calc_A.vcf&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">balance</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;Allele_Balance&quot;</span><span class="p">])</span>  <span class="c1"># &#39;1.000000&#39;</span>
+
+<span class="c1"># Check concordance between two samples</span>
+<span class="n">conc</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">concordance_checker</span><span class="p">(</span>
+    <span class="s2">&quot;tests/data/concordance_input.vcf&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;SAMPLE1&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;SAMPLE2&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">conc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;Concordance&quot;</span><span class="p">])</span>  <span class="c1"># &#39;Concordant&#39;</span>
+
+<span class="c1"># Query variants with heterozygous genotypes</span>
+<span class="n">filtered</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">genotype_query</span><span class="p">(</span>
+    <span class="s2">&quot;tests/data/genotype_query/sample.vcf&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;0/1&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">filtered</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;##&quot;</span><span class="p">))</span>  <span class="c1"># True</span>
+
+<span class="c1"># Remove duplicate records</span>
+<span class="n">dedup</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">duplicate_remover</span><span class="p">(</span><span class="s2">&quot;tests/data/allele_balance_calc_A.vcf&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">dedup</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">))</span>  <span class="c1"># True</span>
 </code></pre></div>
 
 
