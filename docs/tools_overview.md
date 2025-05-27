@@ -3,7 +3,7 @@
 VCFX is a collection of C/C++ tools for processing and analyzing VCF (Variant Call Format) files, with optional WebAssembly compatibility. Each tool is an independent command-line executable that can parse input from `stdin` and write to `stdout`, enabling flexible piping and integration into bioinformatics pipelines.
 
 The suite also includes a convenience wrapper `vcfx` so you can run commands as `vcfx <subcommand>`. For example, `vcfx variant_counter` is equivalent to running `VCFX_variant_counter`. Use `vcfx --list` or the alias `vcfx list` to see available subcommands. To view Markdown documentation for a tool, run `vcfx help <tool>`. All individual `VCFX_*` binaries remain available if you prefer calling them directly.
-Every tool also accepts `--version` to display the build version.
+Every tool now supports the common flags `--help` and `--version` for quick usage or version information.
 
 ## Tool Categories
 
