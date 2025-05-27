@@ -16,21 +16,24 @@ VCFX_validator [OPTIONS] < input.vcf
 | `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
 | `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 | `-s`, `--strict` | Enable stricter validation checks |
+| `-d`, `--report-dups` | Report duplicate records to stderr |
 
 ## Description
 `VCFX_validator` processes a VCF file to verify its structural validity by:
 
-1. Reading the VCF file from standard input
+1. Reading the VCF file from standard input (plain or gzip/BGZF compressed)
 2. Checking that all meta-information lines (starting with '##') are properly formatted
 3. Validating that the #CHROM header line is present and has at least 8 required columns
 4. For each data line:
    - Ensuring it has at least 8 columns
    - Verifying that CHROM is not empty
    - Confirming POS is a positive integer
-   - Checking that REF and ALT are not empty
+   - Checking that REF and ALT contain only valid bases
    - Validating that QUAL is either '.' or a non-negative float
    - Ensuring FILTER is not empty
-   - Performing basic validation on the INFO field
+   - Checking INFO and FORMAT fields against header definitions
+   - Validating genotype syntax
+   - Detecting duplicate records when `--report-dups` is used
 5. Reporting errors for any validation failures
 6. Returning exit code 0 if the file is valid, or 1 if it contains errors
 
@@ -53,15 +56,11 @@ This tool is useful for validating VCF files before processing them with other t
 - CHROM: Must not be empty
 - POS: Must be a positive integer
 - ID: Can be empty or '.' (not validated)
-- REF: Must not be empty
-- ALT: Must not be empty
+- REF: Must contain only A,C,G,T,N
+- ALT: Must contain only A,C,G,T,N
 - QUAL: Must be '.' or a non-negative float
 - FILTER: Must not be empty
-- INFO: Must be '.' or contain valid key-value pairs or flags:
-  - If not '.', must contain at least one valid entry
-  - Key-value pairs must have a non-empty key
-
-  - Flags (without '=') are allowed
+- INFO: Keys must be defined in the header. Numeric counts are validated when numeric. Flags are allowed.
 
 ### Strict Mode
 When `--strict` is used, additional checks are applied:
@@ -136,8 +135,3 @@ Error: no #CHROM line found in file.
 ## Limitations
 - Does not validate VCF version compatibility
 - No validation of the content of meta-information lines beyond the '##' prefix
-- Limited validation of INFO and FORMAT fields (no checking against header definitions)
-- No validation of sample genotype data
-- No checking of REF/ALT sequence validity (e.g., allowed bases)
-- No detection of duplicate variant records
-- Cannot handle compressed (gzipped) VCF files directly 
