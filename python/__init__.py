@@ -36,6 +36,17 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for pure Python envs
     def get_version() -> str:
         """Return the toolkit version when bindings are unavailable."""
         return "0.0.0"
+else:
+    __all__ = [
+        "trim",
+        "split",
+        "read_file_maybe_compressed",
+        "read_maybe_compressed",
+        "get_version",
+    ]
+
+__version__ = get_version()
+__all__.append("__version__")
 from . import tools as _tools
 from typing import Callable
 import subprocess
