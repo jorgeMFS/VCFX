@@ -39,6 +39,13 @@ inline bool handle_version_flag(int argc, char* argv[], const std::string& tool,
     return false;
 }
 
+// Handle common flags shared by all tools. Returns true if "--version" or
+// "--help"/"-h" was processed and the program should exit.
+bool handle_common_flags(int argc, char* argv[],
+                         const std::string& tool,
+                         void (*print_help)(),
+                         std::ostream& os = std::cout);
+
 // Read entire input stream, automatically decompressing if gzip/BGZF
 // compressed. Returns true on success and stores the resulting text in
 // 'out'.

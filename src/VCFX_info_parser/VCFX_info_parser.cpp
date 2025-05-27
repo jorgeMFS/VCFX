@@ -139,8 +139,10 @@ bool parseInfoFields(std::istream& in, std::ostream& out, const std::vector<std:
     return true;
 }
 
+static void show_help() { printHelp(); }
+
 int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_info_parser")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_info_parser", show_help)) return 0;
     std::vector<std::string> info_fields;
 
     // parse arguments
