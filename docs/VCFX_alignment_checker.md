@@ -12,8 +12,8 @@ VCFX_alignment_checker --alignment-discrepancy <vcf_file> <reference.fasta> > di
 | Option | Description |
 |--------|-------------|
 | `-a`, `--alignment-discrepancy` | Enable alignment discrepancy checking mode |
-| `-h`, `--help` | Display help message and exit |
-| `-v`, `--version` | Show program version and exit |
+| `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
+| `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
 ## Description
 `VCFX_alignment_checker` compares VCF variants against a reference genome to validate sequence consistency. The tool:

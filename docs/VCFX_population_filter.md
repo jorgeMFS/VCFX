@@ -11,8 +11,8 @@ VCFX_population_filter [OPTIONS] < input.vcf > output.vcf
 ## Options
 | Option | Description |
 |--------|-------------|
-| `-h`, `--help` | Display help message and exit |
-| `-v`, `--version` | Show program version and exit |
+| `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
+| `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 | `-p`, `--population <TAG>` | **Required**: Population tag to keep (e.g., 'EUR', 'AFR', 'EAS') |
 | `-m`, `--pop-map <FILE>` | **Required**: Tab-delimited file mapping sample names to populations |
 

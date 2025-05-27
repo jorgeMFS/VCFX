@@ -12,8 +12,8 @@ VCFX_allele_balance_calc [OPTIONS] < input.vcf > allele_balance.tsv
 | Option | Description |
 |--------|-------------|
 | `-s`, `--samples "Sample1 Sample2..."` | Optional. Specify sample names to calculate allele balance for (space-separated). If omitted, all samples are processed. |
-| `-h`, `--help` | Display help message and exit |
-| `-v`, `--version` | Show program version and exit |
+| `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
+| `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
 ## Description
 `VCFX_allele_balance_calc` processes a VCF file and calculates the allele balance for each variant in each specified sample. The tool:

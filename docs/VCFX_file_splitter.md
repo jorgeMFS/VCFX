@@ -15,8 +15,8 @@ VCFX_file_splitter [OPTIONS] < input.vcf
 | Option | Description |
 |--------|-------------|
 | `-p`, `--prefix <PREFIX>` | Output file prefix (default: "split") |
-| `-h`, `--help` | Display help message and exit |
-| `-v`, `--version` | Show program version and exit |
+| `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
+| `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
 ## Description
 

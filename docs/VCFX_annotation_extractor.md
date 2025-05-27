@@ -15,8 +15,8 @@ VCFX_annotation_extractor --annotation-extract "FIELD1,FIELD2,..." < input.vcf >
 | Option | Description |
 |--------|-------------|
 | `-a`, `--annotation-extract <FIELDS>` | Required. Comma-separated list of INFO field annotations to extract (e.g., "ANN,Gene,Impact") |
-| `-h`, `--help` | Display help message and exit |
-| `-v`, `--version` | Show program version and exit |
+| `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
+| `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
 ## Description
 

@@ -15,8 +15,8 @@ VCFX_haplotype_phaser [OPTIONS] < input.vcf > blocks.txt
 | Option | Description |
 |--------|-------------|
 | `-l`, `--ld-threshold <VALUE>` | r² threshold for LD-based grouping (0.0-1.0, default: 0.8) |
-| `-h`, `--help` | Display help message and exit |
-| `-v`, `--version` | Show program version and exit |
+| `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
+| `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
 ## Description
 

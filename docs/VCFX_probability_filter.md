@@ -12,8 +12,8 @@ VCFX_probability_filter --filter-probability "<CONDITION>" < input.vcf > filtere
 | Option | Description |
 |--------|-------------|
 | `-f, --filter-probability <condition>` | Specify the probability filter condition (e.g., `GP>0.9`) |
-| `-h, --help` | Display help message and exit |
-| `-v`, `--version` | Show program version and exit |
+| `-h, --help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
+| `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
 ## Description
 `VCFX_probability_filter` analyzes the genotype probability fields in the FORMAT column of a VCF file and filters variants based on a user-defined condition. The tool:

@@ -16,8 +16,8 @@ VCFX_compressor [OPTIONS] < input_file > output_file
 |--------|-------------|
 | `-c`, `--compress` | Compress the input VCF file (read from stdin, write to stdout) |
 | `-d`, `--decompress` | Decompress the input VCF.gz file (read from stdin, write to stdout) |
-| `-h`, `--help` | Display help message and exit |
-| `-v`, `--version` | Show program version and exit |
+| `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
+| `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
 ## Description
 

@@ -16,8 +16,8 @@ VCFX_quality_adjuster [OPTIONS] < input.vcf > output.vcf
 |--------|-------------|
 | `-a`, `--adjust-qual <FUNC>` | Required. The transformation function to apply. Must be one of: `log`, `sqrt`, `square`, or `identity`. |
 | `-n`, `--no-clamp` | Do not clamp negative or extremely large values resulting from transformations. |
-| `-h`, `--help` | Display help message and exit. |
-| `-v`, `--version` | Show program version and exit |
+| `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
+| `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
 ## Description
 
