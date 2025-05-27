@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <sstream>
 #include <algorithm>
 #include <cctype>
@@ -17,7 +18,8 @@ static void displayHelp() {
         << "Usage:\n"
         << "  VCFX_cross_sample_concordance [options] < input.vcf > concordance_results.txt\n\n"
         << "Options:\n"
-        << "  -h, --help    Display this help message and exit\n\n"
+        << "  -h, --help              Display this help message and exit\n"
+        << "  -s, --samples LIST      Comma-separated list of samples to check\n\n"
         << "Description:\n"
         << "  Reads a multi-sample VCF from stdin, normalizes each sample's genotype\n"
         << "  (including multi-allelic variants), and determines if all samples that\n"
@@ -111,10 +113,12 @@ static std::string normalizeGenotype(const std::string &sampleField,
 // --------------------------------------------------------------------------
 // The main function to process the VCF and produce cross-sample concordance
 // --------------------------------------------------------------------------
-static void calculateConcordance(std::istream &in, std::ostream &out) {
+static void calculateConcordance(std::istream &in, std::ostream &out,
+                                 const std::vector<std::string> &subset) {
     std::string line;
     std::vector<std::string> sampleNames;
     bool gotChromHeader = false;
+    std::vector<int> sampleIndices;
 
     // We'll print a header for our TSV
     // CHROM POS ID REF ALT Num_Samples Unique_Normalized_Genotypes Concordance_Status
@@ -135,6 +139,22 @@ static void calculateConcordance(std::istream &in, std::ostream &out) {
             // from index=9 onwards => sample names
             for (size_t i = 9; i < headers.size(); ++i) {
                 sampleNames.push_back(headers[i]);
+            }
+            // Determine which sample indices to process
+            if (subset.empty()) {
+                for (size_t i = 0; i < sampleNames.size(); ++i) {
+                    sampleIndices.push_back(static_cast<int>(i));
+                }
+            } else {
+                std::unordered_set<std::string> want(subset.begin(), subset.end());
+                for (size_t i = 0; i < sampleNames.size(); ++i) {
+                    if (want.count(sampleNames[i])) {
+                        sampleIndices.push_back(static_cast<int>(i));
+                    }
+                }
+                if (sampleIndices.empty()) {
+                    std::cerr << "Warning: none of the requested samples were found in the VCF header.\n";
+                }
             }
             gotChromHeader = true;
             break; // proceed to reading data lines
@@ -177,11 +197,11 @@ static void calculateConcordance(std::istream &in, std::ostream &out) {
 
         // For each sample, normalize genotype
         std::vector<std::string> normalizedGts;
-        normalizedGts.reserve(sampleNames.size());
+        normalizedGts.reserve(sampleIndices.size());
         size_t sampleCountHere = 0;
 
-        for (size_t s = 0; s < sampleNames.size(); ++s) {
-            auto &sampleField = fields[9 + s];
+        for (int idx : sampleIndices) {
+            auto &sampleField = fields[9 + idx];
             std::string norm = normalizeGenotype(sampleField, altAlleles);
             if (!norm.empty()) {
                 // we have a parseable genotype
@@ -241,18 +261,21 @@ static void calculateConcordance(std::istream &in, std::ostream &out) {
 int main(int argc, char* argv[]) {
     if (vcfx::handle_version_flag(argc, argv, "VCFX_cross_sample_concordance")) return 0;
     bool showHelp = false;
+    std::string samplesArg;
 
     static struct option longOpts[] = {
         {"help", no_argument, 0, 'h'},
+        {"samples", required_argument, 0, 's'},
         {0,0,0,0}
     };
 
     while (true) {
         int optIndex=0;
-        int c = getopt_long(argc, argv, "h", longOpts, &optIndex);
+        int c = getopt_long(argc, argv, "hs:", longOpts, &optIndex);
         if (c == -1) break;
         switch (c) {
             case 'h': showHelp = true; break;
+            case 's': samplesArg = optarg; break;
             default:  showHelp = true; break;
         }
     }
@@ -262,6 +285,11 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    calculateConcordance(std::cin, std::cout);
+    std::vector<std::string> subsetSamples;
+    if (!samplesArg.empty()) {
+        subsetSamples = split(samplesArg, ',');
+    }
+
+    calculateConcordance(std::cin, std::cout, subsetSamples);
     return 0;
 }
