@@ -2669,8 +2669,14 @@ installed because <code>--no-build-isolation</code> uses your current environmen
 </code></pre></div>
 <h2 id="tool-wrappers">Tool Wrappers<a class="headerlink" href="#tool-wrappers" title="Permanent link">&para;</a></h2>
 <p>Besides the helper functions, the package provides lightweight wrappers for
-all command line tools shipped with VCFX.  The wrappers simply invoke the
+all command line tools shipped with VCFX. The wrappers simply invoke the
 corresponding <code>VCFX_*</code> executable via <code>subprocess</code>.</p>
+<p>For the wrappers to work, either the <code>vcfx</code> wrapper script or the individual
+<code>VCFX_*</code> binaries must be available on your <code>PATH</code>. After building the
+project you can source <code>add_vcfx_tools_to_path.sh</code> to add the build
+directories to <code>PATH</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/path/to/VCFX/add_vcfx_tools_to_path.sh
+</code></pre></div>
 <p>Use <code>vcfx.available_tools()</code> to see which tools are accessible on your
 <code>PATH</code> and call them either via <code>vcfx.run_tool(name, *args)</code> or by using
 the tool name as a function:</p>
