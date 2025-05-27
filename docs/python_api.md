@@ -160,3 +160,40 @@ print(filtered.startswith("##"))  # True
 dedup = vcfx.duplicate_remover("tests/data/allele_balance_calc_A.vcf")
 print(dedup.splitlines()[0].startswith("#"))  # True
 ```
+
+### More Wrappers
+
+```python
+# Subset variants by allele frequency range
+subset = vcfx.af_subsetter("tests/data/af_subsetter_A.vcf", "0.01-0.1")
+print(subset.startswith("##"))
+
+# Detect missing genotypes
+flagged = vcfx.missing_detector("tests/data/concordance_missing_data.vcf")
+print("MISSING_GENOTYPES=1" in flagged)
+
+# Hardy-Weinberg equilibrium test
+hwe = vcfx.hwe_tester("tests/data/hwe_tester/basic_hwe.vcf")
+print(hwe[0]["HWE_pvalue"])
+
+# Inbreeding coefficient calculation
+coeff = vcfx.inbreeding_calculator(
+    "tests/data/inbreeding_calculator/single_sample_excludeSample_false.vcf",
+    freq_mode="excludeSample",
+)
+print(coeff[0]["InbreedingCoefficient"])
+
+# Variant classification
+classes = vcfx.variant_classifier("tests/data/classifier_mixed.vcf")
+print(classes[0]["Classification"])  # 'SNP'
+
+# Cross-sample concordance
+xconc = vcfx.cross_sample_concordance("tests/data/concordance_some_mismatch.vcf")
+print(xconc[0]["Concordance_Status"])  # 'CONCORDANT'
+
+# Extract specific fields
+fields = vcfx.field_extractor(
+    "tests/data/field_extractor_input.vcf", ["CHROM", "POS", "ID"]
+)
+print(fields[0]["ID"])  # 'rs123'
+```
