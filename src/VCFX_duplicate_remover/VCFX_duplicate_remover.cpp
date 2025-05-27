@@ -123,8 +123,10 @@ bool removeDuplicates(std::istream& in, std::ostream& out) {
 // ----------------------------------------------------------------------
 // main: Parse command-line arguments and call removeDuplicates.
 // ----------------------------------------------------------------------
+static void show_help() { printHelp(); }
+
 int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_duplicate_remover")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_duplicate_remover", show_help)) return 0;
     // Simple argument parsing: if --help or -h is provided, print help.
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];

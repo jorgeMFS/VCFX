@@ -146,4 +146,25 @@ bool read_file_maybe_compressed(const std::string& path, std::string& out) {
     return true;
 }
 
+bool handle_common_flags(int argc, char* argv[],
+                         const std::string& tool,
+                         void (*print_help)(),
+                         std::ostream& os) {
+    for (int i = 1; i < argc; ++i) {
+        if (std::strcmp(argv[i], "--version") == 0 ||
+            std::strcmp(argv[i], "-v") == 0) {
+            print_version(tool, get_version(), os);
+            return true;
+        }
+        if (std::strcmp(argv[i], "--help") == 0 ||
+            std::strcmp(argv[i], "-h") == 0) {
+            if (print_help) {
+                print_help();
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
 }  // namespace vcfx

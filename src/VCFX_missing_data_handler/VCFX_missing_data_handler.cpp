@@ -259,8 +259,10 @@ nextFile:
  * @param argv Argument vector.
  * @return int Exit status.
  */
+static void show_help() { printHelp(); }
+
 int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_missing_data_handler")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_missing_data_handler", show_help)) return 0;
     Arguments args;
     parseArguments(argc, argv, args);
 

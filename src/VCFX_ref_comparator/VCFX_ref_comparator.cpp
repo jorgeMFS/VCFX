@@ -273,8 +273,10 @@ void VCFXRefComparator::compareVCF(std::istream &vcfIn, std::ostream &vcfOut){
     }
 }
 
+static void show_help() { VCFXRefComparator obj; char arg0[] = "VCFX_ref_comparator"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+
 int main(int argc, char* argv[]){
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_ref_comparator")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_ref_comparator", show_help)) return 0;
     VCFXRefComparator refComp;
     return refComp.run(argc, argv);
 }

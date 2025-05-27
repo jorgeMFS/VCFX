@@ -189,8 +189,10 @@ void VCFXIndexer::createVCFIndex(std::istream &in, std::ostream &out) {
 }
 
 // Optional main if you build as a single executable
+static void show_help() { VCFXIndexer obj; char arg0[] = "VCFX_indexer"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+
 int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_indexer")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_indexer", show_help)) return 0;
     VCFXIndexer idx;
     return idx.run(argc, argv);
 }

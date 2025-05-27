@@ -320,8 +320,10 @@ void printHelp(){
 }
 
 // main with typical argument parse
+static void show_help() { printHelp(); }
+
 int main(int argc, char* argv[]){
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_record_filter")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_record_filter", show_help)) return 0;
     if(argc==1){
         printHelp();
         return 0;

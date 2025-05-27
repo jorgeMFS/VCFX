@@ -160,8 +160,10 @@ bool calculateDistances(std::istream& in, std::ostream& out) {
 // --------------------------------------------------------------------------
 // main: Parses command-line arguments and calls calculateDistances.
 // --------------------------------------------------------------------------
+static void show_help() { printHelp(); }
+
 int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_distance_calculator")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_distance_calculator", show_help)) return 0;
     // Check for help option.
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];

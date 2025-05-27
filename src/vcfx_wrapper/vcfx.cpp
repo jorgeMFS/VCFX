@@ -8,8 +8,13 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <limits.h>
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
 #include <fstream>
 #include <set>
+
+static const char* argv0_global = nullptr;
 
 static void print_usage(){
     std::cout << "vcfx - unified interface for VCFX tools\n"
@@ -57,11 +62,26 @@ static std::vector<std::string> get_doc_dirs(){
     const char* env = std::getenv("VCFX_DOCS_DIR");
     if(env) dirs.emplace_back(env);
 
+    std::string exe;
     char buf[PATH_MAX];
     ssize_t len = readlink("/proc/self/exe", buf, sizeof(buf)-1);
     if(len > 0){
         buf[len] = '\0';
-        std::string exe(buf);
+        exe = buf;
+    }
+#ifdef __APPLE__
+    if(exe.empty()){
+        uint32_t size = sizeof(buf);
+        if(_NSGetExecutablePath(buf, &size) == 0){
+            exe = buf;
+        }
+    }
+#endif
+    if(exe.empty() && argv0_global){
+        exe = argv0_global;
+    }
+
+    if(!exe.empty()){
         auto pos = exe.find_last_of('/');
         if(pos != std::string::npos){
             std::string base = exe.substr(0,pos);
@@ -91,6 +111,7 @@ static int print_tool_doc(const std::string& tool){
 }
 
 int main(int argc, char* argv[]){
+    argv0_global = argv[0];
     bool show_help = false;
     bool show_list = false;
     static struct option long_opts[] = {
