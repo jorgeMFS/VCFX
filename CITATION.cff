@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "VCFX: A Minimalist, Modular Toolkit for Streamlined Variant Analysis"
+authors:
+  - family-names: Silva
+    given-names: Jorge Miguel
+  - family-names: Oliveira
+    given-names: Jos\u00e9 Luis
+year: "2025"
+# Add DOI here if available
+preferred-citation: |
+  @inproceedings{silva2025vcfx,
+    title={VCFX: A Minimalist, Modular Toolkit for Streamlined Variant Analysis},
+    author={Silva, Jorge Miguel and Oliveira, Jos\'{e} Luis},
+    booktitle={12th International Work-Conference on Bioinformatics and Biomedical Engineering (IWBBIO 2025)},
+    year={2025},
+    organization={Springer}
+  }
+
