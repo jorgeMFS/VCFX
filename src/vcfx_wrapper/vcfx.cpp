@@ -69,6 +69,7 @@ static std::vector<std::string> get_doc_dirs(){
             dirs.push_back(base + "/../share/vcfx/docs");
             dirs.push_back(base + "/../docs");
             dirs.push_back(base + "/../../docs");
+            dirs.push_back(base + "/../../../docs"); // when run from build/src/vcfx_wrapper
         }
     }
     dirs.push_back("docs");
