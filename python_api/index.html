@@ -2506,6 +2506,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#new-wrappers" class="md-nav__link">
+    <span class="md-ellipsis">
+      New Wrappers
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2681,6 +2690,15 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-wrappers" class="md-nav__link">
+    <span class="md-ellipsis">
+      New Wrappers
+    </span>
+  </a>
   
 </li>
       
@@ -2879,6 +2897,31 @@ objects instead of raw text strings.</p>
 <span class="c1"># Calculate genotype dosages</span>
 <span class="n">dosage</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">dosage_calculator</span><span class="p">(</span><span class="s2">&quot;tests/data/dosage_calculator/basic.vcf&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">dosage</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;Dosages&quot;</span><span class="p">])</span>  <span class="c1"># &#39;0,1,2&#39;</span>
+</code></pre></div>
+<h2 id="new-wrappers">New Wrappers<a class="headerlink" href="#new-wrappers" title="Permanent link">&para;</a></h2>
+<p>Additional helper functions mirror the rest of the <code>VCFX_*</code> tools. They work
+like the wrappers above. A few examples:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Infer population ancestry</span>
+<span class="n">infer</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">ancestry_inferrer</span><span class="p">(</span>
+    <span class="s2">&quot;tests/data/ancestry_inferrer/eur_samples.vcf&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tests/data/ancestry_inferrer/population_freqs.txt&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">infer</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;Inferred_Population&quot;</span><span class="p">])</span>  <span class="c1"># &#39;EUR&#39;</span>
+
+<span class="c1"># Extract annotation fields</span>
+<span class="n">rows</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">annotation_extractor</span><span class="p">(</span>
+    <span class="s2">&quot;tests/data/haplotype_extractor/basic.vcf&quot;</span><span class="p">,</span>
+    <span class="p">[</span><span class="s2">&quot;ANN&quot;</span><span class="p">,</span> <span class="s2">&quot;Gene&quot;</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;Gene&quot;</span><span class="p">])</span>
+
+<span class="c1"># Normalize indels</span>
+<span class="n">normalized</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">indel_normalizer</span><span class="p">(</span><span class="s2">&quot;tests/data/indel_normalizer/basic.vcf&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">normalized</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;##&quot;</span><span class="p">))</span>
+
+<span class="c1"># Validate a file</span>
+<span class="n">report</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">validator</span><span class="p">(</span><span class="s2">&quot;tests/data/variant_counter_normal.vcf&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;VCF&quot;</span> <span class="ow">in</span> <span class="n">report</span><span class="p">)</span>
 </code></pre></div>
 
 
