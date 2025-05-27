@@ -1,6 +1,7 @@
 import subprocess
 import shutil
 import functools
+from typing import Any, Callable
 
 # Cache for storing the list of available tools once discovered
 _TOOL_CACHE: list[str] | None = None
@@ -9,13 +10,23 @@ __all__ = ["available_tools", "run_tool"]
 
 
 def available_tools(refresh: bool = False) -> list[str]:
-    """Return a list of VCFX tools available on the PATH.
+    """Return the list of available VCFX command line tools.
 
     Parameters
     ----------
     refresh : bool, optional
         If ``True`` ignore any cached value and re-run ``vcfx --list``.
         Defaults to ``False``.
+
+    Returns
+    -------
+    list[str]
+        Names of tools discovered on ``PATH``.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the ``vcfx`` executable cannot be found.
     """
     global _TOOL_CACHE
     if _TOOL_CACHE is not None and not refresh:
@@ -28,29 +39,45 @@ def available_tools(refresh: bool = False) -> list[str]:
     return _TOOL_CACHE
 
 
-def run_tool(tool, *args, check=True, capture_output=False, text=True, **kwargs):
-    """Run a VCFX tool using subprocess.
+def run_tool(
+    tool: str,
+    *args: str,
+    check: bool = True,
+    capture_output: bool = False,
+    text: bool = True,
+    **kwargs: Any,
+) -> subprocess.CompletedProcess:
+    """Run a VCFX tool using :func:`subprocess.run`.
 
     Parameters
     ----------
     tool : str
         Name of the tool without the ``VCFX_`` prefix.
-    *args : list
-        Arguments passed to the tool.
+    *args : str
+        Command line arguments passed to the tool.
     check : bool, optional
-        If ``True`` (default) raise ``CalledProcessError`` on non-zero
-        return code.
+        If ``True`` (default) raise ``CalledProcessError`` on a non-zero
+        exit status.
     capture_output : bool, optional
-        If ``True`` capture stdout/stderr and return them on the returned
-        ``CompletedProcess`` object.
+        Capture standard output and error and attach them to the returned
+        ``CompletedProcess``. Defaults to ``False``.
     text : bool, optional
         If ``True`` decode output as text. Defaults to ``True``.
-    **kwargs : dict
-        Additional keyword arguments forwarded to ``subprocess.run``.
+    **kwargs : Any
+        Additional keyword arguments forwarded to :func:`subprocess.run`.
 
     Returns
     -------
     subprocess.CompletedProcess
+        The completed process instance for the invoked command.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the requested tool cannot be found on ``PATH``.
+    subprocess.CalledProcessError
+        If ``check`` is ``True`` and the process exits with a non-zero
+        status.
     """
     exe = shutil.which(f"VCFX_{tool}")
     if exe is None:
@@ -61,7 +88,24 @@ def run_tool(tool, *args, check=True, capture_output=False, text=True, **kwargs)
 
 # Lazy attribute access for tool wrappers
 
-def __getattr__(name):
+def __getattr__(name: str) -> Callable[..., subprocess.CompletedProcess]:
+    """Return a callable wrapper for a VCFX tool.
+
+    Parameters
+    ----------
+    name : str
+        Name of the tool as exposed on ``PATH`` without the ``VCFX_`` prefix.
+
+    Returns
+    -------
+    Callable[..., subprocess.CompletedProcess]
+        A function that invokes the requested tool.
+
+    Raises
+    ------
+    AttributeError
+        If *name* does not correspond to an available tool.
+    """
     tools = available_tools()
     if name in tools:
         return functools.partial(run_tool, name)
