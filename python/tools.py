@@ -2,15 +2,30 @@ import subprocess
 import shutil
 import functools
 
+# Cache for storing the list of available tools once discovered
+_TOOL_CACHE: list[str] | None = None
+
 __all__ = ["available_tools", "run_tool"]
 
 
-def available_tools():
-    """Return a list of VCFX tools available on the PATH."""
+def available_tools(refresh: bool = False) -> list[str]:
+    """Return a list of VCFX tools available on the PATH.
+
+    Parameters
+    ----------
+    refresh : bool, optional
+        If ``True`` ignore any cached value and re-run ``vcfx --list``.
+        Defaults to ``False``.
+    """
+    global _TOOL_CACHE
+    if _TOOL_CACHE is not None and not refresh:
+        return _TOOL_CACHE
     result = subprocess.run(["vcfx", "--list"], capture_output=True, text=True)
     if result.returncode != 0:
-        return []
-    return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+        _TOOL_CACHE = []
+    else:
+        _TOOL_CACHE = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    return _TOOL_CACHE
 
 
 def run_tool(tool, *args, check=True, capture_output=False, text=True, **kwargs):
@@ -47,6 +62,8 @@ def run_tool(tool, *args, check=True, capture_output=False, text=True, **kwargs)
 # Lazy attribute access for tool wrappers
 
 def __getattr__(name):
-    if name in available_tools():
+    tools = available_tools()
+    if name in tools:
         return functools.partial(run_tool, name)
     raise AttributeError(f"module 'vcfx' has no attribute '{name}'")
+
