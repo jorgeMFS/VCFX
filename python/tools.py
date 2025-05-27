@@ -1,6 +1,7 @@
 import subprocess
 import shutil
 import functools
+import os
 from typing import Any, Callable
 
 # Cache for storing the list of available tools once discovered
@@ -34,7 +35,22 @@ def available_tools(refresh: bool = False) -> list[str]:
 
     exe = shutil.which("vcfx")
     if exe is None:
-        raise FileNotFoundError("vcfx wrapper not found in PATH")
+        tools: set[str] = set()
+        for path in os.environ.get("PATH", "").split(os.pathsep):
+            if not path:
+                continue
+            try:
+                for entry in os.listdir(path):
+                    if entry.startswith("VCFX_"):
+                        full = os.path.join(path, entry)
+                        if os.path.isfile(full) and os.access(full, os.X_OK):
+                            tools.add(entry[5:])
+            except OSError:
+                continue
+        if not tools:
+            raise FileNotFoundError("vcfx wrapper not found in PATH")
+        _TOOL_CACHE = sorted(tools)
+        return _TOOL_CACHE
 
     result = subprocess.run([exe, "--list"], capture_output=True, text=True)
     if result.returncode != 0:
