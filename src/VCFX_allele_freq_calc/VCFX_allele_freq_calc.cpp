@@ -183,8 +183,10 @@ static void calculateAlleleFrequency(std::istream& in, std::ostream& out) {
 // ---------------------------------------------------------
 // main()
 // ---------------------------------------------------------
+static void show_help() { printHelp(); }
+
 int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_allele_freq_calc")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_allele_freq_calc", show_help)) return 0;
     // Parse arguments for help
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];

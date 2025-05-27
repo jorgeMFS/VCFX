@@ -461,8 +461,10 @@ std::string VCFXReformatter::applyFormatReorderToSample(const std::string &sampl
     return oss.str();
 }
 
+static void show_help() { VCFXReformatter obj; char arg0[] = "VCFX_reformatter"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+
 int main(int argc, char* argv[]){
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_reformatter")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_reformatter", show_help)) return 0;
     VCFXReformatter reformatter;
     return reformatter.run(argc, argv);
 }

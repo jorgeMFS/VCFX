@@ -255,8 +255,10 @@ void VCFXHWETester::performHWE(std::istream& in){
 }
 
 // actual main
+static void show_help() { VCFXHWETester obj; char arg0[] = "VCFX_hwe_tester"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+
 int main(int argc, char* argv[]){
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_hwe_tester")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_hwe_tester", show_help)) return 0;
     VCFXHWETester tester;
     return tester.run(argc, argv);
 }

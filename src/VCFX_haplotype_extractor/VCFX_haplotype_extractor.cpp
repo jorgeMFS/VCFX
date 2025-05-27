@@ -327,8 +327,10 @@ bool HaplotypeExtractor::extractHaplotypes(std::istream& in, std::ostream& out) 
 // ---------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------
+static void show_help() { printHelp(); }
+
 int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_haplotype_extractor")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_haplotype_extractor", show_help)) return 0;
     int blockSize = 100000;
     bool doCheck = false;
     bool debug = false;

@@ -155,8 +155,10 @@ void VCFXMetadataSummarizer::printSummary() const {
     std::cout << "Number of variants: " << numVariants << "\n";
 }
 
+static void show_help() { VCFXMetadataSummarizer obj; char arg0[] = "VCFX_metadata_summarizer"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+
 int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_metadata_summarizer")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_metadata_summarizer", show_help)) return 0;
     VCFXMetadataSummarizer summarizer;
     return summarizer.run(argc, argv);
 }

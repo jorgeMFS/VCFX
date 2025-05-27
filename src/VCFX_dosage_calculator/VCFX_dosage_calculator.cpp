@@ -216,8 +216,10 @@ std::vector<std::string> VCFXDosageCalculator::split(const std::string& str, cha
     return tokens;
 }
 
+static void show_help() { VCFXDosageCalculator obj; char arg0[] = "VCFX_dosage_calculator"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+
 int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_dosage_calculator")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_dosage_calculator", show_help)) return 0;
     VCFXDosageCalculator dosageCalculator;
     return dosageCalculator.run(argc, argv);
 }

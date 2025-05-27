@@ -120,8 +120,10 @@ void VCFXMerger::mergeVCF(const std::vector<std::string>& inputFiles, std::ostre
 }
 
 
+static void show_help() { VCFXMerger obj; char arg0[] = "VCFX_merger"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+
 int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_merger")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_merger", show_help)) return 0;
     VCFXMerger merger;
     return merger.run(argc, argv);
 }

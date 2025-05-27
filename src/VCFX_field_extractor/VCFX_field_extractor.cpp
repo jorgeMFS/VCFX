@@ -245,8 +245,10 @@ void extractFields(std::istream& in, std::ostream& out, const std::vector<std::s
 // ------------------------------------------------------------------------
 // main: parse arguments, call extractFields
 // ------------------------------------------------------------------------
+static void show_help() { printHelp(); }
+
 int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_field_extractor")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_field_extractor", show_help)) return 0;
     std::vector<std::string> fields;
     bool showHelp = false;
 
