@@ -2990,6 +2990,10 @@
 <td><code>-v</code>, <code>--version</code></td>
 <td>Show program version and exit</td>
 </tr>
+<tr>
+<td><code>-s</code>, <code>--samples</code></td>
+<td>Comma-separated list of samples to check</td>
+</tr>
 </tbody>
 </table>
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h2>
@@ -3066,6 +3070,9 @@
 <p>Check concordance in a multi-sample VCF file:
 <div class="highlight"><pre><span></span><code>VCFX_cross_sample_concordance<span class="w"> </span>&lt;<span class="w"> </span>input.vcf<span class="w"> </span>&gt;<span class="w"> </span>concordance_results.tsv
 </code></pre></div></p>
+<p>Specify a subset of samples:</p>
+<div class="highlight"><pre><span></span><code>VCFX_cross_sample_concordance<span class="w"> </span>--samples<span class="w"> </span>SampleA,SampleB<span class="w"> </span>&lt;<span class="w"> </span>input.vcf<span class="w"> </span>&gt;<span class="w"> </span>concordance_subset.tsv
+</code></pre></div>
 <h3 id="filtering-for-discordant-variants">Filtering for Discordant Variants<a class="headerlink" href="#filtering-for-discordant-variants" title="Permanent link">&para;</a></h3>
 <p>Identify only variants with discordant genotypes:
 <div class="highlight"><pre><span></span><code>VCFX_cross_sample_concordance<span class="w"> </span>&lt;<span class="w"> </span>input.vcf<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;DISCORDANT&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>discordant_variants.tsv
@@ -3131,7 +3138,6 @@
 <li>Only handles diploid genotypes (e.g., <code>0/1</code>, not haploid <code>0</code> or polyploid genotypes)</li>
 <li>Ignores genotype phasing information in concordance assessment</li>
 <li>Does not consider genotype quality or other FORMAT fields in the assessment</li>
-<li>Cannot specify a subset of samples to check (uses all samples in the VCF)</li>
 <li>No option to adjust concordance thresholds (e.g., requiring 90% sample agreement)</li>
 <li>Cannot output detailed per-sample information for discordant variants </li>
 </ul>
