@@ -82,6 +82,7 @@ TEST_SCRIPTS=(
     "test_variant_classifier.sh"
     "test_variant_counter.sh"
     "test_vcfx_wrapper.sh"
+    "test_doc_lookup.sh"
     "test_available_tools_fallback.sh"
     "test_python_bindings.sh"
 )
