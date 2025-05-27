@@ -197,3 +197,18 @@ fields = vcfx.field_extractor(
 )
 print(fields[0]["ID"])  # 'rs123'
 ```
+
+### Additional Tools
+
+```python
+# Assign ancestry to samples
+assign = vcfx.ancestry_assigner(
+    "tests/data/ancestry_assigner/input.vcf",
+    "tests/data/ancestry_assigner/freq.tsv",
+)
+print(assign[0]["Assigned_Population"])  # 'EUR'
+
+# Calculate genotype dosages
+dosage = vcfx.dosage_calculator("tests/data/dosage_calculator/basic.vcf")
+print(dosage[0]["Dosages"])  # '0,1,2'
+```
