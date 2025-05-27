@@ -86,7 +86,26 @@ print(vcfx.available_tools())
 
 # run through the generic helper
 vcfx.run_tool("alignment_checker", "--help")
+```
 
-# or directly by name (if available)
-vcfx.alignment_checker("--help")
+## Convenience Wrappers
+
+Several tools have Python helpers that run the command line program and
+parse its output into structured data. These wrappers return Python
+objects instead of raw text strings.
+
+```python
+import vcfx
+
+# Check alignment discrepancies and get a list of dictionaries
+rows = vcfx.alignment_checker("tests/data/align_Y.vcf", "tests/data/align_refY.fa")
+print(rows[0]["Discrepancy_Type"])  # 'ALT_MISMATCH'
+
+# Count alleles for all samples
+counts = vcfx.allele_counter("tests/data/allele_counter_A.vcf")
+print(counts[0]["Alt_Count"])  # '1'
+
+# Simply count the variants in a VCF
+n = vcfx.variant_counter("tests/data/variant_counter_normal.vcf")
+print(n)
 ```
