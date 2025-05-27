@@ -17,6 +17,14 @@ if [ -d "${BUILD_SRC_DIR}" ]; then
     BASE_DIRS+=("${BUILD_SRC_DIR}")
 fi
 
+# Also consider nested build directories that may contain their own src
+# tree (e.g. when building the Python bindings in build/python_bindings).
+for sub in "${REPO_ROOT}"/build/*/src; do
+    if [ -d "$sub" ] && [[ ! " ${BASE_DIRS[*]} " =~ " $sub " ]]; then
+        BASE_DIRS+=("$sub")
+    fi
+done
+
 # Also check the standard installation prefix used in the Docker image
 if compgen -G "/usr/local/bin/VCFX_*" > /dev/null; then
     BASE_DIRS+=("/usr/local/bin")
