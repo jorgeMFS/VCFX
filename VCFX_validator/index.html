@@ -3060,22 +3060,28 @@
 <td><code>-s</code>, <code>--strict</code></td>
 <td>Enable stricter validation checks</td>
 </tr>
+<tr>
+<td><code>-d</code>, <code>--report-dups</code></td>
+<td>Report duplicate records to stderr</td>
+</tr>
 </tbody>
 </table>
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h2>
 <p><code>VCFX_validator</code> processes a VCF file to verify its structural validity by:</p>
 <ol>
-<li>Reading the VCF file from standard input</li>
+<li>Reading the VCF file from standard input (plain or gzip/BGZF compressed)</li>
 <li>Checking that all meta-information lines (starting with '##') are properly formatted</li>
 <li>Validating that the #CHROM header line is present and has at least 8 required columns</li>
 <li>For each data line:</li>
 <li>Ensuring it has at least 8 columns</li>
 <li>Verifying that CHROM is not empty</li>
 <li>Confirming POS is a positive integer</li>
-<li>Checking that REF and ALT are not empty</li>
+<li>Checking that REF and ALT contain only valid bases</li>
 <li>Validating that QUAL is either '.' or a non-negative float</li>
 <li>Ensuring FILTER is not empty</li>
-<li>Performing basic validation on the INFO field</li>
+<li>Checking INFO and FORMAT fields against header definitions</li>
+<li>Validating genotype syntax</li>
+<li>Detecting duplicate records when <code>--report-dups</code> is used</li>
 <li>Reporting errors for any validation failures</li>
 <li>Returning exit code 0 if the file is valid, or 1 if it contains errors</li>
 </ol>
@@ -3099,18 +3105,11 @@
 <li>CHROM: Must not be empty</li>
 <li>POS: Must be a positive integer</li>
 <li>ID: Can be empty or '.' (not validated)</li>
-<li>REF: Must not be empty</li>
-<li>ALT: Must not be empty</li>
+<li>REF: Must contain only A,C,G,T,N</li>
+<li>ALT: Must contain only A,C,G,T,N</li>
 <li>QUAL: Must be '.' or a non-negative float</li>
 <li>FILTER: Must not be empty</li>
-<li>INFO: Must be '.' or contain valid key-value pairs or flags:</li>
-<li>If not '.', must contain at least one valid entry</li>
-<li>
-<p>Key-value pairs must have a non-empty key</p>
-</li>
-<li>
-<p>Flags (without '=') are allowed</p>
-</li>
+<li>INFO: Keys must be defined in the header. Numeric counts are validated when numeric. Flags are allowed.</li>
 </ul>
 <h3 id="strict-mode">Strict Mode<a class="headerlink" href="#strict-mode" title="Permanent link">&para;</a></h3>
 <p>When <code>--strict</code> is used, additional checks are applied:
@@ -3174,11 +3173,6 @@ messages such as <code>VCF file is valid.</code> are printed to standard error.<
 <ul>
 <li>Does not validate VCF version compatibility</li>
 <li>No validation of the content of meta-information lines beyond the '##' prefix</li>
-<li>Limited validation of INFO and FORMAT fields (no checking against header definitions)</li>
-<li>No validation of sample genotype data</li>
-<li>No checking of REF/ALT sequence validity (e.g., allowed bases)</li>
-<li>No detection of duplicate variant records</li>
-<li>Cannot handle compressed (gzipped) VCF files directly </li>
 </ul>
 
 
