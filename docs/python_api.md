@@ -88,6 +88,10 @@ print(vcfx.available_tools())
 vcfx.run_tool("alignment_checker", "--help")
 ```
 
+For a full script demonstrating how to set up ``PATH`` with
+``add_vcfx_tools_to_path.sh`` and handle errors when running tools,
+see [``examples/python_usage.py``](../examples/python_usage.py).
+
 ## Convenience Wrappers
 
 Several tools have Python helpers that run the command line program and
