@@ -2492,6 +2492,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#additional-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional Tools
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2656,6 +2665,15 @@
   <a href="#more-wrappers" class="md-nav__link">
     <span class="md-ellipsis">
       More Wrappers
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional Tools
     </span>
   </a>
   
@@ -2849,6 +2867,18 @@ objects instead of raw text strings.</p>
     <span class="s2">&quot;tests/data/field_extractor_input.vcf&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;CHROM&quot;</span><span class="p">,</span> <span class="s2">&quot;POS&quot;</span><span class="p">,</span> <span class="s2">&quot;ID&quot;</span><span class="p">]</span>
 <span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;ID&quot;</span><span class="p">])</span>  <span class="c1"># &#39;rs123&#39;</span>
+</code></pre></div>
+<h3 id="additional-tools">Additional Tools<a class="headerlink" href="#additional-tools" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Assign ancestry to samples</span>
+<span class="n">assign</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">ancestry_assigner</span><span class="p">(</span>
+    <span class="s2">&quot;tests/data/ancestry_assigner/input.vcf&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tests/data/ancestry_assigner/freq.tsv&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">assign</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;Assigned_Population&quot;</span><span class="p">])</span>  <span class="c1"># &#39;EUR&#39;</span>
+
+<span class="c1"># Calculate genotype dosages</span>
+<span class="n">dosage</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">dosage_calculator</span><span class="p">(</span><span class="s2">&quot;tests/data/dosage_calculator/basic.vcf&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">dosage</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;Dosages&quot;</span><span class="p">])</span>  <span class="c1"># &#39;0,1,2&#39;</span>
 </code></pre></div>
 
 
