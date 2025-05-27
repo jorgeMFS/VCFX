@@ -11,6 +11,9 @@ __all__ = [
     "CrossSampleConcordanceRow",
     "AncestryAssignment",
     "DosageRow",
+    "AncestryInference",
+    "DistanceRow",
+    "IndexEntry",
 ]
 
 
@@ -107,3 +110,24 @@ class DosageRow:
     REF: str
     ALT: str
     Dosages: str
+
+
+@dataclass
+class AncestryInference:
+    Sample: str
+    Inferred_Population: str
+
+
+@dataclass
+class DistanceRow:
+    CHROM: str
+    POS: str
+    PREV_POS: str
+    DISTANCE: str
+
+
+@dataclass
+class IndexEntry:
+    CHROM: str
+    POS: str
+    FILE_OFFSET: str

@@ -37,6 +37,43 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for pure Python envs
         "variant_classifier",
         "cross_sample_concordance",
         "field_extractor",
+        "ancestry_inferrer",
+        "annotation_extractor",
+        "compressor",
+        "custom_annotator",
+        "diff_tool",
+        "distance_calculator",
+        "file_splitter",
+        "format_converter",
+        "gl_filter",
+        "haplotype_extractor",
+        "haplotype_phaser",
+        "header_parser",
+        "impact_filter",
+        "indel_normalizer",
+        "indexer",
+        "ld_calculator",
+        "merger",
+        "metadata_summarizer",
+        "missing_data_handler",
+        "multiallelic_splitter",
+        "nonref_filter",
+        "outlier_detector",
+        "phase_checker",
+        "phase_quality_filter",
+        "phred_filter",
+        "population_filter",
+        "position_subsetter",
+        "probability_filter",
+        "quality_adjuster",
+        "ref_comparator",
+        "reformatter",
+        "region_subsampler",
+        "sample_extractor",
+        "sorter",
+        "subsampler",
+        "sv_handler",
+        "validator",
         "AlleleFrequency",
         "InfoSummary",
         "AlleleBalance",
@@ -47,6 +84,9 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for pure Python envs
         "CrossSampleConcordanceRow",
         "AncestryAssignment",
         "DosageRow",
+        "AncestryInference",
+        "DistanceRow",
+        "IndexEntry",
     ]
 
     def trim(text: str) -> str:
@@ -103,6 +143,43 @@ else:
         "variant_classifier",
         "cross_sample_concordance",
         "field_extractor",
+        "ancestry_inferrer",
+        "annotation_extractor",
+        "compressor",
+        "custom_annotator",
+        "diff_tool",
+        "distance_calculator",
+        "file_splitter",
+        "format_converter",
+        "gl_filter",
+        "haplotype_extractor",
+        "haplotype_phaser",
+        "header_parser",
+        "impact_filter",
+        "indel_normalizer",
+        "indexer",
+        "ld_calculator",
+        "merger",
+        "metadata_summarizer",
+        "missing_data_handler",
+        "multiallelic_splitter",
+        "nonref_filter",
+        "outlier_detector",
+        "phase_checker",
+        "phase_quality_filter",
+        "phred_filter",
+        "population_filter",
+        "position_subsetter",
+        "probability_filter",
+        "quality_adjuster",
+        "ref_comparator",
+        "reformatter",
+        "region_subsampler",
+        "sample_extractor",
+        "sorter",
+        "subsampler",
+        "sv_handler",
+        "validator",
         "AlleleFrequency",
         "InfoSummary",
         "AlleleBalance",
@@ -113,6 +190,9 @@ else:
         "CrossSampleConcordanceRow",
         "AncestryAssignment",
         "DosageRow",
+        "AncestryInference",
+        "DistanceRow",
+        "IndexEntry",
     ]
 
 __version__ = get_version()
@@ -147,6 +227,43 @@ inbreeding_calculator = _tools.inbreeding_calculator
 variant_classifier = _tools.variant_classifier
 cross_sample_concordance = _tools.cross_sample_concordance
 field_extractor = _tools.field_extractor
+ancestry_inferrer = _tools.ancestry_inferrer
+annotation_extractor = _tools.annotation_extractor
+compressor = _tools.compressor
+custom_annotator = _tools.custom_annotator
+diff_tool = _tools.diff_tool
+distance_calculator = _tools.distance_calculator
+file_splitter = _tools.file_splitter
+format_converter = _tools.format_converter
+gl_filter = _tools.gl_filter
+haplotype_extractor = _tools.haplotype_extractor
+haplotype_phaser = _tools.haplotype_phaser
+header_parser = _tools.header_parser
+impact_filter = _tools.impact_filter
+indel_normalizer = _tools.indel_normalizer
+indexer = _tools.indexer
+ld_calculator = _tools.ld_calculator
+merger = _tools.merger
+metadata_summarizer = _tools.metadata_summarizer
+missing_data_handler = _tools.missing_data_handler
+multiallelic_splitter = _tools.multiallelic_splitter
+nonref_filter = _tools.nonref_filter
+outlier_detector = _tools.outlier_detector
+phase_checker = _tools.phase_checker
+phase_quality_filter = _tools.phase_quality_filter
+phred_filter = _tools.phred_filter
+population_filter = _tools.population_filter
+position_subsetter = _tools.position_subsetter
+probability_filter = _tools.probability_filter
+quality_adjuster = _tools.quality_adjuster
+ref_comparator = _tools.ref_comparator
+reformatter = _tools.reformatter
+region_subsampler = _tools.region_subsampler
+sample_extractor = _tools.sample_extractor
+sorter = _tools.sorter
+subsampler = _tools.subsampler
+sv_handler = _tools.sv_handler
+validator = _tools.validator
 from .results import (
     AlleleFrequency,
     InfoSummary,
@@ -158,6 +275,9 @@ from .results import (
     CrossSampleConcordanceRow,
     AncestryAssignment,
     DosageRow,
+    AncestryInference,
+    DistanceRow,
+    IndexEntry,
 )
 
 
