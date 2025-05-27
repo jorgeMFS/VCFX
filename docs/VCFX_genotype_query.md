@@ -16,8 +16,8 @@ VCFX_genotype_query [OPTIONS] < input.vcf > filtered.vcf
 |--------|-------------|
 | `--genotype-query`, `-g` "GENOTYPE" | Specify the genotype to query (e.g., "0/1", "1/1") |
 | `--strict` | Use strict string comparison (no phasing unification or allele sorting) |
-| `--help`, `-h` | Display help message and exit |
-| `-v`, `--version` | Show program version and exit |
+| `--help`, `-h` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
+| `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
 ## Description
 
