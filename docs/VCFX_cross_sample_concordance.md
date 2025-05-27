@@ -13,6 +13,7 @@ VCFX_cross_sample_concordance [OPTIONS] < input.vcf > concordance_results.tsv
 |--------|-------------|
 | `-h`, `--help` | Display help message and exit |
 | `-v`, `--version` | Show program version and exit |
+| `-s`, `--samples` | Comma-separated list of samples to check |
 
 ## Description
 `VCFX_cross_sample_concordance` examines each variant in a multi-sample VCF file and determines if all samples with valid genotypes have the same normalized genotype. The tool:
@@ -61,6 +62,12 @@ Additionally, a summary of statistics is printed to standard error, including:
 Check concordance in a multi-sample VCF file:
 ```bash
 VCFX_cross_sample_concordance < input.vcf > concordance_results.tsv
+```
+
+Specify a subset of samples:
+
+```bash
+VCFX_cross_sample_concordance --samples SampleA,SampleB < input.vcf > concordance_subset.tsv
 ```
 
 ### Filtering for Discordant Variants
@@ -130,6 +137,6 @@ For each sample's genotype, the tool performs the following normalization steps:
 - Only handles diploid genotypes (e.g., `0/1`, not haploid `0` or polyploid genotypes)
 - Ignores genotype phasing information in concordance assessment
 - Does not consider genotype quality or other FORMAT fields in the assessment
-- Cannot specify a subset of samples to check (uses all samples in the VCF)
 - No option to adjust concordance thresholds (e.g., requiring 90% sample agreement)
 - Cannot output detailed per-sample information for discordant variants 
+

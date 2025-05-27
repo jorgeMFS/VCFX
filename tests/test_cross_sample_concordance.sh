@@ -292,14 +292,20 @@ fi
 
 echo "  Test 7 passed. Found $concordant_count concordant, $discordant_count discordant, and $missing_count with no genotypes."
 
+# Test 8: Sample subset option
+run_test 8 "Sample subset" \
+  "$VCFX_EXECUTABLE --samples SAMPLE1,SAMPLE3 < data/concordance_some_mismatch.vcf" \
+  "expected/concordance_subset.tsv" \
+  "out/concordance_subset.tsv"
+
 # Test 8: Help display
-echo "Test 8: Verifying help display"
+echo "Test 9: Verifying help display"
 $VCFX_EXECUTABLE --help > out/concordance_help.txt
 if ! grep -q "VCFX_cross_sample_concordance" out/concordance_help.txt; then
-  echo "  Test 8 failed. Help message not displayed correctly."
+  echo "  Test 9 failed. Help message not displayed correctly."
   cat out/concordance_help.txt
   exit 1
 fi
-echo "  Test 8 passed."
+echo "  Test 9 passed."
 
-echo "All VCFX_cross_sample_concordance tests passed!" 
+echo "All VCFX_cross_sample_concordance tests passed!"
