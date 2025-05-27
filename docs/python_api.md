@@ -212,3 +212,32 @@ print(assign[0]["Assigned_Population"])  # 'EUR'
 dosage = vcfx.dosage_calculator("tests/data/dosage_calculator/basic.vcf")
 print(dosage[0]["Dosages"])  # '0,1,2'
 ```
+
+## New Wrappers
+
+Additional helper functions mirror the rest of the ``VCFX_*`` tools. They work
+like the wrappers above. A few examples:
+
+```python
+# Infer population ancestry
+infer = vcfx.ancestry_inferrer(
+    "tests/data/ancestry_inferrer/eur_samples.vcf",
+    "tests/data/ancestry_inferrer/population_freqs.txt",
+)
+print(infer[0]["Inferred_Population"])  # 'EUR'
+
+# Extract annotation fields
+rows = vcfx.annotation_extractor(
+    "tests/data/haplotype_extractor/basic.vcf",
+    ["ANN", "Gene"],
+)
+print(rows[0]["Gene"])
+
+# Normalize indels
+normalized = vcfx.indel_normalizer("tests/data/indel_normalizer/basic.vcf")
+print(normalized.startswith("##"))
+
+# Validate a file
+report = vcfx.validator("tests/data/variant_counter_normal.vcf")
+print("VCF" in report)
+```

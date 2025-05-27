@@ -93,5 +93,21 @@ assert assign[0]["Assigned_Population"] == "EUR"
 
 dos = vcfx.dosage_calculator("data/dosage_calculator/basic.vcf")
 assert dos[0]["Dosages"] == "0,1,2"
+
+# Additional wrappers
+inf = vcfx.ancestry_inferrer(
+    "data/ancestry_inferrer/eur_samples.vcf",
+    "data/ancestry_inferrer/population_freqs.txt",
+)
+assert inf[0]["Inferred_Population"] == "EUR"
+
+dist = vcfx.distance_calculator("data/variant_counter_normal.vcf")
+assert dist[0]["DISTANCE"]
+
+norm_text = vcfx.indel_normalizer("data/basic_indel.vcf")
+assert norm_text.startswith("##")
+
+val_msg = vcfx.validator("data/variant_counter_normal.vcf")
+assert "VCF" in val_msg
 print("Python tool wrappers OK")
 PY
