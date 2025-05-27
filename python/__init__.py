@@ -26,10 +26,23 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for pure Python envs
         "info_parser",
         "info_summarizer",
         "fasta_converter",
+        "af_subsetter",
+        "allele_balance_filter",
+        "record_filter",
+        "missing_detector",
+        "hwe_tester",
+        "inbreeding_calculator",
+        "variant_classifier",
+        "cross_sample_concordance",
+        "field_extractor",
         "AlleleFrequency",
         "InfoSummary",
         "AlleleBalance",
         "ConcordanceRow",
+        "HWEResult",
+        "InbreedingCoefficient",
+        "VariantClassification",
+        "CrossSampleConcordanceRow",
     ]
 
     def trim(text: str) -> str:
@@ -75,10 +88,23 @@ else:
         "info_parser",
         "info_summarizer",
         "fasta_converter",
+        "af_subsetter",
+        "allele_balance_filter",
+        "record_filter",
+        "missing_detector",
+        "hwe_tester",
+        "inbreeding_calculator",
+        "variant_classifier",
+        "cross_sample_concordance",
+        "field_extractor",
         "AlleleFrequency",
         "InfoSummary",
         "AlleleBalance",
         "ConcordanceRow",
+        "HWEResult",
+        "InbreedingCoefficient",
+        "VariantClassification",
+        "CrossSampleConcordanceRow",
     ]
 
 __version__ = get_version()
@@ -102,11 +128,24 @@ info_aggregator = _tools.info_aggregator
 info_parser = _tools.info_parser
 info_summarizer = _tools.info_summarizer
 fasta_converter = _tools.fasta_converter
+af_subsetter = _tools.af_subsetter
+allele_balance_filter = _tools.allele_balance_filter
+record_filter = _tools.record_filter
+missing_detector = _tools.missing_detector
+hwe_tester = _tools.hwe_tester
+inbreeding_calculator = _tools.inbreeding_calculator
+variant_classifier = _tools.variant_classifier
+cross_sample_concordance = _tools.cross_sample_concordance
+field_extractor = _tools.field_extractor
 from .results import (
     AlleleFrequency,
     InfoSummary,
     AlleleBalance,
     ConcordanceRow,
+    HWEResult,
+    InbreedingCoefficient,
+    VariantClassification,
+    CrossSampleConcordanceRow,
 )
 
 

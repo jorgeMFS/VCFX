@@ -5,6 +5,10 @@ __all__ = [
     "InfoSummary",
     "AlleleBalance",
     "ConcordanceRow",
+    "HWEResult",
+    "InbreedingCoefficient",
+    "VariantClassification",
+    "CrossSampleConcordanceRow",
 ]
 
 
@@ -47,3 +51,41 @@ class ConcordanceRow:
     SAMPLE1_GT: str
     SAMPLE2_GT: str
     Concordance: str
+
+
+@dataclass
+class HWEResult:
+    CHROM: str
+    POS: str
+    ID: str
+    REF: str
+    ALT: str
+    HWE_pvalue: str
+
+
+@dataclass
+class InbreedingCoefficient:
+    Sample: str
+    InbreedingCoefficient: str
+
+
+@dataclass
+class VariantClassification:
+    CHROM: str
+    POS: str
+    ID: str
+    REF: str
+    ALT: str
+    Classification: str
+
+
+@dataclass
+class CrossSampleConcordanceRow:
+    CHROM: str
+    POS: str
+    ID: str
+    REF: str
+    ALT: str
+    Num_Samples: str
+    Unique_Normalized_Genotypes: str
+    Concordance_Status: str
