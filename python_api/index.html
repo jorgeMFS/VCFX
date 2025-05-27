@@ -2464,6 +2464,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#convenience-wrappers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Convenience Wrappers
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2600,6 +2609,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#convenience-wrappers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Convenience Wrappers
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2686,9 +2704,24 @@ the tool name as a function:</p>
 
 <span class="c1"># run through the generic helper</span>
 <span class="n">vcfx</span><span class="o">.</span><span class="n">run_tool</span><span class="p">(</span><span class="s2">&quot;alignment_checker&quot;</span><span class="p">,</span> <span class="s2">&quot;--help&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="convenience-wrappers">Convenience Wrappers<a class="headerlink" href="#convenience-wrappers" title="Permanent link">&para;</a></h2>
+<p>Several tools have Python helpers that run the command line program and
+parse its output into structured data. These wrappers return Python
+objects instead of raw text strings.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">vcfx</span>
 
-<span class="c1"># or directly by name (if available)</span>
-<span class="n">vcfx</span><span class="o">.</span><span class="n">alignment_checker</span><span class="p">(</span><span class="s2">&quot;--help&quot;</span><span class="p">)</span>
+<span class="c1"># Check alignment discrepancies and get a list of dictionaries</span>
+<span class="n">rows</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">alignment_checker</span><span class="p">(</span><span class="s2">&quot;tests/data/align_Y.vcf&quot;</span><span class="p">,</span> <span class="s2">&quot;tests/data/align_refY.fa&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;Discrepancy_Type&quot;</span><span class="p">])</span>  <span class="c1"># &#39;ALT_MISMATCH&#39;</span>
+
+<span class="c1"># Count alleles for all samples</span>
+<span class="n">counts</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">allele_counter</span><span class="p">(</span><span class="s2">&quot;tests/data/allele_counter_A.vcf&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">counts</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;Alt_Count&quot;</span><span class="p">])</span>  <span class="c1"># &#39;1&#39;</span>
+
+<span class="c1"># Simply count the variants in a VCF</span>
+<span class="n">n</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">variant_counter</span><span class="p">(</span><span class="s2">&quot;tests/data/variant_counter_normal.vcf&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
 </code></pre></div>
 
 
