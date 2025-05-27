@@ -175,8 +175,10 @@ int VCFXVariantCounter::countVariantsGzip(std::istream &in){
     return count;
 }
 
+static void show_help() { VCFXVariantCounter obj; char arg0[] = "VCFX_variant_counter"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+
 int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_variant_counter")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_variant_counter", show_help)) return 0;
     VCFXVariantCounter app;
     return app.run(argc, argv);
 }

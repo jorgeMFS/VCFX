@@ -318,8 +318,10 @@ std::vector<std::vector<int>> VCFXHaplotypePhaser::groupVariants(const std::vect
     return blocks;
 }
 
+static void show_help() { VCFXHaplotypePhaser obj; char arg0[] = "VCFX_haplotype_phaser"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+
 int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_haplotype_phaser")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_haplotype_phaser", show_help)) return 0;
     VCFXHaplotypePhaser hp;
     return hp.run(argc, argv);
 }

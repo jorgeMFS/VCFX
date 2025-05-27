@@ -232,8 +232,10 @@ static bool countAlleles(std::istream& in, std::ostream& out, const AlleleCounte
 // ---------------------------------------------------------------------
 // main()
 // ---------------------------------------------------------------------
+static void show_help() { printHelp(); }
+
 int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_allele_counter")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_allele_counter", show_help)) return 0;
     AlleleCounterArguments args;
     parseArguments(argc, argv, args);
 

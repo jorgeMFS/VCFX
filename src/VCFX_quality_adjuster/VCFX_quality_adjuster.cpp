@@ -175,8 +175,10 @@ void VCFXQualityAdjuster::adjustQualityScores(std::istream &in, std::ostream &ou
     }
 }
 
+static void show_help() { VCFXQualityAdjuster obj; char arg0[] = "VCFX_quality_adjuster"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+
 int main(int argc, char* argv[]){
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_quality_adjuster")) return 0;
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_quality_adjuster", show_help)) return 0;
     VCFXQualityAdjuster app;
     return app.run(argc, argv);
 }
