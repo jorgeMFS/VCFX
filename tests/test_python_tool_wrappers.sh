@@ -33,5 +33,20 @@ assert counts[0]["Sample"] == "S1"
 
 n = vcfx.variant_counter("data/variant_counter_normal.vcf")
 assert n == 5
+
+freqs = vcfx.allele_freq_calc("data/allele_freq_calc/simple.vcf")
+assert freqs[0]["Allele_Frequency"] == "0.5000"
+
+annotated = vcfx.info_aggregator("data/aggregator/basic.vcf", ["DP"])
+assert "#AGGREGATION_SUMMARY" in annotated
+
+parsed = vcfx.info_parser("data/info_parser/basic.vcf", ["DP"])
+assert parsed[0]["DP"] == "10"
+
+summary = vcfx.info_summarizer("data/info_summarizer/basic.vcf", ["DP"])
+assert summary[0]["Mean"] == "20.0000"
+
+fasta = vcfx.fasta_converter("data/fasta_converter/basic.vcf")
+assert fasta.startswith(">")
 print("Python tool wrappers OK")
 PY

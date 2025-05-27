@@ -14,6 +14,11 @@ __all__ = [
     "alignment_checker",
     "allele_counter",
     "variant_counter",
+    "allele_freq_calc",
+    "info_aggregator",
+    "info_parser",
+    "info_summarizer",
+    "fasta_converter",
 ]
 
 
@@ -213,6 +218,109 @@ def variant_counter(vcf_file: str, strict: bool = False) -> int:
     if ":" in out:
         out = out.split(":", 1)[1]
     return int(out.strip())
+
+
+def allele_freq_calc(vcf_file: str) -> list[dict]:
+    """Calculate allele frequencies from a VCF file.
+
+    Parameters
+    ----------
+    vcf_file : str
+        Path to the VCF input file.
+
+    Returns
+    -------
+    list[dict]
+        Rows from the frequency table as dictionaries.
+    """
+
+    with open(vcf_file, "r", encoding="utf-8") as fh:
+        inp = fh.read()
+
+    result = run_tool(
+        "allele_freq_calc",
+        capture_output=True,
+        text=True,
+        input=inp,
+    )
+
+    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
+    return list(reader)
+
+
+def info_aggregator(vcf_file: str, fields: Sequence[str]) -> str:
+    """Aggregate INFO fields and return the annotated VCF text."""
+
+    args = ["--aggregate-info", ",".join(fields)]
+
+    with open(vcf_file, "r", encoding="utf-8") as fh:
+        inp = fh.read()
+
+    result = run_tool(
+        "info_aggregator",
+        *args,
+        capture_output=True,
+        text=True,
+        input=inp,
+    )
+
+    return result.stdout
+
+
+def info_parser(vcf_file: str, fields: Sequence[str]) -> list[dict]:
+    """Parse INFO fields from a VCF file."""
+
+    args = ["--info", ",".join(fields)]
+
+    with open(vcf_file, "r", encoding="utf-8") as fh:
+        inp = fh.read()
+
+    result = run_tool(
+        "info_parser",
+        *args,
+        capture_output=True,
+        text=True,
+        input=inp,
+    )
+
+    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
+    return list(reader)
+
+
+def info_summarizer(vcf_file: str, fields: Sequence[str]) -> list[dict]:
+    """Summarize INFO fields from a VCF file."""
+
+    args = ["--info", ",".join(fields)]
+
+    with open(vcf_file, "r", encoding="utf-8") as fh:
+        inp = fh.read()
+
+    result = run_tool(
+        "info_summarizer",
+        *args,
+        capture_output=True,
+        text=True,
+        input=inp,
+    )
+
+    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
+    return list(reader)
+
+
+def fasta_converter(vcf_file: str) -> str:
+    """Convert a VCF to FASTA format and return the FASTA text."""
+
+    with open(vcf_file, "r", encoding="utf-8") as fh:
+        inp = fh.read()
+
+    result = run_tool(
+        "fasta_converter",
+        capture_output=True,
+        text=True,
+        input=inp,
+    )
+
+    return result.stdout
 
 
 # Lazy attribute access for tool wrappers
