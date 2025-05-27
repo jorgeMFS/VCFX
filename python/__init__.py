@@ -37,13 +37,31 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for pure Python envs
         """Return the toolkit version when bindings are unavailable."""
         return "0.0.0"
 from . import tools as _tools
+from typing import Callable
+import subprocess
 
 # Re-export helper functions for convenience
 available_tools = _tools.available_tools
 run_tool = _tools.run_tool
 
 
-def __getattr__(name):
-    """Provide access to tool wrappers as attributes."""
+def __getattr__(name: str) -> Callable[..., subprocess.CompletedProcess]:
+    """Return a wrapper for a VCFX command line tool.
+
+    Parameters
+    ----------
+    name : str
+        Name of the tool without the ``VCFX_`` prefix.
+
+    Returns
+    -------
+    Callable[..., subprocess.CompletedProcess]
+        Callable that runs the requested tool.
+
+    Raises
+    ------
+    AttributeError
+        If *name* does not correspond to an available tool.
+    """
     return getattr(_tools, name)
 
