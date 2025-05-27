@@ -15,6 +15,10 @@ __all__ = [
     "allele_counter",
     "variant_counter",
     "allele_freq_calc",
+    "allele_balance_calc",
+    "concordance_checker",
+    "genotype_query",
+    "duplicate_remover",
     "info_aggregator",
     "info_parser",
     "info_summarizer",
@@ -315,6 +319,91 @@ def fasta_converter(vcf_file: str) -> str:
 
     result = run_tool(
         "fasta_converter",
+        capture_output=True,
+        text=True,
+        input=inp,
+    )
+
+    return result.stdout
+
+
+def allele_balance_calc(
+    vcf_file: str, samples: Sequence[str] | None = None
+) -> list[dict]:
+    """Calculate allele balance for samples in a VCF."""
+
+    args: list[str] = []
+    if samples:
+        args.extend(["--samples", " ".join(samples)])
+
+    with open(vcf_file, "r", encoding="utf-8") as fh:
+        inp = fh.read()
+
+    result = run_tool(
+        "allele_balance_calc",
+        *args,
+        capture_output=True,
+        text=True,
+        input=inp,
+    )
+
+    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
+    return list(reader)
+
+
+def concordance_checker(
+    vcf_file: str, sample1: str, sample2: str
+) -> list[dict]:
+    """Check genotype concordance between two samples."""
+
+    args = ["--samples", f"{sample1} {sample2}"]
+
+    with open(vcf_file, "r", encoding="utf-8") as fh:
+        inp = fh.read()
+
+    result = run_tool(
+        "concordance_checker",
+        *args,
+        capture_output=True,
+        text=True,
+        input=inp,
+    )
+
+    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
+    return list(reader)
+
+
+def genotype_query(
+    vcf_file: str, genotype: str, strict: bool = False
+) -> str:
+    """Filter variants by genotype pattern and return VCF text."""
+
+    args = ["--genotype-query", genotype]
+    if strict:
+        args.append("--strict")
+
+    with open(vcf_file, "r", encoding="utf-8") as fh:
+        inp = fh.read()
+
+    result = run_tool(
+        "genotype_query",
+        *args,
+        capture_output=True,
+        text=True,
+        input=inp,
+    )
+
+    return result.stdout
+
+
+def duplicate_remover(vcf_file: str) -> str:
+    """Remove duplicate variant records from a VCF."""
+
+    with open(vcf_file, "r", encoding="utf-8") as fh:
+        inp = fh.read()
+
+    result = run_tool(
+        "duplicate_remover",
         capture_output=True,
         text=True,
         input=inp,
