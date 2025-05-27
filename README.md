@@ -139,7 +139,7 @@ Contributions are welcome! Please see [CONTRIBUTING.md](docs/CONTRIBUTING.md) fo
 
 ## Citation
 
-If you use VCFX in your research, please cite:
+If you use VCFX in your research, please cite (see also [CITATION.cff](CITATION.cff)):
 
 ```
 @inproceedings{silva2025vcfx,
