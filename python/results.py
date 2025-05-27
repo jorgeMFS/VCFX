@@ -9,6 +9,8 @@ __all__ = [
     "InbreedingCoefficient",
     "VariantClassification",
     "CrossSampleConcordanceRow",
+    "AncestryAssignment",
+    "DosageRow",
 ]
 
 
@@ -89,3 +91,19 @@ class CrossSampleConcordanceRow:
     Num_Samples: str
     Unique_Normalized_Genotypes: str
     Concordance_Status: str
+
+
+@dataclass
+class AncestryAssignment:
+    Sample: str
+    Assigned_Population: str
+
+
+@dataclass
+class DosageRow:
+    CHROM: str
+    POS: str
+    ID: str
+    REF: str
+    ALT: str
+    Dosages: str

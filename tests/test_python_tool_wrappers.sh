@@ -84,5 +84,14 @@ assert xconc[0]["Concordance_Status"]
 
 fields = vcfx.field_extractor("data/field_extractor_input.vcf", ["CHROM", "POS"])
 assert fields[0]["CHROM"] == "chr1"
+
+assign = vcfx.ancestry_assigner(
+    "data/ancestry_assigner/input.vcf",
+    "data/ancestry_assigner/freq.tsv",
+)
+assert assign[0]["Assigned_Population"] == "EUR"
+
+dos = vcfx.dosage_calculator("data/dosage_calculator/basic.vcf")
+assert dos[0]["Dosages"] == "0,1,2"
 print("Python tool wrappers OK")
 PY
