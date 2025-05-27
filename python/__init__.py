@@ -18,7 +18,9 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for pure Python envs
         "allele_counter",
         "variant_counter",
         "allele_freq_calc",
+        "ancestry_assigner",
         "allele_balance_calc",
+        "dosage_calculator",
         "concordance_checker",
         "genotype_query",
         "duplicate_remover",
@@ -43,6 +45,8 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for pure Python envs
         "InbreedingCoefficient",
         "VariantClassification",
         "CrossSampleConcordanceRow",
+        "AncestryAssignment",
+        "DosageRow",
     ]
 
     def trim(text: str) -> str:
@@ -80,7 +84,9 @@ else:
         "allele_counter",
         "variant_counter",
         "allele_freq_calc",
+        "ancestry_assigner",
         "allele_balance_calc",
+        "dosage_calculator",
         "concordance_checker",
         "genotype_query",
         "duplicate_remover",
@@ -105,6 +111,8 @@ else:
         "InbreedingCoefficient",
         "VariantClassification",
         "CrossSampleConcordanceRow",
+        "AncestryAssignment",
+        "DosageRow",
     ]
 
 __version__ = get_version()
@@ -120,7 +128,9 @@ alignment_checker = _tools.alignment_checker
 allele_counter = _tools.allele_counter
 variant_counter = _tools.variant_counter
 allele_freq_calc = _tools.allele_freq_calc
+ancestry_assigner = _tools.ancestry_assigner
 allele_balance_calc = _tools.allele_balance_calc
+dosage_calculator = _tools.dosage_calculator
 concordance_checker = _tools.concordance_checker
 genotype_query = _tools.genotype_query
 duplicate_remover = _tools.duplicate_remover
@@ -146,6 +156,8 @@ from .results import (
     InbreedingCoefficient,
     VariantClassification,
     CrossSampleConcordanceRow,
+    AncestryAssignment,
+    DosageRow,
 )
 
 
