@@ -39,6 +39,29 @@ inline bool handle_version_flag(int argc, char* argv[], const std::string& tool,
     return false;
 }
 
+// Check if a specific flag (long or short form) is present
+bool flag_present(int argc, char* argv[], const char* long_flag,
+                  const char* short_flag = nullptr);
+
+// Handle the --help flag using the provided callback. Returns true if the flag
+// was found and handled.
+inline bool handle_help_flag(int argc, char* argv[], void (*print_help)()) {
+    if (flag_present(argc, argv, "--help", "-h")) {
+        if (print_help) print_help();
+        return true;
+    }
+    return false;
+}
+
+// Handle both --help and --version flags. Returns true if either flag was found
+// and processed (in which case the caller should exit).
+inline bool handle_common_flags(int argc, char* argv[], const std::string& tool,
+                                void (*print_help)(),
+                                std::ostream& os = std::cout) {
+    if (handle_help_flag(argc, argv, print_help)) return true;
+    return handle_version_flag(argc, argv, tool, os);
+}
+
 // Read entire input stream, automatically decompressing if gzip/BGZF
 // compressed. Returns true on success and stores the resulting text in
 // 'out'.
