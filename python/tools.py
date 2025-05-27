@@ -23,6 +23,15 @@ __all__ = [
     "info_parser",
     "info_summarizer",
     "fasta_converter",
+    "af_subsetter",
+    "allele_balance_filter",
+    "record_filter",
+    "missing_detector",
+    "hwe_tester",
+    "inbreeding_calculator",
+    "variant_classifier",
+    "cross_sample_concordance",
+    "field_extractor",
 ]
 
 
@@ -410,6 +419,195 @@ def duplicate_remover(vcf_file: str) -> str:
     )
 
     return result.stdout
+
+
+def af_subsetter(vcf_file: str, af_range: str) -> str:
+    """Subset variants by allele frequency range and return VCF text."""
+
+    with open(vcf_file, "r", encoding="utf-8") as fh:
+        inp = fh.read()
+
+    result = run_tool(
+        "af_subsetter",
+        "--af-filter",
+        af_range,
+        capture_output=True,
+        text=True,
+        input=inp,
+    )
+
+    return result.stdout
+
+
+def allele_balance_filter(vcf_file: str, threshold: float) -> str:
+    """Filter variants by allele balance threshold."""
+
+    with open(vcf_file, "r", encoding="utf-8") as fh:
+        inp = fh.read()
+
+    result = run_tool(
+        "allele_balance_filter",
+        "--filter-allele-balance",
+        str(threshold),
+        capture_output=True,
+        text=True,
+        input=inp,
+    )
+
+    return result.stdout
+
+
+def record_filter(
+    vcf_file: str, criteria: str, logic: str | None = None
+) -> str:
+    """Filter variant records using generic expressions."""
+
+    args = ["--filter", criteria]
+    if logic:
+        args.extend(["--logic", logic])
+
+    with open(vcf_file, "r", encoding="utf-8") as fh:
+        inp = fh.read()
+
+    result = run_tool(
+        "record_filter",
+        *args,
+        capture_output=True,
+        text=True,
+        input=inp,
+    )
+
+    return result.stdout
+
+
+def missing_detector(vcf_file: str) -> str:
+    """Flag variants with missing genotypes."""
+
+    with open(vcf_file, "r", encoding="utf-8") as fh:
+        inp = fh.read()
+
+    result = run_tool(
+        "missing_detector",
+        capture_output=True,
+        text=True,
+        input=inp,
+    )
+
+    return result.stdout
+
+
+def hwe_tester(vcf_file: str) -> list[dict]:
+    """Run Hardy-Weinberg equilibrium test and parse TSV output."""
+
+    with open(vcf_file, "r", encoding="utf-8") as fh:
+        inp = fh.read()
+
+    result = run_tool(
+        "hwe_tester",
+        capture_output=True,
+        text=True,
+        input=inp,
+    )
+
+    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
+    return list(reader)
+
+
+def inbreeding_calculator(
+    vcf_file: str,
+    freq_mode: str = "excludeSample",
+    skip_boundary: bool = False,
+) -> list[dict]:
+    """Compute inbreeding coefficients from a VCF."""
+
+    args = ["--freq-mode", freq_mode]
+    if skip_boundary:
+        args.append("--skip-boundary")
+
+    with open(vcf_file, "r", encoding="utf-8") as fh:
+        inp = fh.read()
+
+    result = run_tool(
+        "inbreeding_calculator",
+        *args,
+        capture_output=True,
+        text=True,
+        input=inp,
+    )
+
+    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
+    return list(reader)
+
+
+def variant_classifier(
+    vcf_file: str, append_info: bool = False
+) -> list[dict] | str:
+    """Classify variants and optionally annotate the VCF."""
+
+    args: list[str] = []
+    if append_info:
+        args.append("--append-info")
+
+    with open(vcf_file, "r", encoding="utf-8") as fh:
+        inp = fh.read()
+
+    result = run_tool(
+        "variant_classifier",
+        *args,
+        capture_output=True,
+        text=True,
+        input=inp,
+    )
+
+    if append_info:
+        return result.stdout
+
+    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
+    return list(reader)
+
+
+def cross_sample_concordance(
+    vcf_file: str, samples: Sequence[str] | None = None
+) -> list[dict]:
+    """Check genotype concordance across samples."""
+
+    args: list[str] = []
+    if samples:
+        args.extend(["--samples", ",".join(samples)])
+
+    with open(vcf_file, "r", encoding="utf-8") as fh:
+        inp = fh.read()
+
+    result = run_tool(
+        "cross_sample_concordance",
+        *args,
+        capture_output=True,
+        text=True,
+        input=inp,
+    )
+
+    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
+    return list(reader)
+
+
+def field_extractor(vcf_file: str, fields: Sequence[str]) -> list[dict]:
+    """Extract fields from a VCF and return rows as dictionaries."""
+
+    args = ["--fields", ",".join(fields)]
+
+    with open(vcf_file, "r", encoding="utf-8") as fh:
+        inp = fh.read()
+
+    result = run_tool(
+        "field_extractor",
+        *args,
+        capture_output=True,
+        text=True,
+        input=inp,
+    )
+
+    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
+    return list(reader)
 
 
 # Lazy attribute access for tool wrappers
