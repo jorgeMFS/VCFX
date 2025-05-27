@@ -6,6 +6,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <unistd.h>
+#include <regex>
 
 static std::string trim(const std::string &s){
     size_t start=0;
@@ -24,6 +25,15 @@ static std::vector<std::string> split(const std::string &s, char delim){
     return out;
 }
 
+static bool valid_dna(const std::string& s){
+    if(s.empty()) return false;
+    for(char c: s){
+        char u = std::toupper(static_cast<unsigned char>(c));
+        if(u!='A' && u!='C' && u!='G' && u!='T' && u!='N') return false;
+    }
+    return true;
+}
+
 int VCFXValidator::run(int argc, char* argv[]){
     bool hasStdin = !isatty(fileno(stdin));
     if(argc==1 && !hasStdin){
@@ -34,14 +44,16 @@ int VCFXValidator::run(int argc, char* argv[]){
     static struct option long_opts[]={
         {"help", no_argument, 0, 'h'},
         {"strict", no_argument, 0, 's'},
+        {"report-dups", no_argument, 0, 'd'},
         {0,0,0,0}
     };
     while(true){
-        int c= ::getopt_long(argc, argv, "hs", long_opts, nullptr);
+        int c= ::getopt_long(argc, argv, "hsd", long_opts, nullptr);
         if(c==-1) break;
         switch(c){
             case 'h': showHelp=true; break;
             case 's': strictMode= true; break;
+            case 'd': reportDuplicates = true; break;
             default: showHelp= true;
         }
     }
@@ -60,14 +72,18 @@ void VCFXValidator::displayHelp(){
 "  VCFX_validator [options] < input.vcf\n\n"
 "Options:\n"
 "  -h, --help     Show this help.\n"
-"  -s, --strict   Enable stricter checks.\n\n"
+"  -s, --strict   Enable stricter checks.\n"
+"  -d, --report-dups Report duplicate records.\n\n"
 "Description:\n"
 "  Validates:\n"
 "   * All '##' lines are recognized as meta lines.\n"
 "   * #CHROM line is present and well formed.\n"
 "   * Each data line has >=8 columns, checks CHROM non-empty, POS>0,\n"
 "     REF/ALT non-empty, QUAL is '.' or non-negative float, FILTER non-empty,\n"
-"     INFO is minimally checked.\n"
+"     INFO fields are checked against header definitions.\n"
+"   * FORMAT fields and genotype values are validated.\n"
+"   * REF and ALT sequences must contain only A,C,G,T,N.\n"
+"   * Duplicate variants are detected when --report-dups is used.\n"
 "  In strict mode additional checks are performed:\n"
 "   * Data line column count must match the #CHROM header.\n"
 "   * Sample columns must match the FORMAT field structure.\n"
@@ -76,8 +92,38 @@ void VCFXValidator::displayHelp(){
 }
 
 bool VCFXValidator::validateMetaLine(const std::string &line, int lineNumber){
-    // minimal check: must start with "##"
     if(line.size()<2) return false;
+    if(line.rfind("##INFO=",0)==0 || line.rfind("##FORMAT=",0)==0){
+        size_t start=line.find('<');
+        size_t end=line.rfind('>');
+        if(start==std::string::npos || end==std::string::npos || end<=start){
+            std::cerr<<"Error: malformed header at line "<<lineNumber<<".\n";
+            return false;
+        }
+        std::string inside=line.substr(start+1,end-start-1);
+        auto fields=split(inside,',');
+        std::string id,number,type;
+        for(auto &f:fields){
+            auto eq=f.find('=');
+            if(eq==std::string::npos) continue;
+            std::string key=trim(f.substr(0,eq));
+            std::string val=trim(f.substr(eq+1));
+            if(key=="ID") id=val;
+            else if(key=="Number") number=val;
+            else if(key=="Type") type=val;
+        }
+        if(id.empty()){
+            std::cerr<<"Error: header line missing ID at "<<lineNumber<<".\n";
+            return false;
+        }
+        FieldDef def{number,type};
+        if(line.rfind("##INFO=",0)==0){
+            infoDefs[id]=def;
+        }else{
+            formatDefs[id]=def;
+        }
+        return true;
+    }
     if(line[0]=='#' && line[1]=='#'){
         return true;
     }
@@ -169,9 +215,17 @@ bool VCFXValidator::validateDataLine(const std::string &line, int lineNumber){
         std::cerr<<"Error: line "<< lineNumber<<" REF is empty.\n";
         return false;
     }
+    if(!valid_dna(f[3])){
+        std::cerr<<"Error: line "<<lineNumber<<" REF has invalid characters.\n";
+        return false;
+    }
     // ALT
     if(f[4].empty()){
         std::cerr<<"Error: line "<< lineNumber<<" ALT is empty.\n";
+        return false;
+    }
+    if(!valid_dna(f[4])){
+        std::cerr<<"Error: line "<<lineNumber<<" ALT has invalid characters.\n";
         return false;
     }
     // QUAL => '.' or non-neg float
@@ -192,32 +246,62 @@ bool VCFXValidator::validateDataLine(const std::string &line, int lineNumber){
         std::cerr<<"Error: line "<<lineNumber<<" FILTER is empty.\n";
         return false;
     }
-    // INFO => minimal check
-    // could be '.' => ok
-    // else splitted by ';' => each either 'key=val' or 'flag'
+    // INFO field validation
     if(f[7]!="."){
         std::stringstream infoSS(f[7]);
         std::string token;
-        bool anyValid= false;
+        bool anyValid=false;
         while(std::getline(infoSS, token, ';')){
-            token= trim(token);
+            token=trim(token);
             if(token.empty()) continue;
-            auto eq= token.find('=');
-            if(eq== std::string::npos){
-                // treat as flag
-                anyValid= true;
-            } else {
-                // key=val
-                std::string k= token.substr(0, eq);
-                // std::string v= token.substr(eq+1);
+            auto eq=token.find('=');
+            if(eq==std::string::npos){
+                std::string k=token;
+                auto it=infoDefs.find(k);
+                if(it==infoDefs.end()){
+                    std::string msg="INFO field " + k + " not defined in header";
+                    if(strictMode){
+                        std::cerr<<"Error: "<<msg<<" on line "<<lineNumber<<".\n";
+                        return false;
+                    }else{
+                        std::cerr<<"Warning: "<<msg<<" on line "<<lineNumber<<".\n";
+                    }
+                }
+                anyValid=true;
+            }else{
+                std::string k=token.substr(0,eq);
+                std::string v=token.substr(eq+1);
                 if(k.empty()){
                     std::cerr<<"Error: line "<<lineNumber<<" has INFO with empty key.\n";
                     return false;
                 }
-                anyValid= true;
+                auto it=infoDefs.find(k);
+                if(it==infoDefs.end()){
+                    std::string msg="INFO field " + k + " not defined in header";
+                    if(strictMode){
+                        std::cerr<<"Error: "<<msg<<" on line "<<lineNumber<<".\n";
+                        return false;
+                    }else{
+                        std::cerr<<"Warning: "<<msg<<" on line "<<lineNumber<<".\n";
+                    }
+                }else if(!it->second.number.empty() &&
+                         std::all_of(it->second.number.begin(), it->second.number.end(), ::isdigit)){
+                    size_t expected=static_cast<size_t>(std::stoi(it->second.number));
+                    size_t have=split(v, ',').size();
+                    if(have!=expected){
+                        std::string msg="INFO field " + k + " expected " + it->second.number +
+                                         " values";
+                        if(strictMode){
+                            std::cerr<<"Error: "<<msg<<" on line "<<lineNumber<<".\n";
+                            return false;
+                        }else{
+                            std::cerr<<"Warning: "<<msg<<" on line "<<lineNumber<<".\n";
+                        }
+                    }
+                }
+                anyValid=true;
             }
         }
-        // if not anyValid => error
         if(!anyValid){
             std::cerr<<"Error: line "<<lineNumber<<" INFO not valid.\n";
             return false;
@@ -230,6 +314,18 @@ bool VCFXValidator::validateDataLine(const std::string &line, int lineNumber){
             return false;
         }
         std::vector<std::string> formatParts = split(f[8], ':');
+        for(const auto &fp : formatParts){
+            auto it = formatDefs.find(fp);
+            if(it==formatDefs.end()){
+                std::string msg = "FORMAT field " + fp + " not defined in header";
+                if(strictMode){
+                    std::cerr<<"Error: "<<msg<<" on line "<<lineNumber<<".\n";
+                    return false;
+                } else {
+                    std::cerr<<"Warning: "<<msg<<" on line "<<lineNumber<<".\n";
+                }
+            }
+        }
         for(size_t i=9;i<f.size();++i){
             if(f[i]=="." || f[i].empty()) continue;
             std::vector<std::string> sampleParts = split(f[i], ':');
@@ -243,6 +339,37 @@ bool VCFXValidator::validateDataLine(const std::string &line, int lineNumber){
                     std::cerr<<msg<<" on line "<<lineNumber<<".\n";
                 }
             }
+            for(size_t j=0;j<sampleParts.size() && j<formatParts.size();++j){
+                const std::string &key = formatParts[j];
+                const std::string &val = sampleParts[j];
+                auto it = formatDefs.find(key);
+                if(it!=formatDefs.end() && !it->second.number.empty() &&
+                   std::all_of(it->second.number.begin(), it->second.number.end(), ::isdigit)){
+                    size_t expected = static_cast<size_t>(std::stoi(it->second.number));
+                    size_t have = split(val, ',').size();
+                    if(have!=expected){
+                        std::string msg = "FORMAT field " + key + " expected " + it->second.number + " values";
+                        if(strictMode){
+                            std::cerr<<"Error: "<<msg<<" on line "<<lineNumber<<".\n";
+                            return false;
+                        } else {
+                            std::cerr<<"Warning: "<<msg<<" on line "<<lineNumber<<".\n";
+                        }
+                    }
+                }
+                if(key=="GT" && !val.empty()){
+                    static const std::regex gtRegex("^(\\.|(\\d+([/|]\\d+)*))$");
+                    if(!std::regex_match(val, gtRegex)){
+                        std::string msg = "invalid genotype";
+                        if(strictMode){
+                            std::cerr<<"Error: "<<msg<<" on line "<<lineNumber<<".\n";
+                            return false;
+                        } else {
+                            std::cerr<<"Warning: "<<msg<<" on line "<<lineNumber<<".\n";
+                        }
+                    }
+                }
+            }
         }
     } else if(f.size()>8){
         std::string msg = "Warning: data line has sample columns but header lacks FORMAT";
@@ -254,17 +381,40 @@ bool VCFXValidator::validateDataLine(const std::string &line, int lineNumber){
         }
     }
 
+    // duplicate detection
+    std::string key = f[0] + ":" + f[1] + ":" + f[3] + ":" + f[4];
+    if(seenVariants.count(key)){
+        std::string msg = "duplicate variant";
+        if(reportDuplicates){
+            std::cerr<<"Duplicate at line "<<lineNumber<<"\n";
+        }
+        if(strictMode){
+            std::cerr<<"Error: "<<msg<<" on line "<<lineNumber<<".\n";
+            return false;
+        } else {
+            std::cerr<<"Warning: "<<msg<<" on line "<<lineNumber<<".\n";
+        }
+    } else {
+        seenVariants.insert(key);
+    }
+
     return true;
 }
 
 bool VCFXValidator::validateVCF(std::istream &in){
+    std::string data;
+    if(!vcfx::read_maybe_compressed(in, data)){
+        std::cerr<<"Error: failed to read input stream.\n";
+        return false;
+    }
+    std::istringstream iss(data);
     std::string line;
     int lineNum=0;
-    bool foundChromLine= false;
+    bool foundChromLine=false;
     std::vector<std::string> lines;
 
     while(true){
-        if(!std::getline(in, line)) break;
+        if(!std::getline(iss, line)) break;
         lineNum++;
         if(line.empty()){
             // skip
