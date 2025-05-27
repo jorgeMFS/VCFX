@@ -1,13 +1,20 @@
 import subprocess
 import shutil
 import functools
+import csv
 import os
-from typing import Any, Callable
+from typing import Any, Callable, Sequence
 
 # Cache for storing the list of available tools once discovered
 _TOOL_CACHE: list[str] | None = None
 
-__all__ = ["available_tools", "run_tool"]
+__all__ = [
+    "available_tools",
+    "run_tool",
+    "alignment_checker",
+    "allele_counter",
+    "variant_counter",
+]
 
 
 def available_tools(refresh: bool = False) -> list[str]:
@@ -105,6 +112,107 @@ def run_tool(
         raise FileNotFoundError(f"VCFX tool '{tool}' not found in PATH")
     cmd = [exe, *map(str, args)]
     return subprocess.run(cmd, check=check, capture_output=capture_output, text=text, **kwargs)
+
+
+def alignment_checker(vcf_file: str, reference: str) -> list[dict]:
+    """Run ``alignment_checker`` and parse the TSV output.
+
+    Parameters
+    ----------
+    vcf_file : str
+        Path to the VCF file to check.
+    reference : str
+        Reference FASTA file.
+
+    Returns
+    -------
+    list[dict]
+        Parsed rows from the discrepancy report.
+    """
+
+    result = run_tool(
+        "alignment_checker",
+        "--alignment-discrepancy",
+        vcf_file,
+        reference,
+        capture_output=True,
+        text=True,
+    )
+
+    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
+    return list(reader)
+
+
+def allele_counter(vcf_file: str, samples: Sequence[str] | None = None) -> list[dict]:
+    """Run ``allele_counter`` and return allele counts.
+
+    Parameters
+    ----------
+    vcf_file : str
+        Path to the VCF input file.
+    samples : Sequence[str] | None, optional
+        Optional subset of sample names to process.
+
+    Returns
+    -------
+    list[dict]
+        Parsed allele counts.
+    """
+
+    args: list[str] = []
+    if samples:
+        args.extend(["--samples", " ".join(samples)])
+
+    with open(vcf_file, "r", encoding="utf-8") as fh:
+        inp = fh.read()
+
+    result = run_tool(
+        "allele_counter",
+        *args,
+        capture_output=True,
+        text=True,
+        input=inp,
+    )
+
+    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
+    return list(reader)
+
+
+def variant_counter(vcf_file: str, strict: bool = False) -> int:
+    """Count variants in a VCF using ``variant_counter``.
+
+    Parameters
+    ----------
+    vcf_file : str
+        Path to the VCF file.
+    strict : bool, optional
+        If ``True`` fail on malformed lines. Defaults to ``False``.
+
+    Returns
+    -------
+    int
+        Number of valid variants reported by the tool.
+    """
+
+    args: list[str] = []
+    if strict:
+        args.append("--strict")
+
+    with open(vcf_file, "r", encoding="utf-8") as fh:
+        inp = fh.read()
+
+    result = run_tool(
+        "variant_counter",
+        *args,
+        capture_output=True,
+        text=True,
+        input=inp,
+    )
+
+    out = result.stdout.strip()
+    if ":" in out:
+        out = out.split(":", 1)[1]
+    return int(out.strip())
 
 
 # Lazy attribute access for tool wrappers
