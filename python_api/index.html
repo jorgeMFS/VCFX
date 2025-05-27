@@ -2483,6 +2483,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#more-wrappers" class="md-nav__link">
+    <span class="md-ellipsis">
+      More Wrappers
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2643,6 +2652,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#more-wrappers" class="md-nav__link">
+    <span class="md-ellipsis">
+      More Wrappers
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2797,6 +2815,40 @@ objects instead of raw text strings.</p>
 <span class="c1"># Remove duplicate records</span>
 <span class="n">dedup</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">duplicate_remover</span><span class="p">(</span><span class="s2">&quot;tests/data/allele_balance_calc_A.vcf&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">dedup</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">))</span>  <span class="c1"># True</span>
+</code></pre></div>
+<h3 id="more-wrappers">More Wrappers<a class="headerlink" href="#more-wrappers" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Subset variants by allele frequency range</span>
+<span class="n">subset</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">af_subsetter</span><span class="p">(</span><span class="s2">&quot;tests/data/af_subsetter_A.vcf&quot;</span><span class="p">,</span> <span class="s2">&quot;0.01-0.1&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">subset</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;##&quot;</span><span class="p">))</span>
+
+<span class="c1"># Detect missing genotypes</span>
+<span class="n">flagged</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">missing_detector</span><span class="p">(</span><span class="s2">&quot;tests/data/concordance_missing_data.vcf&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;MISSING_GENOTYPES=1&quot;</span> <span class="ow">in</span> <span class="n">flagged</span><span class="p">)</span>
+
+<span class="c1"># Hardy-Weinberg equilibrium test</span>
+<span class="n">hwe</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">hwe_tester</span><span class="p">(</span><span class="s2">&quot;tests/data/hwe_tester/basic_hwe.vcf&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">hwe</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;HWE_pvalue&quot;</span><span class="p">])</span>
+
+<span class="c1"># Inbreeding coefficient calculation</span>
+<span class="n">coeff</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">inbreeding_calculator</span><span class="p">(</span>
+    <span class="s2">&quot;tests/data/inbreeding_calculator/single_sample_excludeSample_false.vcf&quot;</span><span class="p">,</span>
+    <span class="n">freq_mode</span><span class="o">=</span><span class="s2">&quot;excludeSample&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">coeff</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;InbreedingCoefficient&quot;</span><span class="p">])</span>
+
+<span class="c1"># Variant classification</span>
+<span class="n">classes</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">variant_classifier</span><span class="p">(</span><span class="s2">&quot;tests/data/classifier_mixed.vcf&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">classes</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;Classification&quot;</span><span class="p">])</span>  <span class="c1"># &#39;SNP&#39;</span>
+
+<span class="c1"># Cross-sample concordance</span>
+<span class="n">xconc</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">cross_sample_concordance</span><span class="p">(</span><span class="s2">&quot;tests/data/concordance_some_mismatch.vcf&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">xconc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;Concordance_Status&quot;</span><span class="p">])</span>  <span class="c1"># &#39;CONCORDANT&#39;</span>
+
+<span class="c1"># Extract specific fields</span>
+<span class="n">fields</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">field_extractor</span><span class="p">(</span>
+    <span class="s2">&quot;tests/data/field_extractor_input.vcf&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;CHROM&quot;</span><span class="p">,</span> <span class="s2">&quot;POS&quot;</span><span class="p">,</span> <span class="s2">&quot;ID&quot;</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;ID&quot;</span><span class="p">])</span>  <span class="c1"># &#39;rs123&#39;</span>
 </code></pre></div>
 
 
