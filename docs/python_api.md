@@ -63,8 +63,17 @@ print("VCFX version:", version)
 ## Tool Wrappers
 
 Besides the helper functions, the package provides lightweight wrappers for
-all command line tools shipped with VCFX.  The wrappers simply invoke the
+all command line tools shipped with VCFX. The wrappers simply invoke the
 corresponding ``VCFX_*`` executable via ``subprocess``.
+
+For the wrappers to work, either the ``vcfx`` wrapper script or the individual
+``VCFX_*`` binaries must be available on your ``PATH``. After building the
+project you can source ``add_vcfx_tools_to_path.sh`` to add the build
+directories to ``PATH``:
+
+```bash
+source /path/to/VCFX/add_vcfx_tools_to_path.sh
+```
 
 Use ``vcfx.available_tools()`` to see which tools are accessible on your
 ``PATH`` and call them either via ``vcfx.run_tool(name, *args)`` or by using
