@@ -60,5 +60,29 @@ assert filtered.startswith("##")
 
 dedup = vcfx.duplicate_remover("data/allele_balance_calc_A.vcf")
 assert dedup.startswith("##")
+
+subset = vcfx.af_subsetter("data/af_subsetter_A.vcf", "0.01-0.1")
+assert subset.startswith("##")
+
+flagged = vcfx.missing_detector("data/concordance_missing_data.vcf")
+assert "MISSING_GENOTYPES=1" in flagged
+
+hwe_rows = vcfx.hwe_tester("data/hwe_tester/basic_hwe.vcf")
+assert hwe_rows[0]["HWE_pvalue"]
+
+coeff = vcfx.inbreeding_calculator(
+    "data/inbreeding_calculator/single_sample_excludeSample_false.vcf",
+    freq_mode="excludeSample",
+)
+assert coeff[0]["InbreedingCoefficient"]
+
+classes = vcfx.variant_classifier("data/classifier_mixed.vcf")
+assert classes[0]["Classification"]
+
+xconc = vcfx.cross_sample_concordance("data/concordance_some_mismatch.vcf")
+assert xconc[0]["Concordance_Status"]
+
+fields = vcfx.field_extractor("data/field_extractor_input.vcf", ["CHROM", "POS"])
+assert fields[0]["CHROM"] == "chr1"
 print("Python tool wrappers OK")
 PY
