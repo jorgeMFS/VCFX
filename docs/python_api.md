@@ -161,8 +161,6 @@ dedup = vcfx.duplicate_remover("tests/data/allele_balance_calc_A.vcf")
 print(dedup.splitlines()[0].startswith("#"))  # True
 ```
 
-### More Wrappers
-
 ```python
 # Subset variants by allele frequency range
 subset = vcfx.af_subsetter("tests/data/af_subsetter_A.vcf", "0.01-0.1")
@@ -198,8 +196,6 @@ fields = vcfx.field_extractor(
 print(fields[0]["ID"])  # 'rs123'
 ```
 
-### Additional Tools
-
 ```python
 # Assign ancestry to samples
 assign = vcfx.ancestry_assigner(
@@ -213,7 +209,7 @@ dosage = vcfx.dosage_calculator("tests/data/dosage_calculator/basic.vcf")
 print(dosage[0]["Dosages"])  # '0,1,2'
 ```
 
-## New Wrappers
+### Further Wrappers
 
 Additional helper functions mirror the rest of the ``VCFX_*`` tools. They work
 like the wrappers above. A few examples:
