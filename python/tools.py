@@ -8,9 +8,8 @@ from typing import Any, Callable, Sequence
 # Cache for storing the list of available tools once discovered
 _TOOL_CACHE: list[str] | None = None
 
-__all__ = [
-    "available_tools",
-    "run_tool",
+# List of VCFX command line tools with convenience wrappers
+TOOL_NAMES: list[str] = [
     "alignment_checker",
     "allele_counter",
     "variant_counter",
@@ -72,6 +71,9 @@ __all__ = [
     "sv_handler",
     "validator",
 ]
+
+# Exported names from this module
+__all__ = ["available_tools", "run_tool", *TOOL_NAMES]
 
 
 def available_tools(refresh: bool = False) -> list[str]:
