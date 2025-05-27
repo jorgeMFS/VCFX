@@ -17,8 +17,8 @@ VCFX_inbreeding_calculator [OPTIONS] < input.vcf > output.txt
 | `--freq-mode` MODE | How to calculate allele frequencies: 'excludeSample' (default) or 'global' |
 | `--skip-boundary` | Skip sites with boundary frequencies (p=0 or p=1) |
 | `--count-boundary-as-used` | Count boundary sites in usedCount even when skipping them |
-| `-h`, `--help` | Display help message and exit |
-| `-v`, `--version` | Show program version and exit |
+| `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
+| `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
 ## Description
 

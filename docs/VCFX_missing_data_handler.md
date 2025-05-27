@@ -16,8 +16,8 @@ VCFX_missing_data_handler [OPTIONS] [files...] > processed.vcf
 |--------|-------------|
 | `--fill-missing`, `-f` | Impute missing genotypes with a default value |
 | `--default-genotype`, `-d` <GEN> | Specify the default genotype for imputation (default: "./.")  |
-| `--help`, `-h` | Display help message and exit |
-| `-v`, `--version` | Show program version and exit |
+| `--help`, `-h` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
+| `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
 ## Description
 

@@ -14,7 +14,7 @@ VCFX_tool_name [OPTIONS] < input.vcf > output.format
 
 | Option | Description |
 |--------|-------------|
-| `-h`, `--help` | Display help message and exit |
+| `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
 | `-o`, `--option1` | Description of option 1 |
 | `-p`, `--option2 VALUE` | Description of option 2 which requires a value |
 

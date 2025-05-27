@@ -108,6 +108,20 @@ vcfx list
 ```bash
 vcfx help allele_counter
 ```
+### Common Flags
+
+All tools recognize `-h`/`--help` and `-v`/`--version` via `vcfx::handle_common_flags`.
+A minimal `main()` typically looks like:
+```cpp
+static void show_help() { printHelp(); }
+
+int main(int argc, char* argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_example", show_help))
+        return 0;
+    // ...
+}
+```
+
 
 ## Building for WebAssembly
 
