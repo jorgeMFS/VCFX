@@ -48,5 +48,17 @@ assert summary[0]["Mean"] == "20.0000"
 
 fasta = vcfx.fasta_converter("data/fasta_converter/basic.vcf")
 assert fasta.startswith(">")
+
+balance = vcfx.allele_balance_calc("data/allele_balance_calc_A.vcf")
+assert balance[0]["Allele_Balance"] == "1.000000"
+
+conc = vcfx.concordance_checker("data/concordance_input.vcf", "SAMPLE1", "SAMPLE2")
+assert conc[0]["Concordance"] == "Concordant"
+
+filtered = vcfx.genotype_query("data/genotype_query/sample.vcf", "0/1")
+assert filtered.startswith("##")
+
+dedup = vcfx.duplicate_remover("data/allele_balance_calc_A.vcf")
+assert dedup.startswith("##")
 print("Python tool wrappers OK")
 PY

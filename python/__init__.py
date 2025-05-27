@@ -18,12 +18,18 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for pure Python envs
         "allele_counter",
         "variant_counter",
         "allele_freq_calc",
+        "allele_balance_calc",
+        "concordance_checker",
+        "genotype_query",
+        "duplicate_remover",
         "info_aggregator",
         "info_parser",
         "info_summarizer",
         "fasta_converter",
         "AlleleFrequency",
         "InfoSummary",
+        "AlleleBalance",
+        "ConcordanceRow",
     ]
 
     def trim(text: str) -> str:
@@ -61,12 +67,18 @@ else:
         "allele_counter",
         "variant_counter",
         "allele_freq_calc",
+        "allele_balance_calc",
+        "concordance_checker",
+        "genotype_query",
+        "duplicate_remover",
         "info_aggregator",
         "info_parser",
         "info_summarizer",
         "fasta_converter",
         "AlleleFrequency",
         "InfoSummary",
+        "AlleleBalance",
+        "ConcordanceRow",
     ]
 
 __version__ = get_version()
@@ -82,11 +94,20 @@ alignment_checker = _tools.alignment_checker
 allele_counter = _tools.allele_counter
 variant_counter = _tools.variant_counter
 allele_freq_calc = _tools.allele_freq_calc
+allele_balance_calc = _tools.allele_balance_calc
+concordance_checker = _tools.concordance_checker
+genotype_query = _tools.genotype_query
+duplicate_remover = _tools.duplicate_remover
 info_aggregator = _tools.info_aggregator
 info_parser = _tools.info_parser
 info_summarizer = _tools.info_summarizer
 fasta_converter = _tools.fasta_converter
-from .results import AlleleFrequency, InfoSummary
+from .results import (
+    AlleleFrequency,
+    InfoSummary,
+    AlleleBalance,
+    ConcordanceRow,
+)
 
 
 def __getattr__(name: str) -> Callable[..., subprocess.CompletedProcess]:
