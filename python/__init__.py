@@ -12,6 +12,11 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for pure Python envs
         "read_file_maybe_compressed",
         "read_maybe_compressed",
         "get_version",
+        "available_tools",
+        "run_tool",
+        "alignment_checker",
+        "allele_counter",
+        "variant_counter",
     ]
 
     def trim(text: str) -> str:
@@ -43,6 +48,11 @@ else:
         "read_file_maybe_compressed",
         "read_maybe_compressed",
         "get_version",
+        "available_tools",
+        "run_tool",
+        "alignment_checker",
+        "allele_counter",
+        "variant_counter",
     ]
 
 __version__ = get_version()
@@ -54,6 +64,9 @@ import subprocess
 # Re-export helper functions for convenience
 available_tools = _tools.available_tools
 run_tool = _tools.run_tool
+alignment_checker = _tools.alignment_checker
+allele_counter = _tools.allele_counter
+variant_counter = _tools.variant_counter
 
 
 def __getattr__(name: str) -> Callable[..., subprocess.CompletedProcess]:
