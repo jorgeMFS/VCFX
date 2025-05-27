@@ -31,7 +31,12 @@ def available_tools(refresh: bool = False) -> list[str]:
     global _TOOL_CACHE
     if _TOOL_CACHE is not None and not refresh:
         return _TOOL_CACHE
-    result = subprocess.run(["vcfx", "--list"], capture_output=True, text=True)
+
+    exe = shutil.which("vcfx")
+    if exe is None:
+        raise FileNotFoundError("vcfx wrapper not found in PATH")
+
+    result = subprocess.run([exe, "--list"], capture_output=True, text=True)
     if result.returncode != 0:
         _TOOL_CACHE = []
     else:
@@ -105,6 +110,8 @@ def __getattr__(name: str) -> Callable[..., subprocess.CompletedProcess]:
     ------
     AttributeError
         If *name* does not correspond to an available tool.
+    FileNotFoundError
+        If the ``vcfx`` wrapper cannot be located on ``PATH``.
     """
     tools = available_tools()
     if name in tools:
