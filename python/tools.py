@@ -15,7 +15,9 @@ __all__ = [
     "allele_counter",
     "variant_counter",
     "allele_freq_calc",
+    "ancestry_assigner",
     "allele_balance_calc",
+    "dosage_calculator",
     "concordance_checker",
     "genotype_query",
     "duplicate_remover",
@@ -158,7 +160,9 @@ def alignment_checker(vcf_file: str, reference: str) -> list[dict]:
     )
 
     reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    return list(reader)
+    rows = list(reader)
+
+    return rows
 
 
 def allele_counter(vcf_file: str, samples: Sequence[str] | None = None) -> list[dict]:
@@ -261,6 +265,33 @@ def allele_freq_calc(vcf_file: str) -> list[dict]:
     return list(reader)
 
 
+def ancestry_assigner(vcf_file: str, freq_file: str) -> list[dict]:
+    """Assign sample ancestry using a frequency reference file."""
+
+    with open(vcf_file, "r", encoding="utf-8") as fh:
+        inp = fh.read()
+
+    result = run_tool(
+        "ancestry_assigner",
+        "--assign-ancestry",
+        freq_file,
+        capture_output=True,
+        text=True,
+        input=inp,
+    )
+
+    rows: list[dict] = []
+    for line in result.stdout.splitlines():
+        line = line.strip()
+        if not line or ":" in line:
+            continue
+        parts = line.split()
+        if len(parts) == 2:
+            rows.append({"Sample": parts[0], "Assigned_Population": parts[1]})
+
+    return rows
+
+
 def info_aggregator(vcf_file: str, fields: Sequence[str]) -> str:
     """Aggregate INFO fields and return the annotated VCF text."""
 
@@ -351,6 +382,23 @@ def allele_balance_calc(
     result = run_tool(
         "allele_balance_calc",
         *args,
+        capture_output=True,
+        text=True,
+        input=inp,
+    )
+
+    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
+    return list(reader)
+
+
+def dosage_calculator(vcf_file: str) -> list[dict]:
+    """Calculate genotype dosages for each sample."""
+
+    with open(vcf_file, "r", encoding="utf-8") as fh:
+        inp = fh.read()
+
+    result = run_tool(
+        "dosage_calculator",
         capture_output=True,
         text=True,
         input=inp,
