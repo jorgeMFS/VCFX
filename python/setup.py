@@ -39,6 +39,7 @@ setup(
     version=read_version(),
     packages=['vcfx'],
     package_dir={'vcfx': '.'},
+    package_data={'vcfx': ['py.typed']},
     ext_modules=[CMakeExtension('vcfx._vcfx')],
     cmdclass={'build_ext': CMakeBuild},
     zip_safe=False,

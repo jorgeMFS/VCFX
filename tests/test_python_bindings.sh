@@ -14,6 +14,7 @@ cmake -DPYTHON_BINDINGS=ON ../..
 make -j
 
 cd "$SCRIPT_DIR"
+source "$ROOT_DIR/add_vcfx_tools_to_path.sh"
 
 PYTHONPATH="${BUILD_DIR}/python" python3 - <<'PY'
 import vcfx

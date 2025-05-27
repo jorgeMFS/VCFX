@@ -75,6 +75,21 @@ pip install --no-build-isolation ./python
 When offline, ensure the `setuptools` and `cmake` packages are already installed
 because build isolation is disabled.
 
+#### Building a Wheel
+
+To build a distributable wheel from the local checkout:
+
+```bash
+python3 -m venv venv && source venv/bin/activate
+python3 -m pip wheel ./python -w dist --no-build-isolation
+```
+
+When offline, install `setuptools` and `wheel` beforehand:
+
+```bash
+python3 -m pip install setuptools wheel
+```
+
 ### Python API
 
 VCFX also offers optional Python bindings. See
