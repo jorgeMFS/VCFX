@@ -27,6 +27,17 @@ std::vector<std::string> split(const std::string& str, char delimiter) {
     return result;
 }
 
+bool flag_present(int argc, char* argv[], const char* long_flag,
+                  const char* short_flag) {
+    for (int i = 1; i < argc; ++i) {
+        if (std::strcmp(argv[i], long_flag) == 0 ||
+            (short_flag && std::strcmp(argv[i], short_flag) == 0)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void print_error(const std::string& msg, std::ostream& os) {
     os << "Error: " << msg << '\n';
 }
