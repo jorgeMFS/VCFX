@@ -17,6 +17,13 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for pure Python envs
         "alignment_checker",
         "allele_counter",
         "variant_counter",
+        "allele_freq_calc",
+        "info_aggregator",
+        "info_parser",
+        "info_summarizer",
+        "fasta_converter",
+        "AlleleFrequency",
+        "InfoSummary",
     ]
 
     def trim(text: str) -> str:
@@ -53,6 +60,13 @@ else:
         "alignment_checker",
         "allele_counter",
         "variant_counter",
+        "allele_freq_calc",
+        "info_aggregator",
+        "info_parser",
+        "info_summarizer",
+        "fasta_converter",
+        "AlleleFrequency",
+        "InfoSummary",
     ]
 
 __version__ = get_version()
@@ -67,6 +81,12 @@ run_tool = _tools.run_tool
 alignment_checker = _tools.alignment_checker
 allele_counter = _tools.allele_counter
 variant_counter = _tools.variant_counter
+allele_freq_calc = _tools.allele_freq_calc
+info_aggregator = _tools.info_aggregator
+info_parser = _tools.info_parser
+info_summarizer = _tools.info_summarizer
+fasta_converter = _tools.fasta_converter
+from .results import AlleleFrequency, InfoSummary
 
 
 def __getattr__(name: str) -> Callable[..., subprocess.CompletedProcess]:

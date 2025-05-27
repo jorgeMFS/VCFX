@@ -109,3 +109,27 @@ print(counts[0]["Alt_Count"])  # '1'
 n = vcfx.variant_counter("tests/data/variant_counter_normal.vcf")
 print(n)
 ```
+
+Additional wrappers are available for other tools:
+
+```python
+# Allele frequency calculation
+freqs = vcfx.allele_freq_calc("tests/data/allele_freq_calc/simple.vcf")
+print(freqs[0]["Allele_Frequency"])  # '0.5000'
+
+# Aggregate INFO fields and read the updated VCF text
+annotated = vcfx.info_aggregator("tests/data/aggregator/basic.vcf", ["DP"])
+print("#AGGREGATION_SUMMARY" in annotated)
+
+# Parse INFO fields into dictionaries
+info_rows = vcfx.info_parser("tests/data/info_parser/basic.vcf", ["DP"])
+print(info_rows[0]["DP"])  # '10'
+
+# Summarize INFO fields
+summary = vcfx.info_summarizer("tests/data/info_summarizer/basic.vcf", ["DP"])
+print(summary[0]["Mean"])  # '20.0000'
+
+# Convert VCF to FASTA alignment
+fasta = vcfx.fasta_converter("tests/data/fasta_converter/basic.vcf")
+print(fasta.splitlines()[0])  # '>SAMPLE1'
+```
