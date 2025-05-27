@@ -2723,6 +2723,27 @@ objects instead of raw text strings.</p>
 <span class="n">n</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">variant_counter</span><span class="p">(</span><span class="s2">&quot;tests/data/variant_counter_normal.vcf&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
 </code></pre></div>
+<p>Additional wrappers are available for other tools:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Allele frequency calculation</span>
+<span class="n">freqs</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">allele_freq_calc</span><span class="p">(</span><span class="s2">&quot;tests/data/allele_freq_calc/simple.vcf&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">freqs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;Allele_Frequency&quot;</span><span class="p">])</span>  <span class="c1"># &#39;0.5000&#39;</span>
+
+<span class="c1"># Aggregate INFO fields and read the updated VCF text</span>
+<span class="n">annotated</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">info_aggregator</span><span class="p">(</span><span class="s2">&quot;tests/data/aggregator/basic.vcf&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;DP&quot;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;#AGGREGATION_SUMMARY&quot;</span> <span class="ow">in</span> <span class="n">annotated</span><span class="p">)</span>
+
+<span class="c1"># Parse INFO fields into dictionaries</span>
+<span class="n">info_rows</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">info_parser</span><span class="p">(</span><span class="s2">&quot;tests/data/info_parser/basic.vcf&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;DP&quot;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">info_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;DP&quot;</span><span class="p">])</span>  <span class="c1"># &#39;10&#39;</span>
+
+<span class="c1"># Summarize INFO fields</span>
+<span class="n">summary</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">info_summarizer</span><span class="p">(</span><span class="s2">&quot;tests/data/info_summarizer/basic.vcf&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;DP&quot;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">summary</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;Mean&quot;</span><span class="p">])</span>  <span class="c1"># &#39;20.0000&#39;</span>
+
+<span class="c1"># Convert VCF to FASTA alignment</span>
+<span class="n">fasta</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">fasta_converter</span><span class="p">(</span><span class="s2">&quot;tests/data/fasta_converter/basic.vcf&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">fasta</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># &#39;&gt;SAMPLE1&#39;</span>
+</code></pre></div>
 
 
 
