@@ -75,6 +75,18 @@ pip install --no-build-isolation ./python
 When offline, ensure the `setuptools` and `cmake` packages are already installed
 because build isolation is disabled.
 
+### Python API
+
+VCFX also offers optional Python bindings. See
+[the Python API docs](docs/python_api.md) for details. After installing, you can
+list available command line tools via `vcfx.available_tools()` and run any tool
+with `vcfx.run_tool()`:
+
+```python
+import vcfx
+vcfx.run_tool("alignment_checker", "--help")
+```
+
 ### Basic Usage Example
 
 ```bash
