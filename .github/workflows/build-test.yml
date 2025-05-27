@@ -89,11 +89,15 @@ jobs:
           export PATH="$PWD/install/bin:$PATH"
           echo "$PWD/install/bin" >> $GITHUB_PATH
           cat <<'EOF' | python -
-          import vcfx
+          import pathlib, vcfx, sys
           print('version:', vcfx.get_version())
           tools = vcfx.available_tools()
           print('tools:', len(tools))
           if tools:
               vcfx.run_tool(tools[0], '--help', check=False)
+          p = pathlib.Path(vcfx.__file__).resolve().parent / 'py.typed'
+          print('py.typed exists:', p.is_file())
+          if not p.is_file():
+              sys.exit('py.typed missing')
           EOF
         shell: bash
