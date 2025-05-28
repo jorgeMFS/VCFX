@@ -26,10 +26,10 @@ PYTHONPATH="${BUILD_DIR}/python" python3 - <<'PY'
 import vcfx
 
 rows = vcfx.alignment_checker("data/align_Y.vcf", "data/align_refY.fa")
-assert rows and rows[0]["Discrepancy_Type"] == "ALT_MISMATCH"
+assert rows and rows[0].Discrepancy_Type == "ALT_MISMATCH"
 
 counts = vcfx.allele_counter("data/allele_counter_A.vcf")
-assert counts[0]["Sample"] == "S1"
+assert counts[0].Sample == "S1"
 
 n = vcfx.variant_counter("data/variant_counter_normal.vcf")
 assert n == 5
