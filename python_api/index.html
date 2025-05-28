@@ -2759,7 +2759,9 @@ see <a href="../examples/python_usage.py"><code>examples/python_usage.py</code><
 <h2 id="convenience-wrappers">Convenience Wrappers<a class="headerlink" href="#convenience-wrappers" title="Permanent link">&para;</a></h2>
 <p>Several tools have Python helpers that run the command line program and
 parse its output into structured data. Many wrappers return dataclasses
-from <code>vcfx.results</code> rather than raw dictionaries.</p>
+from <code>vcfx.results</code> rather than raw dictionaries. When using these
+helpers numeric columns are automatically converted to <code>int</code> or <code>float</code>
+based on the dataclass field annotations.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">vcfx</span>
 
 <span class="c1"># Check alignment discrepancies and get dataclass instances</span>
