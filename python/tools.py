@@ -3,7 +3,23 @@ import shutil
 import functools
 import csv
 import os
-from typing import Any, Callable, Sequence
+from typing import Any, Callable, Sequence, Type, TypeVar
+
+from .results import (
+    AlleleFrequency,
+    InfoSummary,
+    AlleleBalance,
+    ConcordanceRow,
+    HWEResult,
+    InbreedingCoefficient,
+    VariantClassification,
+    CrossSampleConcordanceRow,
+    AncestryAssignment,
+    DosageRow,
+    AncestryInference,
+    DistanceRow,
+    IndexEntry,
+)
 
 # Cache for storing the list of available tools once discovered
 _TOOL_CACHE: list[str] | None = None
@@ -185,6 +201,23 @@ def _convert_fields(rows: list[dict], converters: dict[str, Callable[[str], Any]
     return rows
 
 
+T = TypeVar("T")
+
+
+def _tsv_to_dataclasses(
+    text: str,
+    cls: Type[T],
+    converters: dict[str, Callable[[str], Any]] | None = None,
+) -> list[T]:
+    """Parse TSV *text* into instances of *cls* applying *converters*."""
+
+    reader = csv.DictReader(text.splitlines(), delimiter="\t")
+    rows = list(reader)
+    if converters:
+        _convert_fields(rows, converters)
+    return [cls(**row) for row in rows]
+
+
 def alignment_checker(vcf_file: str, reference: str) -> list[dict]:
     """Run ``alignment_checker`` and parse the TSV output.
 
@@ -288,7 +321,7 @@ def variant_counter(vcf_file: str, strict: bool = False) -> int:
     return int(out.strip())
 
 
-def allele_freq_calc(vcf_file: str) -> list[dict]:
+def allele_freq_calc(vcf_file: str) -> list[AlleleFrequency]:
     """Calculate allele frequencies from a VCF file.
 
     Parameters
@@ -298,8 +331,8 @@ def allele_freq_calc(vcf_file: str) -> list[dict]:
 
     Returns
     -------
-    list[dict]
-        Rows from the frequency table as dictionaries.
+    list[AlleleFrequency]
+        Parsed frequency table rows.
     """
 
     with open(vcf_file, "r", encoding="utf-8") as fh:
@@ -312,12 +345,14 @@ def allele_freq_calc(vcf_file: str) -> list[dict]:
         input=inp,
     )
 
-    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    rows = list(reader)
-    return _convert_fields(rows, {"POS": int, "Allele_Frequency": float})
+    return _tsv_to_dataclasses(
+        result.stdout,
+        AlleleFrequency,
+        {"POS": int, "Allele_Frequency": float},
+    )
 
 
-def ancestry_assigner(vcf_file: str, freq_file: str) -> list[dict]:
+def ancestry_assigner(vcf_file: str, freq_file: str) -> list[AncestryAssignment]:
     """Assign sample ancestry using a frequency reference file."""
 
     with open(vcf_file, "r", encoding="utf-8") as fh:
@@ -341,7 +376,7 @@ def ancestry_assigner(vcf_file: str, freq_file: str) -> list[dict]:
         if len(parts) == 2:
             rows.append({"Sample": parts[0], "Assigned_Population": parts[1]})
 
-    return rows
+    return [AncestryAssignment(**row) for row in rows]
 
 
 def info_aggregator(vcf_file: str, fields: Sequence[str]) -> str:
@@ -383,7 +418,7 @@ def info_parser(vcf_file: str, fields: Sequence[str]) -> list[dict]:
     return list(reader)
 
 
-def info_summarizer(vcf_file: str, fields: Sequence[str]) -> list[dict]:
+def info_summarizer(vcf_file: str, fields: Sequence[str]) -> list[InfoSummary]:
     """Summarize INFO fields from a VCF file."""
 
     args = ["--info", ",".join(fields)]
@@ -399,9 +434,11 @@ def info_summarizer(vcf_file: str, fields: Sequence[str]) -> list[dict]:
         input=inp,
     )
 
-    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    rows = list(reader)
-    return _convert_fields(rows, {"Mean": float, "Median": float, "Mode": float})
+    return _tsv_to_dataclasses(
+        result.stdout,
+        InfoSummary,
+        {"Mean": float, "Median": float, "Mode": float},
+    )
 
 
 def fasta_converter(vcf_file: str) -> str:
@@ -422,7 +459,7 @@ def fasta_converter(vcf_file: str) -> str:
 
 def allele_balance_calc(
     vcf_file: str, samples: Sequence[str] | None = None
-) -> list[dict]:
+) -> list[AlleleBalance]:
     """Calculate allele balance for samples in a VCF."""
 
     args: list[str] = []
@@ -440,12 +477,14 @@ def allele_balance_calc(
         input=inp,
     )
 
-    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    rows = list(reader)
-    return _convert_fields(rows, {"POS": int, "Allele_Balance": float})
+    return _tsv_to_dataclasses(
+        result.stdout,
+        AlleleBalance,
+        {"POS": int, "Allele_Balance": float},
+    )
 
 
-def dosage_calculator(vcf_file: str) -> list[dict]:
+def dosage_calculator(vcf_file: str) -> list[DosageRow]:
     """Calculate genotype dosages for each sample."""
 
     with open(vcf_file, "r", encoding="utf-8") as fh:
@@ -458,14 +497,12 @@ def dosage_calculator(vcf_file: str) -> list[dict]:
         input=inp,
     )
 
-    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    rows = list(reader)
-    return _convert_fields(rows, {"POS": int})
+    return _tsv_to_dataclasses(result.stdout, DosageRow, {"POS": int})
 
 
 def concordance_checker(
     vcf_file: str, sample1: str, sample2: str
-) -> list[dict]:
+) -> list[ConcordanceRow]:
     """Check genotype concordance between two samples."""
 
     args = ["--samples", f"{sample1} {sample2}"]
@@ -481,9 +518,7 @@ def concordance_checker(
         input=inp,
     )
 
-    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    rows = list(reader)
-    return _convert_fields(rows, {"POS": int})
+    return _tsv_to_dataclasses(result.stdout, ConcordanceRow, {"POS": int})
 
 
 def genotype_query(
@@ -600,7 +635,7 @@ def missing_detector(vcf_file: str) -> str:
     return result.stdout
 
 
-def hwe_tester(vcf_file: str) -> list[dict]:
+def hwe_tester(vcf_file: str) -> list[HWEResult]:
     """Run Hardy-Weinberg equilibrium test and parse TSV output."""
 
     with open(vcf_file, "r", encoding="utf-8") as fh:
@@ -613,16 +648,14 @@ def hwe_tester(vcf_file: str) -> list[dict]:
         input=inp,
     )
 
-    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    rows = list(reader)
-    return _convert_fields(rows, {"POS": int, "HWE_pvalue": float})
+    return _tsv_to_dataclasses(result.stdout, HWEResult, {"POS": int, "HWE_pvalue": float})
 
 
 def inbreeding_calculator(
     vcf_file: str,
     freq_mode: str = "excludeSample",
     skip_boundary: bool = False,
-) -> list[dict]:
+) -> list[InbreedingCoefficient]:
     """Compute inbreeding coefficients from a VCF."""
 
     args = ["--freq-mode", freq_mode]
@@ -640,14 +673,16 @@ def inbreeding_calculator(
         input=inp,
     )
 
-    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    rows = list(reader)
-    return _convert_fields(rows, {"InbreedingCoefficient": float})
+    return _tsv_to_dataclasses(
+        result.stdout,
+        InbreedingCoefficient,
+        {"InbreedingCoefficient": float},
+    )
 
 
 def variant_classifier(
     vcf_file: str, append_info: bool = False
-) -> list[dict] | str:
+) -> list[VariantClassification] | str:
     """Classify variants and optionally annotate the VCF."""
 
     args: list[str] = []
@@ -668,14 +703,12 @@ def variant_classifier(
     if append_info:
         return result.stdout
 
-    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    rows = list(reader)
-    return _convert_fields(rows, {"POS": int})
+    return _tsv_to_dataclasses(result.stdout, VariantClassification, {"POS": int})
 
 
 def cross_sample_concordance(
     vcf_file: str, samples: Sequence[str] | None = None
-) -> list[dict]:
+) -> list[CrossSampleConcordanceRow]:
     """Check genotype concordance across samples."""
 
     args: list[str] = []
@@ -693,10 +726,9 @@ def cross_sample_concordance(
         input=inp,
     )
 
-    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    rows = list(reader)
-    return _convert_fields(
-        rows,
+    return _tsv_to_dataclasses(
+        result.stdout,
+        CrossSampleConcordanceRow,
         {"POS": int, "Num_Samples": int, "Unique_Normalized_Genotypes": int},
     )
 
@@ -721,7 +753,7 @@ def field_extractor(vcf_file: str, fields: Sequence[str]) -> list[dict]:
     return list(reader)
 
 
-def ancestry_inferrer(vcf_file: str, freq_file: str) -> list[dict]:
+def ancestry_inferrer(vcf_file: str, freq_file: str) -> list[AncestryInference]:
     """Infer sample ancestry using population frequencies."""
 
     with open(vcf_file, "r", encoding="utf-8") as fh:
@@ -736,8 +768,7 @@ def ancestry_inferrer(vcf_file: str, freq_file: str) -> list[dict]:
         input=inp,
     )
 
-    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    return list(reader)
+    return _tsv_to_dataclasses(result.stdout, AncestryInference, None)
 
 
 def annotation_extractor(vcf_file: str, fields: Sequence[str]) -> list[dict]:
@@ -813,7 +844,7 @@ def diff_tool(file1: str, file2: str) -> str:
     return result.stdout
 
 
-def distance_calculator(vcf_file: str) -> list[dict]:
+def distance_calculator(vcf_file: str) -> list[DistanceRow]:
     """Calculate distances between consecutive variants."""
 
     with open(vcf_file, "r", encoding="utf-8") as fh:
@@ -826,9 +857,11 @@ def distance_calculator(vcf_file: str) -> list[dict]:
         input=inp,
     )
 
-    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    rows = list(reader)
-    return _convert_fields(rows, {"POS": int, "PREV_POS": int, "DISTANCE": int})
+    return _tsv_to_dataclasses(
+        result.stdout,
+        DistanceRow,
+        {"POS": int, "PREV_POS": int, "DISTANCE": int},
+    )
 
 
 def file_splitter(
@@ -998,7 +1031,7 @@ def indel_normalizer(vcf_file: str) -> str:
     return result.stdout
 
 
-def indexer(vcf_file: str) -> list[dict]:
+def indexer(vcf_file: str) -> list[IndexEntry]:
     """Create a byte offset index for a VCF."""
 
     with open(vcf_file, "r", encoding="utf-8") as fh:
@@ -1011,9 +1044,11 @@ def indexer(vcf_file: str) -> list[dict]:
         input=inp,
     )
 
-    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    rows = list(reader)
-    return _convert_fields(rows, {"POS": int, "FILE_OFFSET": int})
+    return _tsv_to_dataclasses(
+        result.stdout,
+        IndexEntry,
+        {"POS": int, "FILE_OFFSET": int},
+    )
 
 
 def ld_calculator(vcf_file: str, region: str | None = None) -> str:
