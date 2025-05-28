@@ -220,6 +220,12 @@ dosage = vcfx.dosage_calculator("tests/data/dosage_calculator/basic.vcf")
 print(dosage[0].Dosages)  # '0,1,2'
 ```
 
+```python
+# Create a position index
+index_rows = vcfx.indexer("tests/data/indexer/basic.vcf")
+print(index_rows[0].FILE_OFFSET)  # 255
+```
+
 ### Further Wrappers
 
 Additional helper functions mirror the rest of the ``VCFX_*`` tools. They work
