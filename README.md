@@ -177,6 +177,13 @@ You can also execute all shell scripts directly with:
 bash ../tests/test_all.sh
 ```
 
+Once the Python tests are migrated to `pytest`, run them with:
+
+```bash
+pytest tests/python
+```
+
+
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](docs/CONTRIBUTING.md) for details.
