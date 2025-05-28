@@ -62,6 +62,7 @@ set(TEST_SCRIPTS
     test_doc_lookup.sh
     test_python_bindings.sh
     test_python_tool_wrappers.sh
+    test_python_tool_wrappers_extra.sh
 )
 
 foreach(script ${TEST_SCRIPTS})
