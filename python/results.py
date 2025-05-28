@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 
 __all__ = [
+    "AlignmentDiscrepancy",
+    "AlleleCount",
     "AlleleFrequency",
     "InfoSummary",
     "AlleleBalance",
@@ -15,6 +17,30 @@ __all__ = [
     "DistanceRow",
     "IndexEntry",
 ]
+
+
+@dataclass
+class AlignmentDiscrepancy:
+    CHROM: str
+    POS: int
+    ID: str
+    REF: str
+    ALT: str
+    Discrepancy_Type: str
+    Reference_Value: str
+    VCF_Value: str
+
+
+@dataclass
+class AlleleCount:
+    CHROM: str
+    POS: int
+    ID: str
+    REF: str
+    ALT: str
+    Sample: str
+    Ref_Count: int
+    Alt_Count: int
 
 
 @dataclass

@@ -101,13 +101,13 @@ from `vcfx.results` rather than raw dictionaries.
 ```python
 import vcfx
 
-# Check alignment discrepancies and get a list of dictionaries
+# Check alignment discrepancies and get dataclass instances
 rows = vcfx.alignment_checker("tests/data/align_Y.vcf", "tests/data/align_refY.fa")
-print(rows[0]["Discrepancy_Type"])  # 'ALT_MISMATCH'
+print(rows[0].Discrepancy_Type)  # 'ALT_MISMATCH'
 
 # Count alleles for all samples
 counts = vcfx.allele_counter("tests/data/allele_counter_A.vcf")
-print(counts[0]["Alt_Count"])  # '1'
+print(counts[0].Alt_Count)  # 1
 
 # Simply count the variants in a VCF
 n = vcfx.variant_counter("tests/data/variant_counter_normal.vcf")
