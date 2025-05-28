@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vcfx"
-version = "1.0.2"
+dynamic = ["version"]
 description = "Python bindings for the VCFX toolkit"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -22,3 +22,6 @@ classifiers = [
 
 [tool.setuptools.package-data]
 "vcfx" = ["py.typed"]
+
+[tool.setuptools.dynamic]
+version = {attr = "vcfx.__version__"}

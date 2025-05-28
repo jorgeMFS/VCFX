@@ -33,7 +33,15 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for pure Python envs
         try:
             return version(__package__ or "vcfx")
         except PackageNotFoundError:
-            return "0.0.0"
+            try:
+                from pathlib import Path
+                import sys
+                script_dir = Path(__file__).resolve().parent.parent / "scripts"
+                sys.path.insert(0, str(script_dir))
+                from extract_version import extract_version  # type: ignore
+                return extract_version()
+            except Exception:
+                return "0.0.0"
 
 from . import tools as _tools
 from .tools import TOOL_NAMES
