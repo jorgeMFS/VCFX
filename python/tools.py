@@ -4,6 +4,7 @@ import functools
 import csv
 import os
 from typing import Any, Callable, Sequence, Type, TypeVar
+from dataclasses import fields as dataclass_fields
 
 from .results import (
     AlignmentDiscrepancy,
@@ -212,7 +213,11 @@ def _tsv_to_dataclasses(
     converters: dict[str, Callable[[str], Any]] | None = None,
     fieldnames: Sequence[str] | None = None,
 ) -> list[T]:
-    """Parse TSV *text* into instances of *cls* applying *converters*.
+    """Parse TSV *text* into instances of *cls*.
+
+    If *converters* is not provided, the field types defined on ``cls``
+    are used to cast values (``int`` and ``float``). Custom converters may
+    be supplied to override this behaviour.
 
     Parameters
     ----------
@@ -229,8 +234,18 @@ def _tsv_to_dataclasses(
     lines = [ln for ln in text.splitlines() if ln.strip()]
     reader = csv.DictReader(lines, delimiter="\t", fieldnames=fieldnames)
     rows = list(reader)
+
+    if converters is None:
+        converters = {}
+        for f in dataclass_fields(cls):
+            if f.type is int:
+                converters[f.name] = int
+            elif f.type is float:
+                converters[f.name] = float
+
     if converters:
         _convert_fields(rows, converters)
+
     return [cls(**row) for row in rows]
 
 
@@ -259,11 +274,7 @@ def alignment_checker(vcf_file: str, reference: str) -> list[AlignmentDiscrepanc
         text=True,
     )
 
-    return _tsv_to_dataclasses(
-        result.stdout,
-        AlignmentDiscrepancy,
-        {"POS": int},
-    )
+    return _tsv_to_dataclasses(result.stdout, AlignmentDiscrepancy)
 
 
 def allele_counter(vcf_file: str, samples: Sequence[str] | None = None) -> list[AlleleCount]:
@@ -297,11 +308,7 @@ def allele_counter(vcf_file: str, samples: Sequence[str] | None = None) -> list[
         input=inp,
     )
 
-    return _tsv_to_dataclasses(
-        result.stdout,
-        AlleleCount,
-        {"POS": int, "Ref_Count": int, "Alt_Count": int},
-    )
+    return _tsv_to_dataclasses(result.stdout, AlleleCount)
 
 
 def variant_counter(vcf_file: str, strict: bool = False) -> int:
@@ -365,11 +372,7 @@ def allele_freq_calc(vcf_file: str) -> list[AlleleFrequency]:
         input=inp,
     )
 
-    return _tsv_to_dataclasses(
-        result.stdout,
-        AlleleFrequency,
-        {"POS": int, "Allele_Frequency": float},
-    )
+    return _tsv_to_dataclasses(result.stdout, AlleleFrequency)
 
 
 def ancestry_assigner(vcf_file: str, freq_file: str) -> list[AncestryAssignment]:
@@ -449,11 +452,7 @@ def info_summarizer(vcf_file: str, fields: Sequence[str]) -> list[InfoSummary]:
         input=inp,
     )
 
-    return _tsv_to_dataclasses(
-        result.stdout,
-        InfoSummary,
-        {"Mean": float, "Median": float, "Mode": float},
-    )
+    return _tsv_to_dataclasses(result.stdout, InfoSummary)
 
 
 def fasta_converter(vcf_file: str) -> str:
@@ -492,11 +491,7 @@ def allele_balance_calc(
         input=inp,
     )
 
-    return _tsv_to_dataclasses(
-        result.stdout,
-        AlleleBalance,
-        {"POS": int, "Allele_Balance": float},
-    )
+    return _tsv_to_dataclasses(result.stdout, AlleleBalance)
 
 
 def dosage_calculator(vcf_file: str) -> list[DosageRow]:
@@ -512,7 +507,7 @@ def dosage_calculator(vcf_file: str) -> list[DosageRow]:
         input=inp,
     )
 
-    return _tsv_to_dataclasses(result.stdout, DosageRow, {"POS": int})
+    return _tsv_to_dataclasses(result.stdout, DosageRow)
 
 
 def concordance_checker(
@@ -533,7 +528,7 @@ def concordance_checker(
         input=inp,
     )
 
-    return _tsv_to_dataclasses(result.stdout, ConcordanceRow, {"POS": int})
+    return _tsv_to_dataclasses(result.stdout, ConcordanceRow)
 
 
 def genotype_query(
@@ -663,7 +658,7 @@ def hwe_tester(vcf_file: str) -> list[HWEResult]:
         input=inp,
     )
 
-    return _tsv_to_dataclasses(result.stdout, HWEResult, {"POS": int, "HWE_pvalue": float})
+    return _tsv_to_dataclasses(result.stdout, HWEResult)
 
 
 def inbreeding_calculator(
@@ -688,11 +683,7 @@ def inbreeding_calculator(
         input=inp,
     )
 
-    return _tsv_to_dataclasses(
-        result.stdout,
-        InbreedingCoefficient,
-        {"InbreedingCoefficient": float},
-    )
+    return _tsv_to_dataclasses(result.stdout, InbreedingCoefficient)
 
 
 def variant_classifier(
@@ -718,7 +709,7 @@ def variant_classifier(
     if append_info:
         return result.stdout
 
-    return _tsv_to_dataclasses(result.stdout, VariantClassification, {"POS": int})
+    return _tsv_to_dataclasses(result.stdout, VariantClassification)
 
 
 def cross_sample_concordance(
@@ -741,11 +732,7 @@ def cross_sample_concordance(
         input=inp,
     )
 
-    return _tsv_to_dataclasses(
-        result.stdout,
-        CrossSampleConcordanceRow,
-        {"POS": int, "Num_Samples": int, "Unique_Normalized_Genotypes": int},
-    )
+    return _tsv_to_dataclasses(result.stdout, CrossSampleConcordanceRow)
 
 
 def field_extractor(vcf_file: str, fields: Sequence[str]) -> list[dict]:
@@ -872,11 +859,7 @@ def distance_calculator(vcf_file: str) -> list[DistanceRow]:
         input=inp,
     )
 
-    return _tsv_to_dataclasses(
-        result.stdout,
-        DistanceRow,
-        {"POS": int, "PREV_POS": int, "DISTANCE": int},
-    )
+    return _tsv_to_dataclasses(result.stdout, DistanceRow)
 
 
 def file_splitter(
@@ -1059,11 +1042,7 @@ def indexer(vcf_file: str) -> list[IndexEntry]:
         input=inp,
     )
 
-    return _tsv_to_dataclasses(
-        result.stdout,
-        IndexEntry,
-        {"POS": int, "FILE_OFFSET": int},
-    )
+    return _tsv_to_dataclasses(result.stdout, IndexEntry)
 
 
 def ld_calculator(vcf_file: str, region: str | None = None) -> str:

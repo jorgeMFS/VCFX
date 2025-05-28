@@ -96,7 +96,9 @@ see [``examples/python_usage.py``](../examples/python_usage.py).
 
 Several tools have Python helpers that run the command line program and
 parse its output into structured data. Many wrappers return dataclasses
-from `vcfx.results` rather than raw dictionaries.
+from `vcfx.results` rather than raw dictionaries. When using these
+helpers numeric columns are automatically converted to ``int`` or ``float``
+based on the dataclass field annotations.
 
 ```python
 import vcfx
