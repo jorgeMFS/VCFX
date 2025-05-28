@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 import pathlib
 import subprocess
 from setuptools import setup, Extension

@@ -43,11 +43,11 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for pure Python envs
             except Exception:
                 return "0.0.0"
 
-from . import tools as _tools
-from .tools import TOOL_NAMES
-from typing import Callable
-import subprocess
-from .results import (
+from . import tools as _tools  # noqa: E402
+from .tools import TOOL_NAMES  # noqa: E402
+from typing import Callable  # noqa: E402
+import subprocess  # noqa: E402
+from .results import (  # noqa: E402
     AlignmentDiscrepancy,
     AlleleCount,
     AlleleFrequency,
