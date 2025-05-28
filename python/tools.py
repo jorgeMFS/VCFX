@@ -6,6 +6,8 @@ import os
 from typing import Any, Callable, Sequence, Type, TypeVar
 
 from .results import (
+    AlignmentDiscrepancy,
+    AlleleCount,
     AlleleFrequency,
     InfoSummary,
     AlleleBalance,
@@ -218,7 +220,7 @@ def _tsv_to_dataclasses(
     return [cls(**row) for row in rows]
 
 
-def alignment_checker(vcf_file: str, reference: str) -> list[dict]:
+def alignment_checker(vcf_file: str, reference: str) -> list[AlignmentDiscrepancy]:
     """Run ``alignment_checker`` and parse the TSV output.
 
     Parameters
@@ -230,7 +232,7 @@ def alignment_checker(vcf_file: str, reference: str) -> list[dict]:
 
     Returns
     -------
-    list[dict]
+    list[AlignmentDiscrepancy]
         Parsed rows from the discrepancy report.
     """
 
@@ -243,13 +245,14 @@ def alignment_checker(vcf_file: str, reference: str) -> list[dict]:
         text=True,
     )
 
-    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    rows = list(reader)
+    return _tsv_to_dataclasses(
+        result.stdout,
+        AlignmentDiscrepancy,
+        {"POS": int},
+    )
 
-    return rows
 
-
-def allele_counter(vcf_file: str, samples: Sequence[str] | None = None) -> list[dict]:
+def allele_counter(vcf_file: str, samples: Sequence[str] | None = None) -> list[AlleleCount]:
     """Run ``allele_counter`` and return allele counts.
 
     Parameters
@@ -261,7 +264,7 @@ def allele_counter(vcf_file: str, samples: Sequence[str] | None = None) -> list[
 
     Returns
     -------
-    list[dict]
+    list[AlleleCount]
         Parsed allele counts.
     """
 
@@ -280,8 +283,11 @@ def allele_counter(vcf_file: str, samples: Sequence[str] | None = None) -> list[
         input=inp,
     )
 
-    reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    return list(reader)
+    return _tsv_to_dataclasses(
+        result.stdout,
+        AlleleCount,
+        {"POS": int, "Ref_Count": int, "Alt_Count": int},
+    )
 
 
 def variant_counter(vcf_file: str, strict: bool = False) -> int:
