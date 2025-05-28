@@ -27,7 +27,24 @@ SH
 chmod +x "$TMPDIR/bin/vcfx"
 export PATH="$TMPDIR/bin:/usr/bin:/bin"
 
-PYTHONPATH="$TMPDIR" python3 - <<PY
+PY=python3
+if command -v python3.10 >/dev/null 2>&1; then
+    PY=python3.10
+else
+    version=$(python3 - <<'EOF'
+import sys
+print(f"{sys.version_info.major} {sys.version_info.minor}")
+EOF
+    )
+    read -r MAJOR MINOR <<<"$version"
+    if [ "$MAJOR" -lt 3 ] || { [ "$MAJOR" -eq 3 ] && [ "$MINOR" -lt 10 ]; }; then
+        echo "python3 version is <3.10 and python3.10 not found; skipping"
+        rm -rf "$TMPDIR"
+        exit 0
+    fi
+fi
+
+PYTHONPATH="$TMPDIR" "$PY" - <<PY
 import vcfx
 expected = "${VERSION}"
 if vcfx.__version__ != expected:
