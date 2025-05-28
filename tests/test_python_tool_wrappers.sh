@@ -107,6 +107,9 @@ assert inf[0].Inferred_Population == "EUR"
 dist = vcfx.distance_calculator("data/variant_counter_normal.vcf")
 assert isinstance(dist[1].DISTANCE, int)
 
+index_rows = vcfx.indexer("data/indexer/basic.vcf")
+assert isinstance(index_rows[0].FILE_OFFSET, int)
+
 norm_text = vcfx.indel_normalizer("data/basic_indel.vcf")
 assert norm_text.startswith("##")
 
