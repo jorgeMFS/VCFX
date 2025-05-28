@@ -713,7 +713,17 @@ def variant_classifier(
     if append_info:
         return result.stdout
 
-    return _tsv_to_dataclasses(result.stdout, VariantClassification)
+    lines = [ln for ln in result.stdout.splitlines() if ln.strip()]
+    header_idx = None
+    for i, ln in enumerate(lines):
+        if ln.split("\t")[:2] == ["CHROM", "POS"]:
+            header_idx = i + 1
+            break
+    if header_idx is not None:
+        lines = lines[header_idx:]
+    fieldnames = ["CHROM", "POS", "ID", "REF", "ALT", "Classification"]
+    text = "\n".join(lines)
+    return _tsv_to_dataclasses(text, VariantClassification, fieldnames=fieldnames)
 
 
 def cross_sample_concordance(
