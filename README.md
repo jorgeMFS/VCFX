@@ -66,6 +66,13 @@ make
 ```
 
 Enabling `PYTHON_BINDINGS` builds the Python module.
+
+### Versioning
+
+The version numbers for both the C++ tools and the Python package are defined
+once in `CMakeLists.txt` (`VCFX_VERSION_MAJOR`, `VCFX_VERSION_MINOR`,
+`VCFX_VERSION_PATCH`). The Python build reads these values at install time to
+ensure a single source of truth.
 #### Installing Python Bindings from a Local Checkout
 
 ```bash
