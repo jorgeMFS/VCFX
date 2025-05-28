@@ -35,7 +35,7 @@ if [ ${#BASE_DIRS[@]} -eq 0 ]; then
     return 1
 fi
 
-# Gather directories containing executables named VCFX_*
+# Gather directories containing executables named VCFX_* or the vcfx wrapper
 TOOL_DIRS=""
 for base in "${BASE_DIRS[@]}"; do
     while IFS= read -r -d '' toolExec; do
@@ -43,7 +43,7 @@ for base in "${BASE_DIRS[@]}"; do
         if [[ ":$TOOL_DIRS:" != *":$toolDir:"* ]]; then
             TOOL_DIRS="${TOOL_DIRS}:${toolDir}"
         fi
-    done < <(find "$base" -type f -perm /111 -name 'VCFX_*' -print0 2>/dev/null)
+    done < <(find "$base" -type f -perm /111 \( -name 'VCFX_*' -o -name 'vcfx' \) -print0 2>/dev/null)
 done
 
 # If empty (no tools found), bail out
