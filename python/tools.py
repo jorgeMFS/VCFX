@@ -5,7 +5,7 @@ import shutil
 import functools
 import csv
 import os
-from typing import Any, Callable, Sequence, Type, TypeVar
+from typing import Any, Callable, Sequence, Type, TypeVar, get_type_hints
 from dataclasses import fields as dataclass_fields
 
 from .results import (
@@ -239,10 +239,12 @@ def _tsv_to_dataclasses(
 
     if converters is None:
         converters = {}
+        hints = get_type_hints(cls)
         for f in dataclass_fields(cls):
-            if f.type is int:
+            ftype = hints.get(f.name, f.type)
+            if ftype is int:
                 converters[f.name] = int
-            elif f.type is float:
+            elif ftype is float:
                 converters[f.name] = float
 
     if converters:
