@@ -5,8 +5,8 @@ set -o pipefail
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ROOT_DIR="$( cd "$SCRIPT_DIR/.." && pwd )"
 
-# Determine package version from pyproject.toml
-VERSION=$(grep '^version' "$ROOT_DIR/python/pyproject.toml" | cut -d '"' -f2)
+# Determine package version from the CMake configuration
+VERSION=$(python "$ROOT_DIR/scripts/extract_version.py")
 TMPDIR="$(mktemp -d)"
 mkdir -p "$TMPDIR/vcfx"
 cp "$ROOT_DIR"/python/*.py "$TMPDIR/vcfx"
