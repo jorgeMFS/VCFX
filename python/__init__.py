@@ -34,6 +34,8 @@ from .tools import TOOL_NAMES
 from typing import Callable
 import subprocess
 from .results import (
+    AlignmentDiscrepancy,
+    AlleleCount,
     AlleleFrequency,
     InfoSummary,
     AlleleBalance,
@@ -76,6 +78,8 @@ __all__ = [
     "available_tools",
     "run_tool",
     *TOOL_NAMES,
+    "AlignmentDiscrepancy",
+    "AlleleCount",
     "AlleleFrequency",
     "InfoSummary",
     "AlleleBalance",
