@@ -61,10 +61,11 @@ conda install -c bioconda vcfx
 git clone https://github.com/ieeta-pt/VCFX.git
 cd VCFX
 mkdir -p build && cd build
-cmake ..
+cmake .. -DPYTHON_BINDINGS=ON
 make
 ```
 
+Enabling `PYTHON_BINDINGS` builds the Python module.
 #### Installing Python Bindings from a Local Checkout
 
 ```bash
@@ -88,6 +89,13 @@ When offline, install `setuptools` and `wheel` beforehand:
 
 ```bash
 python3 -m pip install setuptools wheel
+```
+
+#### Installing from PyPI or a Wheel
+
+```bash
+pip install vcfx               # from PyPI
+pip install dist/vcfx-*.whl    # from a local wheel
 ```
 
 ### Python API
