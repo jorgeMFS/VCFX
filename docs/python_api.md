@@ -95,8 +95,8 @@ see [``examples/python_usage.py``](../examples/python_usage.py).
 ## Convenience Wrappers
 
 Several tools have Python helpers that run the command line program and
-parse its output into structured data. These wrappers return Python
-objects instead of raw text strings.
+parse its output into structured data. Many wrappers return dataclasses
+from `vcfx.results` rather than raw dictionaries.
 
 ```python
 import vcfx
@@ -119,7 +119,7 @@ Additional wrappers are available for other tools:
 ```python
 # Allele frequency calculation
 freqs = vcfx.allele_freq_calc("tests/data/allele_freq_calc/simple.vcf")
-print(freqs[0]["Allele_Frequency"])  # '0.5000'
+print(freqs[0].Allele_Frequency)  # 0.5000
 
 # Aggregate INFO fields and read the updated VCF text
 annotated = vcfx.info_aggregator("tests/data/aggregator/basic.vcf", ["DP"])
@@ -131,7 +131,7 @@ print(info_rows[0]["DP"])  # '10'
 
 # Summarize INFO fields
 summary = vcfx.info_summarizer("tests/data/info_summarizer/basic.vcf", ["DP"])
-print(summary[0]["Mean"])  # '20.0000'
+print(summary[0].Mean)  # 20.0000
 
 # Convert VCF to FASTA alignment
 fasta = vcfx.fasta_converter("tests/data/fasta_converter/basic.vcf")
@@ -143,7 +143,7 @@ print(fasta.splitlines()[0])  # '>SAMPLE1'
 ```python
 # Calculate allele balance for all samples
 balance = vcfx.allele_balance_calc("tests/data/allele_balance_calc_A.vcf")
-print(balance[0]["Allele_Balance"])  # '1.000000'
+print(balance[0].Allele_Balance)  # 1.000000
 
 # Check concordance between two samples
 conc = vcfx.concordance_checker(
@@ -151,7 +151,9 @@ conc = vcfx.concordance_checker(
     "SAMPLE1",
     "SAMPLE2",
 )
-print(conc[0]["Concordance"])  # 'Concordant'
+print(conc[0].Concordance)  # 'Concordant'
+```
+```python
 
 # Query variants with heterozygous genotypes
 filtered = vcfx.genotype_query(
@@ -176,22 +178,22 @@ print("MISSING_GENOTYPES=1" in flagged)
 
 # Hardy-Weinberg equilibrium test
 hwe = vcfx.hwe_tester("tests/data/hwe_tester/basic_hwe.vcf")
-print(hwe[0]["HWE_pvalue"])
+print(hwe[0].HWE_pvalue)
 
 # Inbreeding coefficient calculation
 coeff = vcfx.inbreeding_calculator(
     "tests/data/inbreeding_calculator/single_sample_excludeSample_false.vcf",
     freq_mode="excludeSample",
 )
-print(coeff[0]["InbreedingCoefficient"])
+print(coeff[0].InbreedingCoefficient)
 
 # Variant classification
 classes = vcfx.variant_classifier("tests/data/classifier_mixed.vcf")
-print(classes[0]["Classification"])  # 'SNP'
+print(classes[0].Classification)  # 'SNP'
 
 # Cross-sample concordance
 xconc = vcfx.cross_sample_concordance("tests/data/concordance_some_mismatch.vcf")
-print(xconc[0]["Concordance_Status"])  # 'CONCORDANT'
+print(xconc[0].Concordance_Status)  # 'CONCORDANT'
 
 # Extract specific fields
 fields = vcfx.field_extractor(
@@ -206,11 +208,13 @@ assign = vcfx.ancestry_assigner(
     "tests/data/ancestry_assigner/input.vcf",
     "tests/data/ancestry_assigner/freq.tsv",
 )
-print(assign[0]["Assigned_Population"])  # 'EUR'
+print(assign[0].Assigned_Population)  # 'EUR'
+```
+```python
 
 # Calculate genotype dosages
 dosage = vcfx.dosage_calculator("tests/data/dosage_calculator/basic.vcf")
-print(dosage[0]["Dosages"])  # '0,1,2'
+print(dosage[0].Dosages)  # '0,1,2'
 ```
 
 ### Further Wrappers
@@ -224,7 +228,7 @@ infer = vcfx.ancestry_inferrer(
     "tests/data/ancestry_inferrer/eur_samples.vcf",
     "tests/data/ancestry_inferrer/population_freqs.txt",
 )
-print(infer[0]["Inferred_Population"])  # 'EUR'
+print(infer[0].Inferred_Population)  # 'EUR'
 
 # Extract annotation fields
 rows = vcfx.annotation_extractor(
