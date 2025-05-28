@@ -17,6 +17,14 @@ if [ -d "${BUILD_SRC_DIR}" ]; then
     BASE_DIRS+=("${BUILD_SRC_DIR}")
 fi
 
+# Also consider nested build directories that may contain their own src
+# tree (e.g. when building the Python bindings in build/python_bindings).
+for sub in "${REPO_ROOT}"/build/*/src; do
+    if [ -d "$sub" ] && [[ ! " ${BASE_DIRS[*]} " =~ " $sub " ]]; then
+        BASE_DIRS+=("$sub")
+    fi
+done
+
 # Also check the standard installation prefix used in the Docker image
 if compgen -G "/usr/local/bin/VCFX_*" > /dev/null; then
     BASE_DIRS+=("/usr/local/bin")
@@ -27,7 +35,7 @@ if [ ${#BASE_DIRS[@]} -eq 0 ]; then
     return 1
 fi
 
-# Gather directories containing executables named VCFX_*
+# Gather directories containing executables named VCFX_* or the vcfx wrapper
 TOOL_DIRS=""
 for base in "${BASE_DIRS[@]}"; do
     while IFS= read -r -d '' toolExec; do
@@ -35,7 +43,7 @@ for base in "${BASE_DIRS[@]}"; do
         if [[ ":$TOOL_DIRS:" != *":$toolDir:"* ]]; then
             TOOL_DIRS="${TOOL_DIRS}:${toolDir}"
         fi
-    done < <(find "$base" -type f -perm /111 -name 'VCFX_*' -print0 2>/dev/null)
+    done < <(find "$base" -type f -perm /111 \( -name 'VCFX_*' -o -name 'vcfx' \) -print0 2>/dev/null)
 done
 
 # If empty (no tools found), bail out
