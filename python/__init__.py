@@ -28,8 +28,6 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for pure Python envs
     def get_version() -> str:
         """Return the toolkit version when bindings are unavailable."""
         return "0.0.0"
-else:
-    pass
 
 from . import tools as _tools
 from .tools import TOOL_NAMES
@@ -56,8 +54,18 @@ __version__ = get_version()
 # Re-export helper functions for convenience
 available_tools = _tools.available_tools
 run_tool = _tools.run_tool
-for _name in TOOL_NAMES:
-    globals()[_name] = getattr(_tools, _name)
+
+# Export command wrappers if the vcfx helper is available.  When the
+# wrapper cannot be located on ``PATH`` importing ``vcfx`` should still
+# succeed so that helper functions like :func:`trim` remain usable.  In
+# that case the tool wrappers will be resolved lazily via
+# ``__getattr__``.
+try:  # pragma: no cover - depends on external binaries being built
+    for _name in TOOL_NAMES:
+        globals()[_name] = getattr(_tools, _name)
+except FileNotFoundError:
+    # Tools are unavailable; they will be looked up on demand.
+    pass
 
 __all__ = [
     "trim",
