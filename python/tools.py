@@ -1029,8 +1029,16 @@ def indel_normalizer(vcf_file: str) -> str:
     return result.stdout
 
 
-def indexer(vcf_file: str) -> list[IndexEntry]:
-    """Create a byte offset index for a VCF."""
+def indexer(vcf_file: str, header: bool = True) -> list[IndexEntry]:
+    """Create a byte offset index for a VCF.
+
+    Parameters
+    ----------
+    vcf_file : str
+        Path to the VCF file to index.
+    header : bool, optional
+        Set to ``False`` if the output lacks a header row. Defaults to ``True``.
+    """
 
     with open(vcf_file, "r", encoding="utf-8") as fh:
         inp = fh.read()
@@ -1042,7 +1050,9 @@ def indexer(vcf_file: str) -> list[IndexEntry]:
         input=inp,
     )
 
-    return _tsv_to_dataclasses(result.stdout, IndexEntry)
+    fields = ["CHROM", "POS", "FILE_OFFSET"] if not header else None
+
+    return _tsv_to_dataclasses(result.stdout, IndexEntry, fieldnames=fields)
 
 
 def ld_calculator(vcf_file: str, region: str | None = None) -> str:
