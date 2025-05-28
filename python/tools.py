@@ -210,10 +210,24 @@ def _tsv_to_dataclasses(
     text: str,
     cls: Type[T],
     converters: dict[str, Callable[[str], Any]] | None = None,
+    fieldnames: Sequence[str] | None = None,
 ) -> list[T]:
-    """Parse TSV *text* into instances of *cls* applying *converters*."""
+    """Parse TSV *text* into instances of *cls* applying *converters*.
 
-    reader = csv.DictReader(text.splitlines(), delimiter="\t")
+    Parameters
+    ----------
+    text : str
+        TSV formatted text to parse.
+    cls : Type[T]
+        Dataclass type to instantiate for each row.
+    converters : dict[str, Callable[[str], Any]] | None, optional
+        Optional mapping of field names to converter functions.
+    fieldnames : Sequence[str] | None, optional
+        Explicit field names when *text* has no header row.
+    """
+
+    lines = [ln for ln in text.splitlines() if ln.strip()]
+    reader = csv.DictReader(lines, delimiter="\t", fieldnames=fieldnames)
     rows = list(reader)
     if converters:
         _convert_fields(rows, converters)
@@ -373,16 +387,11 @@ def ancestry_assigner(vcf_file: str, freq_file: str) -> list[AncestryAssignment]
         input=inp,
     )
 
-    rows: list[dict] = []
-    for line in result.stdout.splitlines():
-        line = line.strip()
-        if not line or ":" in line:
-            continue
-        parts = line.split()
-        if len(parts) == 2:
-            rows.append({"Sample": parts[0], "Assigned_Population": parts[1]})
-
-    return [AncestryAssignment(**row) for row in rows]
+    return _tsv_to_dataclasses(
+        result.stdout,
+        AncestryAssignment,
+        fieldnames=["Sample", "Assigned_Population"],
+    )
 
 
 def info_aggregator(vcf_file: str, fields: Sequence[str]) -> str:
