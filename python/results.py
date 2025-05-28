@@ -20,36 +20,36 @@ __all__ = [
 @dataclass
 class AlleleFrequency:
     CHROM: str
-    POS: str
+    POS: int
     ID: str
     REF: str
     ALT: str
-    Allele_Frequency: str
+    Allele_Frequency: float
 
 
 @dataclass
 class InfoSummary:
     INFO_Field: str
-    Mean: str
-    Median: str
-    Mode: str
+    Mean: float
+    Median: float
+    Mode: float
 
 
 @dataclass
 class AlleleBalance:
     CHROM: str
-    POS: str
+    POS: int
     ID: str
     REF: str
     ALT: str
     Sample: str
-    Allele_Balance: str
+    Allele_Balance: float
 
 
 @dataclass
 class ConcordanceRow:
     CHROM: str
-    POS: str
+    POS: int
     ID: str
     REF: str
     ALT: str
@@ -61,23 +61,23 @@ class ConcordanceRow:
 @dataclass
 class HWEResult:
     CHROM: str
-    POS: str
+    POS: int
     ID: str
     REF: str
     ALT: str
-    HWE_pvalue: str
+    HWE_pvalue: float
 
 
 @dataclass
 class InbreedingCoefficient:
     Sample: str
-    InbreedingCoefficient: str
+    InbreedingCoefficient: float
 
 
 @dataclass
 class VariantClassification:
     CHROM: str
-    POS: str
+    POS: int
     ID: str
     REF: str
     ALT: str
@@ -87,12 +87,12 @@ class VariantClassification:
 @dataclass
 class CrossSampleConcordanceRow:
     CHROM: str
-    POS: str
+    POS: int
     ID: str
     REF: str
     ALT: str
-    Num_Samples: str
-    Unique_Normalized_Genotypes: str
+    Num_Samples: int
+    Unique_Normalized_Genotypes: int
     Concordance_Status: str
 
 
@@ -105,7 +105,7 @@ class AncestryAssignment:
 @dataclass
 class DosageRow:
     CHROM: str
-    POS: str
+    POS: int
     ID: str
     REF: str
     ALT: str
@@ -121,13 +121,13 @@ class AncestryInference:
 @dataclass
 class DistanceRow:
     CHROM: str
-    POS: str
-    PREV_POS: str
-    DISTANCE: str
+    POS: int
+    PREV_POS: int
+    DISTANCE: int
 
 
 @dataclass
 class IndexEntry:
     CHROM: str
-    POS: str
-    FILE_OFFSET: str
+    POS: int
+    FILE_OFFSET: int
