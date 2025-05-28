@@ -43,7 +43,11 @@ for base in "${BASE_DIRS[@]}"; do
         if [[ ":$TOOL_DIRS:" != *":$toolDir:"* ]]; then
             TOOL_DIRS="${TOOL_DIRS}:${toolDir}"
         fi
-    done < <(find "$base" -type f -perm /111 \( -name 'VCFX_*' -o -name 'vcfx' \) -print0 2>/dev/null)
+    done < <(
+        find "$base" -type f \
+            \( -perm -u+x -o -perm -g+x -o -perm -o+x \) \
+            \( -name 'VCFX_*' -o -name 'vcfx' \) -print0 2>/dev/null
+    )
 done
 
 # If empty (no tools found), bail out
