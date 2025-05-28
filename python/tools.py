@@ -173,6 +173,18 @@ def run_tool(
     return subprocess.run(cmd, check=check, capture_output=capture_output, text=text, **kwargs)
 
 
+def _convert_fields(rows: list[dict], converters: dict[str, Callable[[str], Any]]) -> list[dict]:
+    """Apply *converters* to fields in each row in *rows*."""
+    for row in rows:
+        for key, func in converters.items():
+            if key in row:
+                try:
+                    row[key] = func(row[key])
+                except ValueError:
+                    row[key] = float("nan")
+    return rows
+
+
 def alignment_checker(vcf_file: str, reference: str) -> list[dict]:
     """Run ``alignment_checker`` and parse the TSV output.
 
@@ -301,7 +313,8 @@ def allele_freq_calc(vcf_file: str) -> list[dict]:
     )
 
     reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    return list(reader)
+    rows = list(reader)
+    return _convert_fields(rows, {"POS": int, "Allele_Frequency": float})
 
 
 def ancestry_assigner(vcf_file: str, freq_file: str) -> list[dict]:
@@ -387,7 +400,8 @@ def info_summarizer(vcf_file: str, fields: Sequence[str]) -> list[dict]:
     )
 
     reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    return list(reader)
+    rows = list(reader)
+    return _convert_fields(rows, {"Mean": float, "Median": float, "Mode": float})
 
 
 def fasta_converter(vcf_file: str) -> str:
@@ -427,7 +441,8 @@ def allele_balance_calc(
     )
 
     reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    return list(reader)
+    rows = list(reader)
+    return _convert_fields(rows, {"POS": int, "Allele_Balance": float})
 
 
 def dosage_calculator(vcf_file: str) -> list[dict]:
@@ -444,7 +459,8 @@ def dosage_calculator(vcf_file: str) -> list[dict]:
     )
 
     reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    return list(reader)
+    rows = list(reader)
+    return _convert_fields(rows, {"POS": int})
 
 
 def concordance_checker(
@@ -466,7 +482,8 @@ def concordance_checker(
     )
 
     reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    return list(reader)
+    rows = list(reader)
+    return _convert_fields(rows, {"POS": int})
 
 
 def genotype_query(
@@ -597,7 +614,8 @@ def hwe_tester(vcf_file: str) -> list[dict]:
     )
 
     reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    return list(reader)
+    rows = list(reader)
+    return _convert_fields(rows, {"POS": int, "HWE_pvalue": float})
 
 
 def inbreeding_calculator(
@@ -623,7 +641,8 @@ def inbreeding_calculator(
     )
 
     reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    return list(reader)
+    rows = list(reader)
+    return _convert_fields(rows, {"InbreedingCoefficient": float})
 
 
 def variant_classifier(
@@ -650,7 +669,8 @@ def variant_classifier(
         return result.stdout
 
     reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    return list(reader)
+    rows = list(reader)
+    return _convert_fields(rows, {"POS": int})
 
 
 def cross_sample_concordance(
@@ -674,7 +694,11 @@ def cross_sample_concordance(
     )
 
     reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    return list(reader)
+    rows = list(reader)
+    return _convert_fields(
+        rows,
+        {"POS": int, "Num_Samples": int, "Unique_Normalized_Genotypes": int},
+    )
 
 
 def field_extractor(vcf_file: str, fields: Sequence[str]) -> list[dict]:
@@ -803,7 +827,8 @@ def distance_calculator(vcf_file: str) -> list[dict]:
     )
 
     reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    return list(reader)
+    rows = list(reader)
+    return _convert_fields(rows, {"POS": int, "PREV_POS": int, "DISTANCE": int})
 
 
 def file_splitter(
@@ -987,7 +1012,8 @@ def indexer(vcf_file: str) -> list[dict]:
     )
 
     reader = csv.DictReader(result.stdout.splitlines(), delimiter="\t")
-    return list(reader)
+    rows = list(reader)
+    return _convert_fields(rows, {"POS": int, "FILE_OFFSET": int})
 
 
 def ld_calculator(vcf_file: str, region: str | None = None) -> str:
