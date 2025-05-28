@@ -30,6 +30,7 @@ assert rows and rows[0].Discrepancy_Type == "ALT_MISMATCH"
 
 counts = vcfx.allele_counter("data/allele_counter_A.vcf")
 assert counts[0].Sample == "S1"
+assert isinstance(counts[0].Ref_Count, int)
 
 n = vcfx.variant_counter("data/variant_counter_normal.vcf")
 assert n == 5
@@ -45,6 +46,7 @@ assert parsed[0]["DP"] == "10"
 
 summary = vcfx.info_summarizer("data/info_summarizer/basic.vcf", ["DP"])
 assert abs(summary[0].Mean - 20.0) < 1e-6
+assert isinstance(summary[0].Median, float)
 
 fasta = vcfx.fasta_converter("data/fasta_converter/basic.vcf")
 assert fasta.startswith(">")
@@ -81,6 +83,7 @@ assert classes[0].Classification
 
 xconc = vcfx.cross_sample_concordance("data/concordance_some_mismatch.vcf")
 assert xconc[0].Concordance_Status
+assert isinstance(xconc[0].Num_Samples, int)
 
 fields = vcfx.field_extractor("data/field_extractor_input.vcf", ["CHROM", "POS"])
 assert fields[0]["CHROM"] == "chr1"
