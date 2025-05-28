@@ -5,6 +5,7 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - fallback for pure Python envs
     import gzip
     from pathlib import Path
+    from importlib.metadata import PackageNotFoundError, version
 
     def trim(text: str) -> str:
         """Return *text* without leading/trailing whitespace."""
@@ -27,7 +28,10 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for pure Python envs
 
     def get_version() -> str:
         """Return the toolkit version when bindings are unavailable."""
-        return "0.0.0"
+        try:
+            return version(__package__ or "vcfx")
+        except PackageNotFoundError:
+            return "0.0.0"
 
 from . import tools as _tools
 from .tools import TOOL_NAMES
