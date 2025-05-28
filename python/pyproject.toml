@@ -1,3 +1,11 @@
 [build-system]
-requires = ["setuptools>=40.8", "cmake"]
+requires = ["setuptools>=61", "cmake"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "vcfx"
+version = "1.0.2"
+description = "Python bindings for the VCFX toolkit"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
