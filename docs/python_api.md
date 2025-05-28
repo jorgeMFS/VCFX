@@ -208,6 +208,7 @@ assign = vcfx.ancestry_assigner(
     "tests/data/ancestry_assigner/input.vcf",
     "tests/data/ancestry_assigner/freq.tsv",
 )
+# ``assign`` is a list of :class:`vcfx.results.AncestryAssignment` objects
 print(assign[0].Assigned_Population)  # 'EUR'
 ```
 ```python
