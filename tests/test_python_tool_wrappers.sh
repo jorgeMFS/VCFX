@@ -35,7 +35,7 @@ n = vcfx.variant_counter("data/variant_counter_normal.vcf")
 assert n == 5
 
 freqs = vcfx.allele_freq_calc("data/allele_freq_calc/simple.vcf")
-assert freqs[0]["Allele_Frequency"] == "0.5000"
+assert abs(freqs[0]["Allele_Frequency"] - 0.5) < 1e-6
 
 annotated = vcfx.info_aggregator("data/aggregator/basic.vcf", ["DP"])
 assert "#AGGREGATION_SUMMARY" in annotated
@@ -44,13 +44,13 @@ parsed = vcfx.info_parser("data/info_parser/basic.vcf", ["DP"])
 assert parsed[0]["DP"] == "10"
 
 summary = vcfx.info_summarizer("data/info_summarizer/basic.vcf", ["DP"])
-assert summary[0]["Mean"] == "20.0000"
+assert abs(summary[0]["Mean"] - 20.0) < 1e-6
 
 fasta = vcfx.fasta_converter("data/fasta_converter/basic.vcf")
 assert fasta.startswith(">")
 
 balance = vcfx.allele_balance_calc("data/allele_balance_calc_A.vcf")
-assert balance[0]["Allele_Balance"] == "1.000000"
+assert abs(balance[0]["Allele_Balance"] - 1.0) < 1e-6
 
 conc = vcfx.concordance_checker("data/concordance_input.vcf", "SAMPLE1", "SAMPLE2")
 assert conc[0]["Concordance"] == "Concordant"
@@ -68,13 +68,13 @@ flagged = vcfx.missing_detector("data/concordance_missing_data.vcf")
 assert "MISSING_GENOTYPES=1" in flagged
 
 hwe_rows = vcfx.hwe_tester("data/hwe_tester/basic_hwe.vcf")
-assert hwe_rows[0]["HWE_pvalue"]
+assert isinstance(hwe_rows[0]["HWE_pvalue"], float)
 
 coeff = vcfx.inbreeding_calculator(
     "data/inbreeding_calculator/single_sample_excludeSample_false.vcf",
     freq_mode="excludeSample",
 )
-assert coeff[0]["InbreedingCoefficient"]
+assert isinstance(coeff[0]["InbreedingCoefficient"], float)
 
 classes = vcfx.variant_classifier("data/classifier_mixed.vcf")
 assert classes[0]["Classification"]
@@ -102,7 +102,7 @@ inf = vcfx.ancestry_inferrer(
 assert inf[0]["Inferred_Population"] == "EUR"
 
 dist = vcfx.distance_calculator("data/variant_counter_normal.vcf")
-assert dist[0]["DISTANCE"]
+assert isinstance(dist[1]["DISTANCE"], int)
 
 norm_text = vcfx.indel_normalizer("data/basic_indel.vcf")
 assert norm_text.startswith("##")
