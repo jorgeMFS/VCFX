@@ -240,7 +240,7 @@ def _tsv_to_dataclasses(
     if converters is None:
         converters = {}
         hints = get_type_hints(cls)
-        for f in dataclass_fields(cls):
+        for f in dataclass_fields(cls):  # type: ignore[arg-type]
             ftype = hints.get(f.name, f.type)
             if ftype is int:
                 converters[f.name] = int
@@ -886,7 +886,7 @@ def file_splitter(
 
     cwd = output_dir or os.getcwd()
 
-    result = run_tool(
+    _ = run_tool(
         "file_splitter",
         "--prefix",
         prefix,
