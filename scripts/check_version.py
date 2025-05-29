@@ -4,7 +4,10 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
-import tomllib
+try:
+    import tomllib  # Python 3.11+
+except ModuleNotFoundError:  # pragma: no cover - Python 3.10 fallback
+    import tomli as tomllib
 
 from extract_version import extract_version
 
