@@ -134,4 +134,3 @@ def __getattr__(name: str) -> Callable[..., subprocess.CompletedProcess]:
         If *name* does not correspond to an available tool.
     """
     return getattr(_tools, name)
-

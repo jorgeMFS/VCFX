@@ -1,8 +1,9 @@
 # mypy: ignore-errors
 import pathlib
 import subprocess
-from setuptools import setup, Extension
+from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext
+
 
 class CMakeExtension(Extension):
     def __init__(self, name):
@@ -19,8 +20,15 @@ class CMakeBuild(build_ext):
         build_temp = pathlib.Path(self.build_temp)
         build_temp.mkdir(parents=True, exist_ok=True)
         source_dir = pathlib.Path(__file__).resolve().parent.parent
-        subprocess.check_call(['cmake', str(source_dir)] + cmake_args, cwd=build_temp)
-        subprocess.check_call(['cmake', '--build', '.', '--target', '_vcfx'], cwd=build_temp)
+        subprocess.check_call(
+            ['cmake', str(source_dir)] + cmake_args,
+            cwd=build_temp,
+        )
+        subprocess.check_call(
+            ['cmake', '--build', '.', '--target', '_vcfx'],
+            cwd=build_temp,
+        )
+
 
 setup(
     packages=['vcfx'],
