@@ -161,6 +161,10 @@ def run_tool(
 ) -> subprocess.CompletedProcess:
     """Run a VCFX tool using :func:`subprocess.run`.
 
+    If the executable ``VCFX_<tool>`` cannot be located on ``PATH`` this
+    function falls back to invoking ``vcfx <tool>`` when the ``vcfx``
+    wrapper script is available.
+
     Parameters
     ----------
     tool : str
@@ -192,9 +196,14 @@ def run_tool(
         status.
     """
     exe = shutil.which(f"VCFX_{tool}")
+    cmd: list[str]
     if exe is None:
-        raise FileNotFoundError(f"VCFX tool '{tool}' not found in PATH")
-    cmd = [exe, *map(str, args)]
+        vcfx_wrapper = shutil.which("vcfx")
+        if vcfx_wrapper is None:
+            raise FileNotFoundError(f"VCFX tool '{tool}' not found in PATH")
+        cmd = [vcfx_wrapper, tool, *map(str, args)]
+    else:
+        cmd = [exe, *map(str, args)]
     return subprocess.run(
         cmd,
         check=check,
