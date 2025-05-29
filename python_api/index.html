@@ -2753,6 +2753,9 @@ the tool name as a function:</p>
 <span class="c1"># run through the generic helper</span>
 <span class="n">vcfx</span><span class="o">.</span><span class="n">run_tool</span><span class="p">(</span><span class="s2">&quot;alignment_checker&quot;</span><span class="p">,</span> <span class="s2">&quot;--help&quot;</span><span class="p">)</span>
 </code></pre></div>
+<p>If <code>VCFX_alignment_checker</code> (or any other tool) is not present on
+<code>PATH</code>, <code>run_tool</code> automatically tries to execute <code>vcfx</code> with the
+tool name as the first argument when the <code>vcfx</code> wrapper is available.</p>
 <p>For a full script demonstrating how to set up <code>PATH</code> with
 <code>add_vcfx_tools_to_path.sh</code> and handle errors when running tools,
 see <a href="../examples/python_usage.py"><code>examples/python_usage.py</code></a>.</p>
