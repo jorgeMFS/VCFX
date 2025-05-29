@@ -43,8 +43,13 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for pure Python envs
             except Exception:
                 return "0.0.0"
 
+__version__ = get_version()
+
 from . import tools as _tools  # noqa: E402
-from .tools import TOOL_NAMES  # noqa: E402
+try:
+    from .tools import TOOL_NAMES  # noqa: E402
+except FileNotFoundError:  # pragma: no cover - depends on external binaries
+    TOOL_NAMES = []
 from typing import Callable  # noqa: E402
 import subprocess  # noqa: E402
 from .results import (  # noqa: E402
@@ -64,8 +69,6 @@ from .results import (  # noqa: E402
     DistanceRow,
     IndexEntry,
 )
-
-__version__ = get_version()
 
 # Re-export helper functions for convenience
 available_tools = _tools.available_tools
