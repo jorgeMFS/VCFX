@@ -143,7 +143,11 @@ def available_tools(refresh: bool = False) -> list[str]:
     if result.returncode != 0:
         _TOOL_CACHE = []
     else:
-        _TOOL_CACHE = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+        _TOOL_CACHE = [
+            line.strip()
+            for line in result.stdout.splitlines()
+            if line.strip()
+        ]
     return _TOOL_CACHE
 
 
@@ -191,10 +195,19 @@ def run_tool(
     if exe is None:
         raise FileNotFoundError(f"VCFX tool '{tool}' not found in PATH")
     cmd = [exe, *map(str, args)]
-    return subprocess.run(cmd, check=check, capture_output=capture_output, text=text, **kwargs)
+    return subprocess.run(
+        cmd,
+        check=check,
+        capture_output=capture_output,
+        text=text,
+        **kwargs,
+    )
 
 
-def _convert_fields(rows: list[dict], converters: dict[str, Callable[[str], Any]]) -> list[dict]:
+def _convert_fields(
+    rows: list[dict],
+    converters: dict[str, Callable[[str], Any]],
+) -> list[dict]:
     """Apply *converters* to fields in each row in *rows*."""
     for row in rows:
         for key, func in converters.items():
@@ -281,7 +294,10 @@ def alignment_checker(vcf_file: str, reference: str) -> list[AlignmentDiscrepanc
     return _tsv_to_dataclasses(result.stdout, AlignmentDiscrepancy)
 
 
-def allele_counter(vcf_file: str, samples: Sequence[str] | None = None) -> list[AlleleCount]:
+def allele_counter(
+    vcf_file: str,
+    samples: Sequence[str] | None = None,
+) -> list[AlleleCount]:
     """Run ``allele_counter`` and return allele counts.
 
     Parameters
@@ -1558,4 +1574,3 @@ def __getattr__(name: str) -> Callable[..., subprocess.CompletedProcess]:
     if name in tools:
         return functools.partial(run_tool, name)
     raise AttributeError(f"module 'vcfx' has no attribute '{name}'")
-
