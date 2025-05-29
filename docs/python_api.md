@@ -88,6 +88,10 @@ print(vcfx.available_tools())
 vcfx.run_tool("alignment_checker", "--help")
 ```
 
+If ``VCFX_alignment_checker`` (or any other tool) is not present on
+``PATH``, ``run_tool`` automatically tries to execute ``vcfx`` with the
+tool name as the first argument when the ``vcfx`` wrapper is available.
+
 For a full script demonstrating how to set up ``PATH`` with
 ``add_vcfx_tools_to_path.sh`` and handle errors when running tools,
 see [``examples/python_usage.py``](../examples/python_usage.py).
