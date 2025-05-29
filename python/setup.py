@@ -9,6 +9,7 @@ class CMakeExtension(Extension):
     def __init__(self, name):
         super().__init__(name, sources=[])
 
+
 class CMakeBuild(build_ext):
     def build_extension(self, ext):
         extdir = pathlib.Path(self.get_ext_fullpath(ext.name)).parent.resolve()
