@@ -177,8 +177,13 @@ You can also execute all shell scripts directly with:
 bash ../tests/test_all.sh
 ```
 
-Python tests are executed with `pytest`. After building the bindings using
-`cmake -DPYTHON_BINDINGS=ON` (or after installing the wheel), run:
+Python tests are executed with `pytest`. Install the development requirements first:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+After building the bindings using `cmake -DPYTHON_BINDINGS=ON` (or after installing the wheel), run:
 
 ```bash
 pytest tests/python

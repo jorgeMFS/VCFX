@@ -1,0 +1,4 @@
+pytest
+ruff
+flake8
+mypy
