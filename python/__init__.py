@@ -78,7 +78,8 @@ run_tool = _tools.run_tool
 # ``__getattr__``.
 try:  # pragma: no cover - depends on external binaries being built
     for _name in TOOL_NAMES:
-        globals()[_name] = getattr(_tools, _name)
+        if _name in vars(_tools):
+            globals()[_name] = getattr(_tools, _name)
 except FileNotFoundError:
     # Tools are unavailable; they will be looked up on demand.
     pass
