@@ -37,10 +37,6 @@ jobs:
         uses: actions/checkout@v3
 
 
-      - name: Check version consistency
-        run: python scripts/check_version.py
-        shell: bash
-
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
@@ -69,6 +65,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
         shell: bash
+      - name: Check version consistency
+        run: python scripts/check_version.py
+        shell: bash
 
       - name: Run tests
         run: |
@@ -89,10 +88,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
-      - name: Check version consistency
-        run: python scripts/check_version.py
-        shell: bash
 
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
@@ -118,7 +113,15 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-
+      - name: Install dev dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+        shell: bash
+      - name: Check version consistency
+        run: python scripts/check_version.py
+        shell: bash
+      
       - name: Build wheel
         run: |
           python -m pip install --upgrade pip wheel
