@@ -73,6 +73,8 @@ The version numbers for both the C++ tools and the Python package are defined
 once in `CMakeLists.txt` (`VCFX_VERSION_MAJOR`, `VCFX_VERSION_MINOR`,
 `VCFX_VERSION_PATCH`). The Python build reads these values at install time to
 ensure a single source of truth.
+For a detailed list of changes in each release, see [CHANGELOG.md](CHANGELOG.md).
+
 #### Installing Python Bindings from a Local Checkout
 
 ```bash
