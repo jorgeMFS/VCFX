@@ -2849,8 +2849,9 @@
 <ol>
 <li>Fork the repository</li>
 <li>Create a new branch for your feature or bug fix</li>
-<li>Write your code, following our coding standards
-   (run <code>clang-format -i &lt;files&gt;</code> before committing)</li>
+<li>Install the pre-commit hooks with <code>pre-commit install</code></li>
+<li>Write your code, following our coding standards. The hooks will automatically
+   format changed C/C++ files.</li>
 <li>Add tests for your changes</li>
 <li>Ensure all tests pass</li>
 <li>Update documentation as needed</li>
@@ -2860,10 +2861,11 @@
 <h2 id="development-setup">Development Setup<a class="headerlink" href="#development-setup" title="Permanent link">&para;</a></h2>
 <h3 id="code-formatting">Code Formatting<a class="headerlink" href="#code-formatting" title="Permanent link">&para;</a></h3>
 <p>We use <code>clang-format</code> to keep the C++ code style consistent. A basic configuration
-is provided in <code>.clang-format</code> at the repository root. Please run:</p>
-<div class="highlight"><pre><span></span><code>clang-format<span class="w"> </span>-i<span class="w"> </span>path/to/changed_file.cpp
+is provided in <code>.clang-format</code> at the repository root. The <code>pre-commit</code> hooks
+automatically apply <code>clang-format</code> to any changed C/C++ files. You can also run
+the hook manually if needed:</p>
+<div class="highlight"><pre><span></span><code>pre-commit<span class="w"> </span>run<span class="w"> </span>clang-format<span class="w"> </span>--files<span class="w"> </span>path/to/changed_file.cpp
 </code></pre></div>
-<p>before committing changes.</p>
 <h3 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h3>
 <ul>
 <li>CMake (version 3.10 or higher)</li>
