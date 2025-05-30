@@ -6,6 +6,7 @@ import pytest
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 
+
 @pytest.fixture(scope="session")
 def build_dir(tmp_path_factory):
     build = tmp_path_factory.mktemp("pybuild")
@@ -16,6 +17,7 @@ def build_dir(tmp_path_factory):
     ], cwd=build)
     subprocess.check_call(["cmake", "--build", ".", "--parallel"], cwd=build)
     return build
+
 
 @pytest.fixture()
 def vcfx(build_dir, monkeypatch):
@@ -30,7 +32,10 @@ def vcfx(build_dir, monkeypatch):
             if exe.is_file():
                 tool_dirs.append(str(sub))
     if tool_dirs:
-        monkeypatch.setenv("PATH", os.pathsep.join(tool_dirs + [os.environ.get("PATH", "")]))
+        monkeypatch.setenv(
+            "PATH",
+            os.pathsep.join(tool_dirs + [os.environ.get("PATH", "")]),
+        )
 
     import vcfx as module
     return module

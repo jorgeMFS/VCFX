@@ -1,4 +1,3 @@
-import os
 import sys
 from pathlib import Path
 import importlib.util
@@ -9,6 +8,7 @@ vcfx = importlib.util.module_from_spec(spec)
 sys.modules["vcfx"] = vcfx
 spec.loader.exec_module(vcfx)  # type: ignore
 
+
 def test_run_tool_fallback(tmp_path, monkeypatch):
     wrapper = tmp_path / "vcfx"
     wrapper.write_text("#!/bin/sh\necho $1\n")
@@ -17,4 +17,3 @@ def test_run_tool_fallback(tmp_path, monkeypatch):
 
     proc = vcfx.run_tool("dummytool", capture_output=True, text=True)
     assert proc.stdout.strip() == "dummytool"
-
