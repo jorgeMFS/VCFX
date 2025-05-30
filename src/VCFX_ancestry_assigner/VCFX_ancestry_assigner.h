@@ -3,27 +3,29 @@
 
 #include <iostream>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 // VCFXAncestryAssigner: Header file for Ancestry Assignment Tool
 class VCFXAncestryAssigner {
-public:
+  public:
     // Entry point for the tool
-    int run(int argc, char* argv[]);
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     // Displays the help message
     void displayHelp();
 
     // Parses a single line from the frequency file
-    bool parseFrequencyLine(const std::string& line, std::string& chrom, int& pos, char& ref, char& alt, std::unordered_map<std::string, double>& freqMap, const std::vector<std::string>& populations);
+    bool parseFrequencyLine(const std::string &line, std::string &chrom, int &pos, char &ref, char &alt,
+                            std::unordered_map<std::string, double> &freqMap,
+                            const std::vector<std::string> &populations);
 
     // Loads ancestral frequencies from the provided input stream
-    bool loadAncestralFrequencies(std::istream& in);
+    bool loadAncestralFrequencies(std::istream &in);
 
     // Assigns ancestry to samples based on VCF input
-    void assignAncestry(std::istream& vcfIn, std::ostream& out);
+    void assignAncestry(std::istream &vcfIn, std::ostream &out);
 
     // Stores populations
     std::vector<std::string> populations;

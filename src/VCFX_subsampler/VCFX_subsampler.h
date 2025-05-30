@@ -6,16 +6,14 @@
 #include <vector>
 
 class VCFXSubsampler {
-public:
-    int run(int argc, char* argv[]);
+  public:
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     void displayHelp();
 
     // Reservoir sampling method
-    void subsampleLines(std::istream &in, std::ostream &out,
-                        int sampleSize, unsigned int seed);
-
+    void subsampleLines(std::istream &in, std::ostream &out, int sampleSize, unsigned int seed);
 };
 
 #endif

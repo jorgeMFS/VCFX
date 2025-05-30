@@ -4,19 +4,13 @@
 #include <string>
 #include <vector>
 
-enum class VariantType {
-    SNP,
-    INDEL,
-    MNV,
-    STRUCTURAL,
-    UNKNOWN
-};
+enum class VariantType { SNP, INDEL, MNV, STRUCTURAL, UNKNOWN };
 
 class VCFXVariantClassifier {
-public:
-    int run(int argc, char* argv[]);
+  public:
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     // Show usage
     void displayHelp();
 
@@ -27,7 +21,8 @@ private:
     // The main method that reads lines from input, classifies, and writes output
     void classifyStream(std::istream &in, std::ostream &out);
 
-    // Detect alt allele as structural if it is symbolic (<DEL>) or breakend notation ([chr or ]chr) or length difference >=50
+    // Detect alt allele as structural if it is symbolic (<DEL>) or breakend notation ([chr or ]chr) or length
+    // difference >=50
     bool isStructuralAllele(const std::string &alt) const;
 
     // Classify a single (ref, alt)
@@ -39,7 +34,8 @@ private:
     // Stringify the variant type
     std::string typeToStr(VariantType t) const;
 
-    // If we are in append‐info mode, we parse line into columns, parse alt as multiple, classify, then append e.g. VCF_CLASS=xxx
+    // If we are in append‐info mode, we parse line into columns, parse alt as multiple, classify, then append e.g.
+    // VCF_CLASS=xxx
     std::string appendClassification(const std::string &line);
 
     // Splitting helper

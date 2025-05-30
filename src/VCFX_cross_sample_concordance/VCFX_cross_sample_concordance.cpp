@@ -1,32 +1,31 @@
 #include "vcfx_core.h"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <unordered_map>
-#include <unordered_set>
-#include <sstream>
 #include <algorithm>
 #include <cctype>
 #include <getopt.h>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 // --------------------------------------------------------------------------
 // A helper function to print usage/help
 // --------------------------------------------------------------------------
 static void displayHelp() {
-    std::cout
-        << "VCFX_cross_sample_concordance: Check variant concordance across multiple samples.\n\n"
-        << "Usage:\n"
-        << "  VCFX_cross_sample_concordance [options] < input.vcf > concordance_results.txt\n\n"
-        << "Options:\n"
-        << "  -h, --help              Display this help message and exit\n"
-        << "  -s, --samples LIST      Comma-separated list of samples to check\n\n"
-        << "Description:\n"
-        << "  Reads a multi-sample VCF from stdin, normalizes each sample's genotype\n"
-        << "  (including multi-allelic variants), and determines if all samples that\n"
-        << "  have a parseable genotype are in complete agreement. Prints one row per\n"
-        << "  variant to stdout and a final summary to stderr.\n\n"
-        << "Example:\n"
-        << "  VCFX_cross_sample_concordance < input.vcf > results.tsv\n\n";
+    std::cout << "VCFX_cross_sample_concordance: Check variant concordance across multiple samples.\n\n"
+              << "Usage:\n"
+              << "  VCFX_cross_sample_concordance [options] < input.vcf > concordance_results.txt\n\n"
+              << "Options:\n"
+              << "  -h, --help              Display this help message and exit\n"
+              << "  -s, --samples LIST      Comma-separated list of samples to check\n\n"
+              << "Description:\n"
+              << "  Reads a multi-sample VCF from stdin, normalizes each sample's genotype\n"
+              << "  (including multi-allelic variants), and determines if all samples that\n"
+              << "  have a parseable genotype are in complete agreement. Prints one row per\n"
+              << "  variant to stdout and a final summary to stderr.\n\n"
+              << "Example:\n"
+              << "  VCFX_cross_sample_concordance < input.vcf > results.tsv\n\n";
 }
 
 // --------------------------------------------------------------------------
@@ -51,9 +50,7 @@ static std::vector<std::string> split(const std::string &str, char delim) {
 //   - Sort so "2/1" => "1/2"
 //   - Return e.g. "1/2"
 // --------------------------------------------------------------------------
-static std::string normalizeGenotype(const std::string &sampleField,
-                                     const std::vector<std::string> &altAlleles)
-{
+static std::string normalizeGenotype(const std::string &sampleField, const std::vector<std::string> &altAlleles) {
     // sampleField might be something like "0/1:.." or just "0/1"
     // We only care about the genotype portion (first colon-delimited field).
     auto parts = split(sampleField, ':');
@@ -64,7 +61,8 @@ static std::string normalizeGenotype(const std::string &sampleField,
 
     // unify separators
     for (char &c : gt) {
-        if (c == '|') c = '/';
+        if (c == '|')
+            c = '/';
     }
     // split by '/'
     auto alleleStrs = split(gt, '/');
@@ -104,7 +102,8 @@ static std::string normalizeGenotype(const std::string &sampleField,
     // Build a normalized string
     std::stringstream out;
     for (size_t i = 0; i < alleleInts.size(); ++i) {
-        if (i > 0) out << "/";
+        if (i > 0)
+            out << "/";
         out << alleleInts[i];
     }
     return out.str();
@@ -113,8 +112,7 @@ static std::string normalizeGenotype(const std::string &sampleField,
 // --------------------------------------------------------------------------
 // The main function to process the VCF and produce cross-sample concordance
 // --------------------------------------------------------------------------
-static void calculateConcordance(std::istream &in, std::ostream &out,
-                                 const std::vector<std::string> &subset) {
+static void calculateConcordance(std::istream &in, std::ostream &out, const std::vector<std::string> &subset) {
     std::string line;
     std::vector<std::string> sampleNames;
     bool gotChromHeader = false;
@@ -180,10 +178,10 @@ static void calculateConcordance(std::istream &in, std::ostream &out,
 
         // parse standard columns
         const std::string &chrom = fields[0];
-        const std::string &pos   = fields[1];
-        const std::string &id    = fields[2];
-        const std::string &ref   = fields[3];
-        const std::string &alt   = fields[4];
+        const std::string &pos = fields[1];
+        const std::string &id = fields[2];
+        const std::string &ref = fields[3];
+        const std::string &alt = fields[4];
         // we can skip qual/filter/info/format => we only need sample columns
         // sample columns start at index=9
         if (fields.size() < (9 + sampleNames.size())) {
@@ -214,9 +212,8 @@ static void calculateConcordance(std::istream &in, std::ostream &out,
         if (sampleCountHere == 0) {
             skippedBecauseNoGenotypes++;
             // Output with NO_GENOTYPES status instead of skipping
-            out << chrom << "\t" << pos << "\t" << id << "\t" << ref << "\t" << alt
-                << "\t" << sampleCountHere 
-                << "\t" << 0  // No unique genotypes
+            out << chrom << "\t" << pos << "\t" << id << "\t" << ref << "\t" << alt << "\t" << sampleCountHere << "\t"
+                << 0 // No unique genotypes
                 << "\t" << "NO_GENOTYPES"
                 << "\n";
             continue;
@@ -241,11 +238,8 @@ static void calculateConcordance(std::istream &in, std::ostream &out,
 
         std::string status = allConcordant ? "CONCORDANT" : "DISCORDANT";
         // Print row
-        out << chrom << "\t" << pos << "\t" << id << "\t" << ref << "\t" << alt
-            << "\t" << sampleCountHere 
-            << "\t" << uniqueGtCount
-            << "\t" << status
-            << "\n";
+        out << chrom << "\t" << pos << "\t" << id << "\t" << ref << "\t" << alt << "\t" << sampleCountHere << "\t"
+            << uniqueGtCount << "\t" << status << "\n";
     }
 
     // Summaries to stderr so as not to pollute the TSV
@@ -260,25 +254,30 @@ static void calculateConcordance(std::istream &in, std::ostream &out,
 // --------------------------------------------------------------------------
 static void show_help() { displayHelp(); }
 
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_common_flags(argc, argv, "VCFX_cross_sample_concordance", show_help)) return 0;
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_cross_sample_concordance", show_help))
+        return 0;
     bool showHelp = false;
     std::string samplesArg;
 
     static struct option longOpts[] = {
-        {"help", no_argument, 0, 'h'},
-        {"samples", required_argument, 0, 's'},
-        {0,0,0,0}
-    };
+        {"help", no_argument, 0, 'h'}, {"samples", required_argument, 0, 's'}, {0, 0, 0, 0}};
 
     while (true) {
-        int optIndex=0;
+        int optIndex = 0;
         int c = getopt_long(argc, argv, "hs:", longOpts, &optIndex);
-        if (c == -1) break;
+        if (c == -1)
+            break;
         switch (c) {
-            case 'h': showHelp = true; break;
-            case 's': samplesArg = optarg; break;
-            default:  showHelp = true; break;
+        case 'h':
+            showHelp = true;
+            break;
+        case 's':
+            samplesArg = optarg;
+            break;
+        default:
+            showHelp = true;
+            break;
         }
     }
 

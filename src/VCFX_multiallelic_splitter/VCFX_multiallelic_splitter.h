@@ -3,8 +3,8 @@
 
 #include <iostream>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 /* Simple structure describing whether an ID is an INFO or FORMAT field, plus its Number field */
 struct SubfieldMeta {

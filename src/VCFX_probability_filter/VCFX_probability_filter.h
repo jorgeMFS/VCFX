@@ -7,16 +7,16 @@
 
 // VCFXProbabilityFilter: Header file for Genotype Probability Filter tool
 class VCFXProbabilityFilter {
-public:
+  public:
     // Entry point for the tool
-    int run(int argc, char* argv[]);
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     // Displays the help message
     void displayHelp();
 
     // Filters VCF input based on the specified genotype probability condition
-    void filterByProbability(std::istream& in, std::ostream& out, const std::string& condition);
+    void filterByProbability(std::istream &in, std::ostream &out, const std::string &condition);
 };
 
 #endif // VCFX_PROBABILITY_FILTER_H

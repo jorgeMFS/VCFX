@@ -8,6 +8,6 @@
 void printHelp();
 
 // Function to perform allele frequency calculation on VCF records
-void calculateAlleleFrequency(std::istream& in, std::ostream& out);
+void calculateAlleleFrequency(std::istream &in, std::ostream &out);
 
 #endif // VCFX_ALLELE_FREQ_CALC_H

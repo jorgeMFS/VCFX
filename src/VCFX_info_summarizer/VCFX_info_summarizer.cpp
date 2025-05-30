@@ -1,14 +1,14 @@
-#include "vcfx_core.h"
 #include "VCFX_info_summarizer.h"
-#include <sstream>
+#include "vcfx_core.h"
 #include <algorithm>
 #include <cctype>
-#include <unordered_set>
-#include <unordered_map>
+#include <cmath>
+#include <cstdlib>
 #include <iomanip>
 #include <map>
-#include <cstdlib>
-#include <cmath>   
+#include <sstream>
+#include <unordered_map>
+#include <unordered_set>
 
 // Function to display help message
 void printHelp() {
@@ -25,7 +25,7 @@ void printHelp() {
 }
 
 // Function to parse command-line arguments
-bool parseArguments(int argc, char* argv[], std::vector<std::string>& info_fields) {
+bool parseArguments(int argc, char *argv[], std::vector<std::string> &info_fields) {
     bool foundAnyField = false;
 
     for (int i = 1; i < argc; ++i) {
@@ -60,8 +60,7 @@ bool parseArguments(int argc, char* argv[], std::vector<std::string>& info_field
                     foundAnyField = true;
                 }
             }
-        }
-        else if (arg == "--help" || arg == "-h") {
+        } else if (arg == "--help" || arg == "-h") {
             printHelp();
             std::exit(0);
         }
@@ -77,8 +76,9 @@ bool parseArguments(int argc, char* argv[], std::vector<std::string>& info_field
 }
 
 // Function to calculate mean
-double calculateMean(const std::vector<double>& data) {
-    if (data.empty()) return 0.0;
+double calculateMean(const std::vector<double> &data) {
+    if (data.empty())
+        return 0.0;
     double sum = 0.0;
     for (auto val : data) {
         sum += val;
@@ -88,7 +88,8 @@ double calculateMean(const std::vector<double>& data) {
 
 // Function to calculate median
 double calculateMedian(std::vector<double> data) {
-    if (data.empty()) return 0.0;
+    if (data.empty())
+        return 0.0;
     std::sort(data.begin(), data.end());
     size_t n = data.size();
     if (n % 2 == 0) {
@@ -99,8 +100,9 @@ double calculateMedian(std::vector<double> data) {
 }
 
 // Function to calculate mode
-double calculateMode(const std::vector<double>& data) {
-    if (data.empty()) return 0.0;
+double calculateMode(const std::vector<double> &data) {
+    if (data.empty())
+        return 0.0;
     std::unordered_map<double, int> frequency;
     int maxFreq = 0;
     double modeValue = data[0];
@@ -116,18 +118,19 @@ double calculateMode(const std::vector<double>& data) {
 }
 
 // Function to parse the INFO field and collect specified fields
-bool summarizeInfoFields(std::istream& in, std::ostream& out, const std::vector<std::string>& info_fields) {
+bool summarizeInfoFields(std::istream &in, std::ostream &out, const std::vector<std::string> &info_fields) {
     std::string line;
     bool header_found = false;
 
     // Map to store vectors of values for each requested INFO field
     std::map<std::string, std::vector<double>> info_data;
-    for (const auto& field : info_fields) {
+    for (const auto &field : info_fields) {
         info_data[field]; // ensures key is created
     }
 
     while (std::getline(in, line)) {
-        if (line.empty()) continue;
+        if (line.empty())
+            continue;
 
         if (line[0] == '#') {
             // Check if it is #CHROM
@@ -145,14 +148,9 @@ bool summarizeInfoFields(std::istream& in, std::ostream& out, const std::vector<
         // parse columns
         std::stringstream ss(line);
         std::string chrom, pos, id, ref, alt, qual, filter, info;
-        if (!std::getline(ss, chrom, '\t') ||
-            !std::getline(ss, pos, '\t') ||
-            !std::getline(ss, id, '\t') ||
-            !std::getline(ss, ref, '\t') ||
-            !std::getline(ss, alt, '\t') ||
-            !std::getline(ss, qual, '\t') ||
-            !std::getline(ss, filter, '\t') ||
-            !std::getline(ss, info, '\t')) {
+        if (!std::getline(ss, chrom, '\t') || !std::getline(ss, pos, '\t') || !std::getline(ss, id, '\t') ||
+            !std::getline(ss, ref, '\t') || !std::getline(ss, alt, '\t') || !std::getline(ss, qual, '\t') ||
+            !std::getline(ss, filter, '\t') || !std::getline(ss, info, '\t')) {
             std::cerr << "Warning: Skipping malformed VCF line: " << line << "\n";
             continue;
         }
@@ -163,7 +161,8 @@ bool summarizeInfoFields(std::istream& in, std::ostream& out, const std::vector<
             std::stringstream info_ss(info);
             std::string kv;
             while (std::getline(info_ss, kv, ';')) {
-                if (kv.empty()) continue;
+                if (kv.empty())
+                    continue;
                 size_t eq = kv.find('=');
                 if (eq != std::string::npos) {
                     std::string key = kv.substr(0, eq);
@@ -177,7 +176,7 @@ bool summarizeInfoFields(std::istream& in, std::ostream& out, const std::vector<
         }
 
         // For each requested field
-        for (const auto& field : info_fields) {
+        for (const auto &field : info_fields) {
             auto it = info_map.find(field);
             if (it == info_map.end()) {
                 // not present
@@ -191,14 +190,12 @@ bool summarizeInfoFields(std::istream& in, std::ostream& out, const std::vector<
                     double v = std::stod(val);
                     // Skip NaN / Inf
                     if (std::isnan(v) || std::isinf(v)) {
-                        std::cerr << "Warning: Non-finite value for field " << field
-                                  << " in line: " << line << "\n";
+                        std::cerr << "Warning: Non-finite value for field " << field << " in line: " << line << "\n";
                         continue; // skip
                     }
                     info_data[field].push_back(v);
                 } catch (...) {
-                    std::cerr << "Warning: Non-numeric value for field " << field
-                              << " in line: " << line << "\n";
+                    std::cerr << "Warning: Non-numeric value for field " << field << " in line: " << line << "\n";
                 }
             }
         }
@@ -206,8 +203,8 @@ bool summarizeInfoFields(std::istream& in, std::ostream& out, const std::vector<
 
     // Print summary table
     out << "INFO_Field\tMean\tMedian\tMode\n";
-    for (const auto& field : info_fields) {
-        const auto& data = info_data.at(field);
+    for (const auto &field : info_fields) {
+        const auto &data = info_data.at(field);
         if (data.empty()) {
             // no numeric data => NA
             out << field << "\tNA\tNA\tNA\n";
@@ -216,10 +213,7 @@ bool summarizeInfoFields(std::istream& in, std::ostream& out, const std::vector<
         double mean = calculateMean(data);
         double median = calculateMedian(data);
         double mode = calculateMode(data);
-        out << field << "\t"
-            << std::fixed << std::setprecision(4) << mean << "\t"
-            << median << "\t"
-            << mode << "\n";
+        out << field << "\t" << std::fixed << std::setprecision(4) << mean << "\t" << median << "\t" << mode << "\n";
     }
 
     return true;
@@ -227,8 +221,9 @@ bool summarizeInfoFields(std::istream& in, std::ostream& out, const std::vector<
 
 static void show_help() { printHelp(); }
 
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_common_flags(argc, argv, "VCFX_info_summarizer", show_help)) return 0;
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_info_summarizer", show_help))
+        return 0;
     std::vector<std::string> info_fields;
 
     // parse arguments

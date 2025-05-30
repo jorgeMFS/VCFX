@@ -5,10 +5,10 @@
 #include <string>
 
 class VCFXVariantCounter {
-public:
-    int run(int argc, char* argv[]);
+  public:
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     // If true, any line with <8 columns is a fatal error
     bool strictMode = false;
 
@@ -19,7 +19,6 @@ private:
     int countVariants(std::istream &in);
     int countVariantsGzip(std::istream &in);
     bool processLine(const std::string &line, int lineNumber, int &count);
-
 };
 
 #endif

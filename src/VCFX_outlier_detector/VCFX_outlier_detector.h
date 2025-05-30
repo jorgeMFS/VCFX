@@ -3,33 +3,27 @@
 
 #include <iostream>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 class VCFXOutlierDetector {
-public:
+  public:
     // Main entry point
-    int run(int argc, char* argv[]);
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     // Print usage
     void displayHelp();
 
     // The function that does the reading and analysis
-    void detectOutliers(std::istream &in, std::ostream &out,
-                        const std::string &metric,
-                        double threshold,
+    void detectOutliers(std::istream &in, std::ostream &out, const std::string &metric, double threshold,
                         bool isVariantMode);
 
     // Parse the user-specified metric from INFO
-    bool parseMetricFromInfo(const std::string &info,
-                             const std::string &key,
-                             double &val) const;
+    bool parseMetricFromInfo(const std::string &info, const std::string &key, double &val) const;
 
     // Parse the user-specified metric from genotype subfields
-    bool parseMetricFromGenotype(const std::string &genotypeField,
-                                 const std::string &metric,
-                                 double &value) const;
+    bool parseMetricFromGenotype(const std::string &genotypeField, const std::string &metric, double &value) const;
 };
 
 #endif

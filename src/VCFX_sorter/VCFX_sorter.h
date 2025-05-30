@@ -16,10 +16,10 @@ struct VCFRecord {
 
 // A class to hold main logic
 class VCFXSorter {
-public:
-    int run(int argc, char* argv[]);
+  public:
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     // parse arguments, then read lines
     // store header lines, store data lines in memory
     // sort data lines
@@ -30,7 +30,7 @@ private:
     void outputVCF(std::ostream &out);
 
     // read an environment var or a CLI option to decide lexicographic or natural
-    bool naturalChromOrder= false;
+    bool naturalChromOrder = false;
 
     // store all lines that begin with '#'
     std::vector<std::string> headerLines;

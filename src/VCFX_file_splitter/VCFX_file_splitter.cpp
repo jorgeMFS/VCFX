@@ -1,41 +1,38 @@
-#include "vcfx_core.h"
 #include "VCFX_file_splitter.h"
-#include <getopt.h>
-#include <sstream>
+#include "vcfx_core.h"
+#include <algorithm>
 #include <fstream>
+#include <getopt.h>
+#include <iostream>
+#include <memory>
+#include <sstream>
 #include <unordered_map>
 #include <vector>
-#include <algorithm>
-#include <memory>
-#include <iostream>
 
 struct ChromFile {
     std::unique_ptr<std::ofstream> ofs;
     bool headerWritten;
 };
 
-int VCFXFileSplitter::run(int argc, char* argv[]) {
+int VCFXFileSplitter::run(int argc, char *argv[]) {
     // Parse command-line arguments
     int opt;
     bool showHelp = false;
     std::string outputPrefix = "split";
 
     static struct option long_options[] = {
-        {"help",   no_argument,       0, 'h'},
-        {"prefix", required_argument, 0, 'p'},
-        {0,        0,                 0,  0}
-    };
+        {"help", no_argument, 0, 'h'}, {"prefix", required_argument, 0, 'p'}, {0, 0, 0, 0}};
 
     while ((opt = getopt_long(argc, argv, "hp:", long_options, nullptr)) != -1) {
         switch (opt) {
-            case 'h':
-                showHelp = true;
-                break;
-            case 'p':
-                outputPrefix = optarg;
-                break;
-            default:
-                showHelp = true;
+        case 'h':
+            showHelp = true;
+            break;
+        case 'p':
+            outputPrefix = optarg;
+            break;
+        default:
+            showHelp = true;
         }
     }
 
@@ -60,8 +57,7 @@ void VCFXFileSplitter::displayHelp() {
 }
 
 // Splits the VCF by chromosome, writing the full header to each file.
-void VCFXFileSplitter::splitVCFByChromosome(std::istream& in,
-                                            const std::string& outputPrefix) {
+void VCFXFileSplitter::splitVCFByChromosome(std::istream &in, const std::string &outputPrefix) {
     std::unordered_map<std::string, ChromFile> chromFiles;
 
     // We'll store all lines that begin with '#' (the header lines) until we hit
@@ -159,10 +155,17 @@ void VCFXFileSplitter::splitVCFByChromosome(std::istream& in,
     }
 }
 
-static void show_help() { VCFXFileSplitter obj; char arg0[] = "VCFX_file_splitter"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+static void show_help() {
+    VCFXFileSplitter obj;
+    char arg0[] = "VCFX_file_splitter";
+    char arg1[] = "--help";
+    char *argv2[] = {arg0, arg1, nullptr};
+    obj.run(2, argv2);
+}
 
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_common_flags(argc, argv, "VCFX_file_splitter", show_help)) return 0;
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_file_splitter", show_help))
+        return 0;
     VCFXFileSplitter splitter;
     return splitter.run(argc, argv);
 }

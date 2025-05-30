@@ -3,8 +3,8 @@
 
 #include <iostream>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 // Function to display help message
 void printHelp();
@@ -17,18 +17,18 @@ struct StatSummary {
 };
 
 // Function to parse command-line arguments
-bool parseArguments(int argc, char* argv[], std::vector<std::string>& info_fields);
+bool parseArguments(int argc, char *argv[], std::vector<std::string> &info_fields);
 
 // Function to calculate mean
-double calculateMean(const std::vector<double>& data);
+double calculateMean(const std::vector<double> &data);
 
 // Function to calculate median
 double calculateMedian(std::vector<double> data);
 
 // Function to calculate mode
-double calculateMode(const std::vector<double>& data);
+double calculateMode(const std::vector<double> &data);
 
 // Function to parse the INFO field and collect specified fields
-bool summarizeInfoFields(std::istream& in, std::ostream& out, const std::vector<std::string>& info_fields);
+bool summarizeInfoFields(std::istream &in, std::ostream &out, const std::vector<std::string> &info_fields);
 
 #endif // VCFX_INFO_SUMMARIZER_H

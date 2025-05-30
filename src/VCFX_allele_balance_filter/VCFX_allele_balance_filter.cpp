@@ -1,28 +1,28 @@
 #include "vcfx_core.h"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <sstream>
 #include <algorithm>
 #include <cstdlib>
 #include <getopt.h>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
 
 // ------------------------------------------------------
 // Class Declaration
 // ------------------------------------------------------
 class VCFXAlleleBalanceFilter {
-public:
-    int run(int argc, char* argv[]);
+  public:
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     // Displays the help message
     void displayHelp();
 
     // Filters VCF input based on allele balance threshold
-    void filterByAlleleBalance(std::istream& in, std::ostream& out, double threshold);
+    void filterByAlleleBalance(std::istream &in, std::ostream &out, double threshold);
 
     // Parses the genotype to calculate allele balance
-    double calculateAlleleBalance(const std::string& genotype);
+    double calculateAlleleBalance(const std::string &genotype);
 };
 
 // ------------------------------------------------------
@@ -30,34 +30,31 @@ private:
 // ------------------------------------------------------
 
 // Entry point for the tool
-int VCFXAlleleBalanceFilter::run(int argc, char* argv[]) {
+int VCFXAlleleBalanceFilter::run(int argc, char *argv[]) {
     // Parse command-line arguments
     int opt;
     bool showHelp = false;
     double threshold = -1.0; // invalid until set
 
     static struct option long_options[] = {
-        {"help",                 no_argument,       0, 'h'},
-        {"filter-allele-balance", required_argument, 0, 'f'},
-        {0,                      0,                 0,  0 }
-    };
+        {"help", no_argument, 0, 'h'}, {"filter-allele-balance", required_argument, 0, 'f'}, {0, 0, 0, 0}};
 
     while ((opt = getopt_long(argc, argv, "hf:", long_options, nullptr)) != -1) {
         switch (opt) {
-            case 'h':
-                showHelp = true;
-                break;
-            case 'f':
-                try {
-                    threshold = std::stod(optarg);
-                } catch (const std::invalid_argument&) {
-                    std::cerr << "Error: Invalid threshold value.\n";
-                    displayHelp();
-                    return 1;
-                }
-                break;
-            default:
-                showHelp = true;
+        case 'h':
+            showHelp = true;
+            break;
+        case 'f':
+            try {
+                threshold = std::stod(optarg);
+            } catch (const std::invalid_argument &) {
+                std::cerr << "Error: Invalid threshold value.\n";
+                displayHelp();
+                return 1;
+            }
+            break;
+        default:
+            showHelp = true;
         }
     }
 
@@ -74,22 +71,21 @@ int VCFXAlleleBalanceFilter::run(int argc, char* argv[]) {
 }
 
 void VCFXAlleleBalanceFilter::displayHelp() {
-    std::cout 
-        << "VCFX_allele_balance_filter: Filter VCF variants based on allele balance ratios.\n\n"
-        << "Usage:\n"
-        << "  VCFX_allele_balance_filter --filter-allele-balance <THRESHOLD> [options]\n\n"
-        << "Options:\n"
-        << "  -h, --help                       Display this help message and exit\n"
-        << "  -f, --filter-allele-balance VAL  Specify the allele balance threshold (0.0 - 1.0)\n\n"
-        << "Example:\n"
-        << "  VCFX_allele_balance_filter --filter-allele-balance 0.3 < input.vcf > filtered.vcf\n\n"
-        << "Note:\n"
-        << "  This filter lumps all non-'0' alleles (1,2,3,...) as ALT when calculating the ratio.\n"
-        << "  If any sample's allele balance is < THRESHOLD, the entire variant line is skipped.\n";
+    std::cout << "VCFX_allele_balance_filter: Filter VCF variants based on allele balance ratios.\n\n"
+              << "Usage:\n"
+              << "  VCFX_allele_balance_filter --filter-allele-balance <THRESHOLD> [options]\n\n"
+              << "Options:\n"
+              << "  -h, --help                       Display this help message and exit\n"
+              << "  -f, --filter-allele-balance VAL  Specify the allele balance threshold (0.0 - 1.0)\n\n"
+              << "Example:\n"
+              << "  VCFX_allele_balance_filter --filter-allele-balance 0.3 < input.vcf > filtered.vcf\n\n"
+              << "Note:\n"
+              << "  This filter lumps all non-'0' alleles (1,2,3,...) as ALT when calculating the ratio.\n"
+              << "  If any sample's allele balance is < THRESHOLD, the entire variant line is skipped.\n";
 }
 
 // The core filter function
-void VCFXAlleleBalanceFilter::filterByAlleleBalance(std::istream& in, std::ostream& out, double threshold) {
+void VCFXAlleleBalanceFilter::filterByAlleleBalance(std::istream &in, std::ostream &out, double threshold) {
     std::string line;
 
     while (std::getline(in, line)) {
@@ -121,7 +117,7 @@ void VCFXAlleleBalanceFilter::filterByAlleleBalance(std::istream& in, std::ostre
 
         // "all or nothing" filter: if ANY genotype fails threshold => skip
         bool pass = true;
-        for (const auto& gtField : genotypes) {
+        for (const auto &gtField : genotypes) {
             double ab = calculateAlleleBalance(gtField);
             if (ab < threshold) {
                 pass = false;
@@ -137,14 +133,15 @@ void VCFXAlleleBalanceFilter::filterByAlleleBalance(std::istream& in, std::ostre
 
 // Calculates allele balance as refCount / (refCount + altCount)
 // *all* non-zero numeric alleles are counted as alt
-double VCFXAlleleBalanceFilter::calculateAlleleBalance(const std::string& genotype) {
+double VCFXAlleleBalanceFilter::calculateAlleleBalance(const std::string &genotype) {
     // Genotype might be "0/1:...". We want the portion before the first ':'
     size_t colonPos = genotype.find(':');
     std::string gt = (colonPos == std::string::npos) ? genotype : genotype.substr(0, colonPos);
 
     // Replace '|' with '/' for simpler splitting
     for (auto &ch : gt) {
-        if (ch == '|') ch = '/';
+        if (ch == '|')
+            ch = '/';
     }
 
     // Split on '/'
@@ -159,7 +156,7 @@ double VCFXAlleleBalanceFilter::calculateAlleleBalance(const std::string& genoty
     int alt_count = 0;
 
     // Count '0' as ref, any other number as alt
-    for (auto & allele : alleles) {
+    for (auto &allele : alleles) {
         // If allele is empty or ".", skip it
         if (allele.empty() || allele == ".") {
             continue;
@@ -176,7 +173,7 @@ double VCFXAlleleBalanceFilter::calculateAlleleBalance(const std::string& genoty
         }
         if (!numeric) {
             // Non-numeric => skip?
-            continue; 
+            continue;
         }
         // numeric => check if it's "0" or not
         if (allele == "0") {
@@ -197,10 +194,17 @@ double VCFXAlleleBalanceFilter::calculateAlleleBalance(const std::string& genoty
 // ------------------------------------------------------
 // main() linking to class
 // ------------------------------------------------------
-static void show_help() { VCFXAlleleBalanceFilter obj; char arg0[] = "VCFX_allele_balance_filter"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+static void show_help() {
+    VCFXAlleleBalanceFilter obj;
+    char arg0[] = "VCFX_allele_balance_filter";
+    char arg1[] = "--help";
+    char *argv2[] = {arg0, arg1, nullptr};
+    obj.run(2, argv2);
+}
 
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_common_flags(argc, argv, "VCFX_allele_balance_filter", show_help)) return 0;
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_allele_balance_filter", show_help))
+        return 0;
     VCFXAlleleBalanceFilter alleleBalanceFilter;
     return alleleBalanceFilter.run(argc, argv);
 }

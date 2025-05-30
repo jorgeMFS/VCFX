@@ -11,20 +11,18 @@
 //   - Removing the largest possible shared leading prefix, adjusting POS accordingly.
 //   - Removing the largest possible shared trailing suffix.
 class VCFXIndelNormalizer {
-public:
-    int run(int argc, char* argv[]);
+  public:
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     // Print usage
     void displayHelp();
 
     // The main function: read VCF from 'in', write normalized lines to 'out'
-    void normalizeIndels(std::istream& in, std::ostream& out);
+    void normalizeIndels(std::istream &in, std::ostream &out);
 
     // For each ALT allele, produce a separate line. Then do left+right trim
-    bool normalizeVariant(std::string &chrom, int &posInt,
-                          std::string &ref,
-                          std::string &alt);
+    bool normalizeVariant(std::string &chrom, int &posInt, std::string &ref, std::string &alt);
 
     // checks if line is a variant line (#CHROM line => we pass it as header)
 };
