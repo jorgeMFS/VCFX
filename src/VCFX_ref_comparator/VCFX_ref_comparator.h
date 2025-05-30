@@ -6,10 +6,10 @@
 #include <unordered_map>
 
 class VCFXRefComparator {
-public:
-    int run(int argc, char* argv[]);
+  public:
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     void displayHelp();
     bool loadReference(const std::string &referenceFastaPath);
     void compareVCF(std::istream &vcfIn, std::ostream &vcfOut);

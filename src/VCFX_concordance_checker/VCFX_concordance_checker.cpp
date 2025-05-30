@@ -1,12 +1,12 @@
 #include "vcfx_core.h"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <sstream>
-#include <unordered_map>
 #include <algorithm>
 #include <cstdlib>
 #include <getopt.h>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 // ---------------------------------------------------------
 // Data structure for command-line arguments
@@ -20,17 +20,16 @@ struct ConcordanceArguments {
 // Print help
 // ---------------------------------------------------------
 static void printHelp() {
-    std::cout 
-        << "VCFX_concordance_checker\n"
-        << "Usage: VCFX_concordance_checker [OPTIONS] < input.vcf > concordance_report.tsv\n\n"
-        << "Options:\n"
-        << "  --samples, -s \"Sample1 Sample2\"  Specify exactly two sample names to compare.\n"
-        << "  --help, -h                        Display this help message and exit.\n\n"
-        << "Description:\n"
-        << "  Compares genotypes between two specified samples in a VCF file, including multi-allelic\n"
-        << "  variants, and outputs per-variant concordance (Concordant or Discordant).\n\n"
-        << "Example:\n"
-        << "  ./VCFX_concordance_checker --samples \"SampleA SampleB\" < input.vcf > concordance_report.tsv\n";
+    std::cout << "VCFX_concordance_checker\n"
+              << "Usage: VCFX_concordance_checker [OPTIONS] < input.vcf > concordance_report.tsv\n\n"
+              << "Options:\n"
+              << "  --samples, -s \"Sample1 Sample2\"  Specify exactly two sample names to compare.\n"
+              << "  --help, -h                        Display this help message and exit.\n\n"
+              << "Description:\n"
+              << "  Compares genotypes between two specified samples in a VCF file, including multi-allelic\n"
+              << "  variants, and outputs per-variant concordance (Concordant or Discordant).\n\n"
+              << "Example:\n"
+              << "  ./VCFX_concordance_checker --samples \"SampleA SampleB\" < input.vcf > concordance_report.tsv\n";
 }
 
 // ---------------------------------------------------------
@@ -49,7 +48,7 @@ static std::vector<std::string> splitString(const std::string &str, char delimit
 // ---------------------------------------------------------
 // parseArguments: fill ConcordanceArguments
 // ---------------------------------------------------------
-static bool parseArguments(int argc, char* argv[], ConcordanceArguments& args) {
+static bool parseArguments(int argc, char *argv[], ConcordanceArguments &args) {
     bool showHelp = false;
 
     for (int i = 1; i < argc; ++i) {
@@ -63,11 +62,9 @@ static bool parseArguments(int argc, char* argv[], ConcordanceArguments& args) {
             }
             args.sample1 = samples[0];
             args.sample2 = samples[1];
-        }
-        else if (arg == "--help" || arg == "-h") {
+        } else if (arg == "--help" || arg == "-h") {
             showHelp = true;
-        }
-        else {
+        } else {
             std::cerr << "Warning: Unrecognized argument '" << arg << "'.\n";
         }
     }
@@ -93,14 +90,14 @@ static bool parseArguments(int argc, char* argv[], ConcordanceArguments& args) {
 //   2 => "2" (meaning altAlleles[1]), etc.
 // We'll store them as strings "0","1","2" for comparison
 // ---------------------------------------------------------
-static std::string normalizeDiploidGenotype(const std::string& genotypeField,
-                                            const std::vector<std::string> &altAlleles)
-{
+static std::string normalizeDiploidGenotype(const std::string &genotypeField,
+                                            const std::vector<std::string> &altAlleles) {
     // genotypeField might be "0/1", "2|3", ".", ...
     // Step 1: replace '|' with '/'
     std::string gt = genotypeField;
     for (char &c : gt) {
-        if (c == '|') c = '/';
+        if (c == '|')
+            c = '/';
     }
     // split by '/'
     auto alleles = splitString(gt, '/');
@@ -138,10 +135,10 @@ static std::string normalizeDiploidGenotype(const std::string& genotypeField,
         }
         numericAll.push_back(val);
     }
-    // We produce a string "x/y" sorted or not? Typically for genotype comparison, 
-    // "1/0" is same as "0/1", but let's keep the original order. It's also common 
-    // to store them in numeric order. We'll store them in sorted numeric order 
-    // so that "0/1" == "1/0". Then we join with "/". 
+    // We produce a string "x/y" sorted or not? Typically for genotype comparison,
+    // "1/0" is same as "0/1", but let's keep the original order. It's also common
+    // to store them in numeric order. We'll store them in sorted numeric order
+    // so that "0/1" == "1/0". Then we join with "/".
     std::sort(numericAll.begin(), numericAll.end());
     std::ostringstream oss;
     oss << numericAll[0] << "/" << numericAll[1];
@@ -169,9 +166,7 @@ static bool calculateConcordance(std::istream &in, std::ostream &out, const Conc
 
     // Print a TSV header:
     // CHROM POS ID REF ALT(S) Sample1_GT Sample2_GT Concordance
-    out << "CHROM\tPOS\tID\tREF\tALT\t" 
-        << args.sample1 << "_GT\t" 
-        << args.sample2 << "_GT\tConcordance\n";
+    out << "CHROM\tPOS\tID\tREF\tALT\t" << args.sample1 << "_GT\t" << args.sample2 << "_GT\tConcordance\n";
 
     while (std::getline(in, line)) {
         if (line.empty()) {
@@ -216,18 +211,16 @@ static bool calculateConcordance(std::istream &in, std::ostream &out, const Conc
             continue;
         }
         // check we have sample columns for sample1, sample2
-        if ((size_t)sample1_index >= fields.size() || 
-            (size_t)sample2_index >= fields.size()) 
-        {
+        if ((size_t)sample1_index >= fields.size() || (size_t)sample2_index >= fields.size()) {
             // line doesn't have enough columns
             continue;
         }
 
         const std::string &chrom = fields[0];
-        const std::string &pos   = fields[1];
-        const std::string &id    = fields[2];
-        const std::string &ref   = fields[3];
-        const std::string &alt   = fields[4];
+        const std::string &pos = fields[1];
+        const std::string &id = fields[2];
+        const std::string &ref = fields[3];
+        const std::string &alt = fields[4];
         // sample columns:
         const std::string &sample1_field = fields[sample1_index];
         const std::string &sample2_field = fields[sample2_index];
@@ -254,14 +247,8 @@ static bool calculateConcordance(std::istream &in, std::ostream &out, const Conc
         std::string cc = same ? "Concordant" : "Discordant";
 
         // Print the row
-        out << chrom << "\t" 
-            << pos   << "\t" 
-            << id    << "\t" 
-            << ref   << "\t" 
-            << alt   << "\t"
-            << s1_gt << "\t"
-            << s2_gt << "\t"
-            << cc    << "\n";
+        out << chrom << "\t" << pos << "\t" << id << "\t" << ref << "\t" << alt << "\t" << s1_gt << "\t" << s2_gt
+            << "\t" << cc << "\n";
     }
 
     // Print summary to stderr so we don't break the TSV
@@ -277,8 +264,9 @@ static bool calculateConcordance(std::istream &in, std::ostream &out, const Conc
 // ---------------------------------------------------------
 static void show_help() { printHelp(); }
 
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_common_flags(argc, argv, "VCFX_concordance_checker", show_help)) return 0;
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_concordance_checker", show_help))
+        return 0;
     ConcordanceArguments args;
     if (!parseArguments(argc, argv, args)) {
         // parseArguments prints error/help if needed

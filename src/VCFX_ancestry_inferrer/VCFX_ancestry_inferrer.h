@@ -8,19 +8,19 @@
 
 // VCFXAncestryInferer: Header file for Ancestry Inference tool
 class VCFXAncestryInferer {
-public:
+  public:
     // Entry point for the tool
-    int run(int argc, char* argv[]);
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     // Displays the help message
     void displayHelp();
 
     // Loads population allele frequencies from a file
-    bool loadPopulationFrequencies(const std::string& freqFilePath);
+    bool loadPopulationFrequencies(const std::string &freqFilePath);
 
     // Infers ancestry for each sample based on allele frequencies
-    void inferAncestry(std::istream& vcfInput, std::ostream& ancestryOutput);
+    void inferAncestry(std::istream &vcfInput, std::ostream &ancestryOutput);
 
     // Structure to hold allele frequencies per population
     struct PopulationFrequencies {

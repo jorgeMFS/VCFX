@@ -1,33 +1,30 @@
-#include "vcfx_core.h"
 #include "VCFX_probability_filter.h"
-#include <getopt.h>
-#include <sstream>
+#include "vcfx_core.h"
 #include <algorithm>
+#include <getopt.h>
 #include <regex>
+#include <sstream>
 
 // Implementation of VCFXProbabilityFilter
-int VCFXProbabilityFilter::run(int argc, char* argv[]) {
+int VCFXProbabilityFilter::run(int argc, char *argv[]) {
     // Parse command-line arguments
     int opt;
     bool showHelp = false;
     std::string condition;
 
     static struct option long_options[] = {
-        {"help",           no_argument,       0, 'h'},
-        {"filter-probability", required_argument, 0, 'f'},
-        {0,                0,                 0,  0 }
-    };
+        {"help", no_argument, 0, 'h'}, {"filter-probability", required_argument, 0, 'f'}, {0, 0, 0, 0}};
 
     while ((opt = getopt_long(argc, argv, "hf:", long_options, nullptr)) != -1) {
         switch (opt) {
-            case 'h':
-                showHelp = true;
-                break;
-            case 'f':
-                condition = optarg;
-                break;
-            default:
-                showHelp = true;
+        case 'h':
+            showHelp = true;
+            break;
+        case 'f':
+            condition = optarg;
+            break;
+        default:
+            showHelp = true;
         }
     }
 
@@ -35,7 +32,7 @@ int VCFXProbabilityFilter::run(int argc, char* argv[]) {
         displayHelp();
         return 0;
     }
-    
+
     if (condition.empty()) {
         displayHelp();
         return 1;
@@ -53,13 +50,14 @@ void VCFXProbabilityFilter::displayHelp() {
     std::cout << "  VCFX_probability_filter --filter-probability \"<CONDITION>\" [options]\n\n";
     std::cout << "Options:\n";
     std::cout << "  -h, --help                        Display this help message and exit\n";
-    std::cout << "  -f, --filter-probability <cond>    Specify the genotype probability filter condition (e.g., GP>0.9)\n\n";
+    std::cout
+        << "  -f, --filter-probability <cond>    Specify the genotype probability filter condition (e.g., GP>0.9)\n\n";
     std::cout << "Supported Operators: >, <, >=, <=, ==, !=\n\n";
     std::cout << "Example:\n";
     std::cout << "  VCFX_probability_filter --filter-probability \"GP>0.9\" < input.vcf > filtered.vcf\n";
 }
 
-void VCFXProbabilityFilter::filterByProbability(std::istream& in, std::ostream& out, const std::string& condition) {
+void VCFXProbabilityFilter::filterByProbability(std::istream &in, std::ostream &out, const std::string &condition) {
     // Parse the filter condition using regex (e.g., "GP>0.9")
     std::regex conditionRegex(R"((\w+)\s*(>=|<=|>|<|==|!=)\s*([0-9]*\.?[0-9]+))");
     std::smatch matches;
@@ -79,7 +77,8 @@ void VCFXProbabilityFilter::filterByProbability(std::istream& in, std::ostream& 
     size_t fieldIndex = std::string::npos;
 
     while (std::getline(in, line)) {
-        if (line.empty()) continue;
+        if (line.empty())
+            continue;
 
         if (line[0] == '#') {
             // Handle header lines
@@ -210,10 +209,17 @@ void VCFXProbabilityFilter::filterByProbability(std::istream& in, std::ostream& 
     }
 }
 
-static void show_help() { VCFXProbabilityFilter obj; char arg0[] = "VCFX_probability_filter"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+static void show_help() {
+    VCFXProbabilityFilter obj;
+    char arg0[] = "VCFX_probability_filter";
+    char arg1[] = "--help";
+    char *argv2[] = {arg0, arg1, nullptr};
+    obj.run(2, argv2);
+}
 
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_common_flags(argc, argv, "VCFX_probability_filter", show_help)) return 0;
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_probability_filter", show_help))
+        return 0;
     VCFXProbabilityFilter probabilityFilter;
     return probabilityFilter.run(argc, argv);
 }

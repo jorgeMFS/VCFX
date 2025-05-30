@@ -11,13 +11,13 @@
  *   If any sample is unphased (or missing GT), logs a warning and discards line.
  */
 class VCFXPhaseChecker {
-public:
-    int run(int argc, char* argv[]);
+  public:
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     void displayHelp();
 
-    // Processes the input line-by-line. 
+    // Processes the input line-by-line.
     // For each data line, if all samples are phased => write to stdout, else skip.
     void processVCF(std::istream &in, std::ostream &out);
 

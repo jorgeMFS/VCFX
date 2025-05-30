@@ -7,18 +7,15 @@
 #include <vector>
 
 class VCFXPopulationFilter {
-public:
-    int run(int argc, char* argv[]);
+  public:
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     void displayHelp();
 
-    bool loadPopulationMap(const std::string &popMapFile,
-                           const std::string &popTag,
+    bool loadPopulationMap(const std::string &popMapFile, const std::string &popTag,
                            std::unordered_set<std::string> &samplesToInclude);
-    void filterPopulation(std::istream &in,
-                          std::ostream &out,
-                          const std::unordered_set<std::string> &samplesToInclude,
+    void filterPopulation(std::istream &in, std::ostream &out, const std::unordered_set<std::string> &samplesToInclude,
                           const std::string &popTag);
 };
 

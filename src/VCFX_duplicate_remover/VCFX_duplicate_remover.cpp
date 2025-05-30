@@ -1,11 +1,11 @@
-#include "vcfx_core.h"
 #include "VCFX_duplicate_remover.h"
+#include "vcfx_core.h"
+#include <algorithm>
 #include <sstream>
 #include <vector>
-#include <algorithm>
 
 // Utility function: Splits a string by a given delimiter.
-static std::vector<std::string> splitString(const std::string& str, char delimiter) {
+static std::vector<std::string> splitString(const std::string &str, char delimiter) {
     std::vector<std::string> tokens;
     std::stringstream ss(str);
     std::string token;
@@ -32,10 +32,8 @@ void printHelp() {
 
 // Generates a unique key for a variant based on chrom, pos, ref, and alt.
 // For multi-allelic ALT fields, the ALT alleles are split, sorted, and rejoined.
-std::string generateNormalizedVariantKey(const std::string& chrom,
-                                          const std::string& pos,
-                                          const std::string& ref,
-                                          const std::string& alt) {
+std::string generateNormalizedVariantKey(const std::string &chrom, const std::string &pos, const std::string &ref,
+                                         const std::string &alt) {
     // Split ALT field on commas.
     std::vector<std::string> alts = splitString(alt, ',');
     // Sort alleles lexicographically.
@@ -53,10 +51,8 @@ std::string generateNormalizedVariantKey(const std::string& chrom,
 }
 
 // Helper function to generate a VariantKey from parsed values.
-static VariantKey generateVariantKey(const std::string& chrom,
-                                     const std::string& pos,
-                                     const std::string& ref,
-                                     const std::string& alt) {
+static VariantKey generateVariantKey(const std::string &chrom, const std::string &pos, const std::string &ref,
+                                     const std::string &alt) {
     VariantKey key;
     key.chrom = chrom;
     try {
@@ -83,7 +79,7 @@ static VariantKey generateVariantKey(const std::string& chrom,
 }
 
 // Function to remove duplicate variants from a VCF file.
-bool removeDuplicates(std::istream& in, std::ostream& out) {
+bool removeDuplicates(std::istream &in, std::ostream &out) {
     std::string line;
     // Print header lines as-is.
     // Use an unordered_set with our custom hash function to track seen variants.
@@ -125,8 +121,9 @@ bool removeDuplicates(std::istream& in, std::ostream& out) {
 // ----------------------------------------------------------------------
 static void show_help() { printHelp(); }
 
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_common_flags(argc, argv, "VCFX_duplicate_remover", show_help)) return 0;
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_duplicate_remover", show_help))
+        return 0;
     // Simple argument parsing: if --help or -h is provided, print help.
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];

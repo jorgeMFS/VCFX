@@ -1,34 +1,32 @@
 #include "vcfx_core.h"
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <fstream>
-#include <unordered_map>
-#include <vector>
 #include <algorithm>
 #include <cstdlib>
+#include <fstream>
 #include <getopt.h>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 // ---------------------------------------------------------------------------
 // Class: VCFXCustomAnnotator
 // ---------------------------------------------------------------------------
 class VCFXCustomAnnotator {
-public:
-    int run(int argc, char* argv[]);
+  public:
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     void displayHelp();
-    bool loadAnnotations(const std::string& annotationFilePath,
-                         std::unordered_map<std::string, std::string>& annotations);
-    void addAnnotations(std::istream& in, std::ostream& out,
-                        const std::unordered_map<std::string, std::string>& annotations);
+    bool loadAnnotations(const std::string &annotationFilePath,
+                         std::unordered_map<std::string, std::string> &annotations);
+    void addAnnotations(std::istream &in, std::ostream &out,
+                        const std::unordered_map<std::string, std::string> &annotations);
 
     // Generate a unique key for a variant
     // Format: CHROM:POS:REF:ALT
-    static std::string generateVariantKey(const std::string& chrom,
-                                          const std::string& pos,
-                                          const std::string& ref,
-                                          const std::string& alt);
+    static std::string generateVariantKey(const std::string &chrom, const std::string &pos, const std::string &ref,
+                                          const std::string &alt);
 };
 
 // ---------------------------------------------------------------------------
@@ -48,32 +46,29 @@ static std::vector<std::string> split(const std::string &str, char delimiter) {
 // displayHelp
 // ---------------------------------------------------------------------------
 void VCFXCustomAnnotator::displayHelp() {
-    std::cout
-        << "VCFX_custom_annotator: Add custom annotations to the INFO field in a VCF file.\n\n"
-        << "Usage:\n"
-        << "  VCFX_custom_annotator --add-annotation <annotations.txt> [options]\n\n"
-        << "Options:\n"
-        << "  -h, --help                  Display this help message and exit\n"
-        << "  -a, --add-annotation <file> Specify the annotation file\n\n"
-        << "Description:\n"
-        << "  Reads an annotation file with lines:\n"
-        << "    CHROM  POS  REF  ALT  annotation...\n"
-        << "  Then for each VCF variant, if it matches CHROM:POS:REF:ALT, inserts\n"
-        << "  'CustomAnnotation=...' into the INFO field.\n"
-        << "  Multi-allelic ALT fields are split on commas; we attempt to annotate\n"
-        << "  each ALT separately. If no annotation is found for a given ALT, 'NA'\n"
-        << "  is used for that allele's slot.\n\n"
-        << "Example:\n"
-        << "  VCFX_custom_annotator --add-annotation annotations.txt < input.vcf > annotated.vcf\n";
+    std::cout << "VCFX_custom_annotator: Add custom annotations to the INFO field in a VCF file.\n\n"
+              << "Usage:\n"
+              << "  VCFX_custom_annotator --add-annotation <annotations.txt> [options]\n\n"
+              << "Options:\n"
+              << "  -h, --help                  Display this help message and exit\n"
+              << "  -a, --add-annotation <file> Specify the annotation file\n\n"
+              << "Description:\n"
+              << "  Reads an annotation file with lines:\n"
+              << "    CHROM  POS  REF  ALT  annotation...\n"
+              << "  Then for each VCF variant, if it matches CHROM:POS:REF:ALT, inserts\n"
+              << "  'CustomAnnotation=...' into the INFO field.\n"
+              << "  Multi-allelic ALT fields are split on commas; we attempt to annotate\n"
+              << "  each ALT separately. If no annotation is found for a given ALT, 'NA'\n"
+              << "  is used for that allele's slot.\n\n"
+              << "Example:\n"
+              << "  VCFX_custom_annotator --add-annotation annotations.txt < input.vcf > annotated.vcf\n";
 }
 
 // ---------------------------------------------------------------------------
 // generateVariantKey
 // ---------------------------------------------------------------------------
-std::string VCFXCustomAnnotator::generateVariantKey(const std::string& chrom,
-                                                    const std::string& pos,
-                                                    const std::string& ref,
-                                                    const std::string& alt) {
+std::string VCFXCustomAnnotator::generateVariantKey(const std::string &chrom, const std::string &pos,
+                                                    const std::string &ref, const std::string &alt) {
     return chrom + ":" + pos + ":" + ref + ":" + alt;
 }
 
@@ -82,10 +77,8 @@ std::string VCFXCustomAnnotator::generateVariantKey(const std::string& chrom,
 //   Reads a file with lines: CHROM POS REF ALT annotation...
 //   Stores them in a map: "chrom:pos:ref:alt" -> annotation
 // ---------------------------------------------------------------------------
-bool VCFXCustomAnnotator::loadAnnotations(
-    const std::string& annotationFilePath,
-    std::unordered_map<std::string, std::string>& annotations)
-{
+bool VCFXCustomAnnotator::loadAnnotations(const std::string &annotationFilePath,
+                                          std::unordered_map<std::string, std::string> &annotations) {
     std::ifstream infile(annotationFilePath);
     if (!infile.is_open()) {
         std::cerr << "Error: Unable to open annotation file " << annotationFilePath << "\n";
@@ -103,8 +96,7 @@ bool VCFXCustomAnnotator::loadAnnotations(
         std::stringstream ss(line);
         std::string chrom, pos, ref, alt;
         if (!(ss >> chrom >> pos >> ref >> alt)) {
-            std::cerr << "Warning: Skipping invalid annotation line " << line_num
-                      << ": " << line << "\n";
+            std::cerr << "Warning: Skipping invalid annotation line " << line_num << ": " << line << "\n";
             continue;
         }
         // The rest of the line (after the first four fields) is the annotation text
@@ -138,10 +130,8 @@ bool VCFXCustomAnnotator::loadAnnotations(
 //   a single string "val1,val2" if there are multiple alt alleles.
 //   If no annotation is found for an alt, we use "NA" for that slot.
 // ---------------------------------------------------------------------------
-void VCFXCustomAnnotator::addAnnotations(std::istream& in,
-                                         std::ostream& out,
-                                         const std::unordered_map<std::string, std::string>& annotations)
-{
+void VCFXCustomAnnotator::addAnnotations(std::istream &in, std::ostream &out,
+                                         const std::unordered_map<std::string, std::string> &annotations) {
     bool infoHeaderInserted = false;
     std::string line;
 
@@ -154,7 +144,8 @@ void VCFXCustomAnnotator::addAnnotations(std::istream& in,
         if (line[0] == '#') {
             // If it's #CHROM and we haven't inserted the new INFO header yet, do so
             if (!infoHeaderInserted && line.rfind("#CHROM", 0) == 0) {
-                out << "##INFO=<ID=CustomAnnotation,Number=.,Type=String,Description=\"Custom annotations added by VCFX_custom_annotator (multi-allelic)\">\n";
+                out << "##INFO=<ID=CustomAnnotation,Number=.,Type=String,Description=\"Custom annotations added by "
+                       "VCFX_custom_annotator (multi-allelic)\">\n";
                 infoHeaderInserted = true;
             }
             out << line << "\n";
@@ -204,7 +195,8 @@ void VCFXCustomAnnotator::addAnnotations(std::istream& in,
             // join annVals with commas
             std::ostringstream oss;
             for (size_t i = 0; i < annVals.size(); ++i) {
-                if (i > 0) oss << ",";
+                if (i > 0)
+                    oss << ",";
                 oss << annVals[i];
             }
             finalAnn = oss.str();
@@ -223,8 +215,8 @@ void VCFXCustomAnnotator::addAnnotations(std::istream& in,
         // Reconstruct the VCF line
         // We print CHROM POS ID REF ALT QUAL FILTER INFO then the rest
         // e.g. leftover might be " FORMAT SAMPLE1 SAMPLE2..."
-        out << chrom << "\t" << pos << "\t" << id << "\t" << ref << "\t" << alt
-            << "\t" << qual << "\t" << filter << "\t" << info;
+        out << chrom << "\t" << pos << "\t" << id << "\t" << ref << "\t" << alt << "\t" << qual << "\t" << filter
+            << "\t" << info;
 
         // If there's anything left in 'rest', print it
         if (!rest.empty()) {
@@ -237,28 +229,25 @@ void VCFXCustomAnnotator::addAnnotations(std::istream& in,
 // ---------------------------------------------------------------------------
 // run() - parse arguments, load annotation map, apply to VCF
 // ---------------------------------------------------------------------------
-int VCFXCustomAnnotator::run(int argc, char* argv[]) {
+int VCFXCustomAnnotator::run(int argc, char *argv[]) {
     // Parse command-line arguments
     int opt;
     bool showHelp = false;
     std::string annotationFilePath;
 
     static struct option long_options[] = {
-        {"help",           no_argument,       0, 'h'},
-        {"add-annotation", required_argument, 0, 'a'},
-        {0,0,0,0}
-    };
+        {"help", no_argument, 0, 'h'}, {"add-annotation", required_argument, 0, 'a'}, {0, 0, 0, 0}};
 
     while ((opt = getopt_long(argc, argv, "ha:", long_options, nullptr)) != -1) {
         switch (opt) {
-            case 'h':
-                showHelp = true;
-                break;
-            case 'a':
-                annotationFilePath = optarg;
-                break;
-            default:
-                showHelp = true;
+        case 'h':
+            showHelp = true;
+            break;
+        case 'a':
+            annotationFilePath = optarg;
+            break;
+        default:
+            showHelp = true;
         }
     }
 
@@ -282,10 +271,17 @@ int VCFXCustomAnnotator::run(int argc, char* argv[]) {
 // ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
-static void show_help() { VCFXCustomAnnotator obj; char arg0[] = "VCFX_custom_annotator"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+static void show_help() {
+    VCFXCustomAnnotator obj;
+    char arg0[] = "VCFX_custom_annotator";
+    char arg1[] = "--help";
+    char *argv2[] = {arg0, arg1, nullptr};
+    obj.run(2, argv2);
+}
 
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_common_flags(argc, argv, "VCFX_custom_annotator", show_help)) return 0;
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_custom_annotator", show_help))
+        return 0;
     VCFXCustomAnnotator annotator;
     return annotator.run(argc, argv);
 }

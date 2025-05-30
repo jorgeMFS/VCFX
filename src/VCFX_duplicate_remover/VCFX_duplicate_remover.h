@@ -15,17 +15,14 @@ struct VariantKey {
     std::string ref;
     std::string alt; // normalized: sorted, comma-separated alleles
 
-    bool operator==(const VariantKey& other) const {
-        return chrom == other.chrom &&
-               pos == other.pos &&
-               ref == other.ref &&
-               alt == other.alt;
+    bool operator==(const VariantKey &other) const {
+        return chrom == other.chrom && pos == other.pos && ref == other.ref && alt == other.alt;
     }
 };
 
 // Custom hash function for VariantKey using a hash-combine approach
 struct VariantKeyHash {
-    std::size_t operator()(const VariantKey& k) const {
+    std::size_t operator()(const VariantKey &k) const {
         std::size_t h1 = std::hash<std::string>()(k.chrom);
         std::size_t h2 = std::hash<int>()(k.pos);
         std::size_t h3 = std::hash<std::string>()(k.ref);
@@ -39,6 +36,6 @@ struct VariantKeyHash {
 };
 
 // Function to remove duplicate variants from a VCF file
-bool removeDuplicates(std::istream& in, std::ostream& out);
+bool removeDuplicates(std::istream &in, std::ostream &out);
 
 #endif // VCFX_DUPLICATE_REMOVER_H
