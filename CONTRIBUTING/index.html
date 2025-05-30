@@ -2864,7 +2864,12 @@
 is provided in <code>.clang-format</code> at the repository root. The <code>pre-commit</code> hooks
 automatically apply <code>clang-format</code> to any changed C/C++ files. You can also run
 the hook manually if needed:</p>
-<div class="highlight"><pre><span></span><code>pre-commit<span class="w"> </span>run<span class="w"> </span>clang-format<span class="w"> </span>--files<span class="w"> </span>path/to/changed_file.cpp
+<p><div class="highlight"><pre><span></span><code>pre-commit<span class="w"> </span>run<span class="w"> </span>clang-format<span class="w"> </span>--files<span class="w"> </span>path/to/changed_file.cpp
+</code></pre></div>
+If running <code>pre-commit run --all-files</code> reports that the <code>clang-format</code>
+hook modified files, you can apply the formatting to the entire
+repository with:</p>
+<div class="highlight"><pre><span></span><code>pre-commit<span class="w"> </span>run<span class="w"> </span>clang-format<span class="w"> </span>--all-files
 </code></pre></div>
 <h3 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h3>
 <ul>
