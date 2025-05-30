@@ -12,7 +12,10 @@ def extract_version(cmake_path: Path | str | None = None) -> str:
     patch = re.search(r"set\(\s*VCFX_VERSION_PATCH\s+(\d+)\s*\)", cmake_text)
     if major and minor and patch:
         return f"{major.group(1)}.{minor.group(1)}.{patch.group(1)}"
-    version = re.search(r"set\(\s*VCFX_VERSION\s+\"([0-9]+\.[0-9]+\.[0-9]+)\"\s*\)", cmake_text)
+    version = re.search(
+        r"set\(\s*VCFX_VERSION\s+\"([0-9]+\.[0-9]+\.[0-9]+)\"\s*\)",
+        cmake_text,
+    )
     if version:
         return version.group(1)
     raise RuntimeError("Unable to parse version from CMakeLists.txt")

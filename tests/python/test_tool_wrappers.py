@@ -2,6 +2,7 @@ from pathlib import Path
 
 DATA = Path(__file__).resolve().parents[1] / "data"
 
+
 def test_tool_wrappers(vcfx):
     rows = vcfx.alignment_checker(DATA / "align_Y.vcf", DATA / "align_refY.fa")
     assert rows and rows[0].Discrepancy_Type == "ALT_MISMATCH"
@@ -32,7 +33,11 @@ def test_tool_wrappers(vcfx):
     balance = vcfx.allele_balance_calc(DATA / "allele_balance_calc_A.vcf")
     assert abs(balance[0].Allele_Balance - 1.0) < 1e-6
 
-    conc = vcfx.concordance_checker(DATA / "concordance_input.vcf", "SAMPLE1", "SAMPLE2")
+    conc = vcfx.concordance_checker(
+        DATA / "concordance_input.vcf",
+        "SAMPLE1",
+        "SAMPLE2",
+    )
     assert conc[0].Concordance == "Concordant"
 
     filtered = vcfx.genotype_query(DATA / "genotype_query" / "sample.vcf", "0/1")
