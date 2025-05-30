@@ -189,6 +189,13 @@ After building the bindings using `cmake -DPYTHON_BINDINGS=ON` (or after install
 pytest tests/python
 ```
 
+To automatically run `ruff`, `flake8`, `mypy`, and `pytest` before each commit,
+install the pre-commit hooks once:
+
+```bash
+pre-commit install
+```
+
 
 ## Contributing
 
