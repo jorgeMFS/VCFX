@@ -11,6 +11,11 @@ repos:
         entry: flake8
         language: system
         types: [python]
+      - id: clang-format
+        name: clang-format
+        entry: clang-format -i --style=file
+        language: system
+        files: "\\.(c|cc|cpp|cxx|h|hh|hpp|hxx)$"
       - id: mypy
         name: mypy
         entry: mypy python

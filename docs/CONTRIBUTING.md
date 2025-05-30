@@ -31,26 +31,27 @@ We welcome suggestions for new features or improvements to existing functionalit
 
 1. Fork the repository
 2. Create a new branch for your feature or bug fix
-3. Write your code, following our coding standards
-   (run `clang-format -i <files>` before committing)
-4. Add tests for your changes
-5. Ensure all tests pass
-6. Update documentation as needed
-7. Commit your changes with clear, descriptive commit messages
-8. Submit a pull request
+3. Install the pre-commit hooks with `pre-commit install`
+4. Write your code, following our coding standards. The hooks will automatically
+   format changed C/C++ files.
+5. Add tests for your changes
+6. Ensure all tests pass
+7. Update documentation as needed
+8. Commit your changes with clear, descriptive commit messages
+9. Submit a pull request
 
 ## Development Setup
 
 ### Code Formatting
 
 We use `clang-format` to keep the C++ code style consistent. A basic configuration
-is provided in `.clang-format` at the repository root. Please run:
+is provided in `.clang-format` at the repository root. The `pre-commit` hooks
+automatically apply `clang-format` to any changed C/C++ files. You can also run
+the hook manually if needed:
 
 ```bash
-clang-format -i path/to/changed_file.cpp
+pre-commit run clang-format --files path/to/changed_file.cpp
 ```
-
-before committing changes.
 
 ### Prerequisites
 
