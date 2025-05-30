@@ -1,71 +1,67 @@
-#include "vcfx_core.h"
 #include "VCFX_info_aggregator.h"
-#include <getopt.h>
-#include <sstream>
+#include "vcfx_core.h"
 #include <algorithm>
+#include <cmath> // for std::isfinite
+#include <cstdlib>
+#include <getopt.h>
 #include <iomanip>
 #include <iostream>
-#include <cstdlib>
 #include <map>
+#include <sstream>
 #include <vector>
-#include <cmath>  // for std::isfinite
 
 // ----------------------------------------------------------------------
 // Displays help
 // ----------------------------------------------------------------------
 void VCFXInfoAggregator::displayHelp() {
-    std::cout 
-        << "VCFX_info_aggregator: Aggregate numeric INFO field values from a VCF.\n\n"
-        << "Usage:\n"
-        << "  VCFX_info_aggregator --aggregate-info \"DP,AF,...\" < input.vcf > output.vcf\n\n"
-        << "Description:\n"
-        << "  Reads a VCF from stdin, prints it unmodified, and at the end, appends a\n"
-        << "  summary section of the form:\n"
-        << "    #AGGREGATION_SUMMARY\n"
-        << "    DP: Sum=..., Average=...\n"
-        << "    AF: Sum=..., Average=...\n"
-        << "  The VCF portion remains fully valid. The final lines start with '#' so most\n"
-        << "  VCF parsers will ignore them.\n\n"
-        << "Options:\n"
-        << "  -h, --help                Print this help message.\n"
-        << "  -a, --aggregate-info <fields>  Comma-separated list of INFO fields to aggregate.\n\n"
-        << "Example:\n"
-        << "  VCFX_info_aggregator --aggregate-info \"DP,AF\" < input.vcf > aggregated.vcf\n";
+    std::cout << "VCFX_info_aggregator: Aggregate numeric INFO field values from a VCF.\n\n"
+              << "Usage:\n"
+              << "  VCFX_info_aggregator --aggregate-info \"DP,AF,...\" < input.vcf > output.vcf\n\n"
+              << "Description:\n"
+              << "  Reads a VCF from stdin, prints it unmodified, and at the end, appends a\n"
+              << "  summary section of the form:\n"
+              << "    #AGGREGATION_SUMMARY\n"
+              << "    DP: Sum=..., Average=...\n"
+              << "    AF: Sum=..., Average=...\n"
+              << "  The VCF portion remains fully valid. The final lines start with '#' so most\n"
+              << "  VCF parsers will ignore them.\n\n"
+              << "Options:\n"
+              << "  -h, --help                Print this help message.\n"
+              << "  -a, --aggregate-info <fields>  Comma-separated list of INFO fields to aggregate.\n\n"
+              << "Example:\n"
+              << "  VCFX_info_aggregator --aggregate-info \"DP,AF\" < input.vcf > aggregated.vcf\n";
 }
 
 // ----------------------------------------------------------------------
 // parse command line, call aggregator
 // ----------------------------------------------------------------------
-int VCFXInfoAggregator::run(int argc, char* argv[]) {
+int VCFXInfoAggregator::run(int argc, char *argv[]) {
     int opt;
     bool showHelp = false;
     std::string infoFieldsStr;
 
     static struct option longOptions[] = {
-        {"help",          no_argument,       0, 'h'},
-        {"aggregate-info", required_argument, 0, 'a'},
-        {0,0,0,0}
-    };
+        {"help", no_argument, 0, 'h'}, {"aggregate-info", required_argument, 0, 'a'}, {0, 0, 0, 0}};
 
-    while((opt = getopt_long(argc, argv, "ha:", longOptions, nullptr)) != -1) {
-        switch(opt) {
-            case 'h':
-                showHelp = true;
-                break;
-            case 'a':
-                infoFieldsStr = optarg;
-                break;
-            default:
-                showHelp = true;
-                break;
+    while ((opt = getopt_long(argc, argv, "ha:", longOptions, nullptr)) != -1) {
+        switch (opt) {
+        case 'h':
+            showHelp = true;
+            break;
+        case 'a':
+            infoFieldsStr = optarg;
+            break;
+        default:
+            showHelp = true;
+            break;
         }
     }
 
-    if(showHelp) {
+    if (showHelp) {
         displayHelp();
         return 0;
     }
-    if(infoFieldsStr.empty()) {
+    if (infoFieldsStr.empty()) {
         std::cerr << "Error: Must specify --aggregate-info with at least one field.\n";
         return 1;
     }
@@ -75,16 +71,18 @@ int VCFXInfoAggregator::run(int argc, char* argv[]) {
     {
         std::stringstream ss(infoFieldsStr);
         std::string f;
-        while(std::getline(ss, f, ',')) {
+        while (std::getline(ss, f, ',')) {
             // trim
-            while(!f.empty() && isspace((unsigned char)f.back())) f.pop_back();
-            while(!f.empty() && isspace((unsigned char)f.front())) f.erase(f.begin());
-            if(!f.empty()) {
+            while (!f.empty() && isspace((unsigned char)f.back()))
+                f.pop_back();
+            while (!f.empty() && isspace((unsigned char)f.front()))
+                f.erase(f.begin());
+            if (!f.empty()) {
                 infoFields.push_back(f);
             }
         }
     }
-    if(infoFields.empty()) {
+    if (infoFields.empty()) {
         std::cerr << "Error: no valid fields in --aggregate-info\n";
         return 1;
     }
@@ -100,10 +98,8 @@ int VCFXInfoAggregator::run(int argc, char* argv[]) {
 //   3) parse data lines => parse 'INFO' col => parse each requested field => if numeric => accumulate
 //   4) after reading entire file, print summary
 // ----------------------------------------------------------------------
-void VCFXInfoAggregator::aggregateInfo(std::istream& in,
-                                       std::ostream& out,
-                                       const std::vector<std::string>& infoFields)
-{
+void VCFXInfoAggregator::aggregateInfo(std::istream &in, std::ostream &out,
+                                       const std::vector<std::string> &infoFields) {
     // We'll store each field's collected numeric values in a vector
     std::map<std::string, std::vector<double>> collected;
     for (auto &fld : infoFields) {
@@ -114,7 +110,8 @@ void VCFXInfoAggregator::aggregateInfo(std::istream& in,
 
     std::string line;
     while (true) {
-        if (!std::getline(in, line)) break;
+        if (!std::getline(in, line))
+            break;
         if (line.empty()) {
             out << line << "\n";
             continue;
@@ -131,7 +128,7 @@ void VCFXInfoAggregator::aggregateInfo(std::istream& in,
 
         if (!foundChromHeader) {
             std::cerr << "Error: encountered data line before #CHROM header.\n";
-            break;  // break or continue, but we'll break
+            break; // break or continue, but we'll break
         }
 
         // parse columns
@@ -161,7 +158,8 @@ void VCFXInfoAggregator::aggregateInfo(std::istream& in,
             std::stringstream infoSS(info);
             std::string item;
             while (std::getline(infoSS, item, ';')) {
-                if (item.empty()) continue;
+                if (item.empty())
+                    continue;
                 // find '='
                 size_t eqPos = item.find('=');
                 if (eqPos == std::string::npos) {
@@ -170,12 +168,17 @@ void VCFXInfoAggregator::aggregateInfo(std::istream& in,
                 }
                 std::string key = item.substr(0, eqPos);
                 std::string val = item.substr(eqPos + 1);
-                if (key.empty() || val.empty()) continue;
+                if (key.empty() || val.empty())
+                    continue;
                 // trim spaces
-                while (!key.empty() && isspace((unsigned char)key.back())) key.pop_back();
-                while (!key.empty() && isspace((unsigned char)key.front())) key.erase(key.begin());
-                while (!val.empty() && isspace((unsigned char)val.back())) val.pop_back();
-                while (!val.empty() && isspace((unsigned char)val.front())) val.erase(val.begin());
+                while (!key.empty() && isspace((unsigned char)key.back()))
+                    key.pop_back();
+                while (!key.empty() && isspace((unsigned char)key.front()))
+                    key.erase(key.begin());
+                while (!val.empty() && isspace((unsigned char)val.back()))
+                    val.pop_back();
+                while (!val.empty() && isspace((unsigned char)val.front()))
+                    val.erase(val.begin());
 
                 auto it = collected.find(key);
                 if (it == collected.end()) {
@@ -190,7 +193,7 @@ void VCFXInfoAggregator::aggregateInfo(std::istream& in,
                         it->second.push_back(d);
                     }
                     // else skip
-                } catch(...) {
+                } catch (...) {
                     // skip
                 }
             }
@@ -214,10 +217,17 @@ void VCFXInfoAggregator::aggregateInfo(std::istream& in,
     }
 }
 
-static void show_help() { VCFXInfoAggregator obj; char arg0[] = "VCFX_info_aggregator"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+static void show_help() {
+    VCFXInfoAggregator obj;
+    char arg0[] = "VCFX_info_aggregator";
+    char arg1[] = "--help";
+    char *argv2[] = {arg0, arg1, nullptr};
+    obj.run(2, argv2);
+}
 
-int main(int argc, char* argv[]){
-    if (vcfx::handle_common_flags(argc, argv, "VCFX_info_aggregator", show_help)) return 0;
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_info_aggregator", show_help))
+        return 0;
     VCFXInfoAggregator app;
     return app.run(argc, argv);
 }

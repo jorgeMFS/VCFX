@@ -1,12 +1,12 @@
-#include "vcfx_core.h"
 #include "VCFX_af_subsetter.h"
-#include <getopt.h>
-#include <sstream>
+#include "vcfx_core.h"
 #include <algorithm>
-#include <iostream>
 #include <cstdlib>
+#include <getopt.h>
+#include <iostream>
+#include <sstream>
 
-int VCFXAfSubsetter::run(int argc, char* argv[]) {
+int VCFXAfSubsetter::run(int argc, char *argv[]) {
     // Parse command-line arguments
     int opt;
     bool showHelp = false;
@@ -14,39 +14,37 @@ int VCFXAfSubsetter::run(int argc, char* argv[]) {
     double maxAF = 1.0;
 
     static struct option long_options[] = {
-        {"help",      no_argument,       0, 'h'},
-        {"af-filter", required_argument, 0, 'a'},
-        {0,           0,                 0,  0 }
-    };
+        {"help", no_argument, 0, 'h'}, {"af-filter", required_argument, 0, 'a'}, {0, 0, 0, 0}};
 
     while ((opt = getopt_long(argc, argv, "ha:", long_options, nullptr)) != -1) {
         switch (opt) {
-            case 'h':
-                showHelp = true;
-                break;
-            case 'a': {
-                std::string range(optarg);
-                size_t dashPos = range.find('-');
-                if (dashPos == std::string::npos) {
-                    std::cerr << "Error: Invalid AF range format. Use <minAF>-<maxAF>.\n";
-                    displayHelp();
-                    return 1;
-                }
-                try {
-                    minAF = std::stod(range.substr(0, dashPos));
-                    maxAF = std::stod(range.substr(dashPos + 1));
-                    if (minAF < 0.0 || maxAF > 1.0 || minAF > maxAF) {
-                        throw std::invalid_argument("AF values out of range or minAF > maxAF.");
-                    }
-                } catch (const std::invalid_argument&) {
-                    std::cerr << "Error: Invalid AF range values. Ensure they are numbers between 0.0 and 1.0 with minAF <= maxAF.\n";
-                    displayHelp();
-                    return 1;
-                }
-                break;
+        case 'h':
+            showHelp = true;
+            break;
+        case 'a': {
+            std::string range(optarg);
+            size_t dashPos = range.find('-');
+            if (dashPos == std::string::npos) {
+                std::cerr << "Error: Invalid AF range format. Use <minAF>-<maxAF>.\n";
+                displayHelp();
+                return 1;
             }
-            default:
-                showHelp = true;
+            try {
+                minAF = std::stod(range.substr(0, dashPos));
+                maxAF = std::stod(range.substr(dashPos + 1));
+                if (minAF < 0.0 || maxAF > 1.0 || minAF > maxAF) {
+                    throw std::invalid_argument("AF values out of range or minAF > maxAF.");
+                }
+            } catch (const std::invalid_argument &) {
+                std::cerr << "Error: Invalid AF range values. Ensure they are numbers between 0.0 and 1.0 with minAF "
+                             "<= maxAF.\n";
+                displayHelp();
+                return 1;
+            }
+            break;
+        }
+        default:
+            showHelp = true;
         }
     }
 
@@ -72,7 +70,7 @@ void VCFXAfSubsetter::displayHelp() {
               << "  VCFX_af_subsetter --af-filter 0.01-0.05 < input.vcf > subsetted.vcf\n";
 }
 
-bool VCFXAfSubsetter::parseAF(const std::string& infoField, std::vector<double>& afValues) {
+bool VCFXAfSubsetter::parseAF(const std::string &infoField, std::vector<double> &afValues) {
     // Find "AF=" in the INFO string
     size_t pos = infoField.find("AF=");
     if (pos == std::string::npos) {
@@ -82,9 +80,7 @@ bool VCFXAfSubsetter::parseAF(const std::string& infoField, std::vector<double>&
     // Extract substring up to the next semicolon or end of string
     size_t start = pos + 3; // skip 'AF='
     size_t end = infoField.find(';', start);
-    std::string afStr = (end == std::string::npos)
-                        ? infoField.substr(start)
-                        : infoField.substr(start, end - start);
+    std::string afStr = (end == std::string::npos) ? infoField.substr(start) : infoField.substr(start, end - start);
 
     // Split by comma (to handle multi-allelic AF like "0.2,0.8")
     std::stringstream ss(afStr);
@@ -100,7 +96,7 @@ bool VCFXAfSubsetter::parseAF(const std::string& infoField, std::vector<double>&
     return !afValues.empty();
 }
 
-void VCFXAfSubsetter::subsetByAlleleFrequency(std::istream& in, std::ostream& out, double minAF, double maxAF) {
+void VCFXAfSubsetter::subsetByAlleleFrequency(std::istream &in, std::ostream &out, double minAF, double maxAF) {
     std::string line;
     while (std::getline(in, line)) {
         if (line.empty()) {
@@ -124,8 +120,7 @@ void VCFXAfSubsetter::subsetByAlleleFrequency(std::istream& in, std::ostream& ou
         }
 
         if (fields.size() < 8) {
-            std::cerr << "Warning: Skipping invalid VCF line (less than 8 fields): "
-                      << line << "\n";
+            std::cerr << "Warning: Skipping invalid VCF line (less than 8 fields): " << line << "\n";
             continue;
         }
 
@@ -133,8 +128,7 @@ void VCFXAfSubsetter::subsetByAlleleFrequency(std::istream& in, std::ostream& ou
         std::string info = fields[7];
         std::vector<double> afValues;
         if (!parseAF(info, afValues)) {
-            std::cerr << "Warning: AF not found or invalid in INFO field. Skipping variant: "
-                      << line << "\n";
+            std::cerr << "Warning: AF not found or invalid in INFO field. Skipping variant: " << line << "\n";
             continue;
         }
 
@@ -156,10 +150,17 @@ void VCFXAfSubsetter::subsetByAlleleFrequency(std::istream& in, std::ostream& ou
 //
 // Typical main():
 //
-static void show_help() { VCFXAfSubsetter obj; char arg0[] = "VCFX_af_subsetter"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+static void show_help() {
+    VCFXAfSubsetter obj;
+    char arg0[] = "VCFX_af_subsetter";
+    char arg1[] = "--help";
+    char *argv2[] = {arg0, arg1, nullptr};
+    obj.run(2, argv2);
+}
 
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_common_flags(argc, argv, "VCFX_af_subsetter", show_help)) return 0;
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_af_subsetter", show_help))
+        return 0;
     VCFXAfSubsetter afSubsetter;
     return afSubsetter.run(argc, argv);
 }

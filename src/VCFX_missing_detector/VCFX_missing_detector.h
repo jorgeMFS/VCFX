@@ -10,13 +10,13 @@
  * and flag them in the INFO field with MISSING_GENOTYPES=1
  */
 class VCFXMissingDetector {
-public:
+  public:
     /**
      * Entry point for the tool
      */
-    int run(int argc, char* argv[]);
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     /**
      * Displays the help message
      */
@@ -25,7 +25,7 @@ private:
     /**
      * Detects missing genotypes in VCF input from 'in', writes flagged lines to 'out'
      */
-    void detectMissingGenotypes(std::istream& in, std::ostream& out);
+    void detectMissingGenotypes(std::istream &in, std::ostream &out);
 };
 
 #endif // VCFX_MISSING_DETECTOR_H
