@@ -45,5 +45,3 @@ except FileNotFoundError as exc:
     print("Tool not found:", exc)
 except subprocess.CalledProcessError as exc:
     print("Tool failed with status", exc.returncode)
-
-
