@@ -6,16 +6,16 @@
 
 // VCFXFileSplitter: Splits a VCF file by chromosome into multiple smaller VCFs.
 class VCFXFileSplitter {
-public:
+  public:
     // Entry point for the tool
-    int run(int argc, char* argv[]);
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     // Displays the help message
     void displayHelp();
 
     // Splits the input VCF by chromosome using the specified prefix
-    void splitVCFByChromosome(std::istream& in, const std::string& outputPrefix);
+    void splitVCFByChromosome(std::istream &in, const std::string &outputPrefix);
 };
 
 #endif // VCFX_FILE_SPLITTER_H

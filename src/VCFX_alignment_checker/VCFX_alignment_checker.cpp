@@ -1,34 +1,31 @@
-#include "vcfx_core.h"
 #include "VCFX_alignment_checker.h"
-#include <getopt.h>
-#include <sstream>
+#include "vcfx_core.h"
 #include <algorithm>
-#include <vector>
-#include <string>
-#include <iostream>
 #include <cstdlib>
 #include <fstream>
+#include <getopt.h>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
 
-int VCFXAlignmentChecker::run(int argc, char* argv[]) {
+int VCFXAlignmentChecker::run(int argc, char *argv[]) {
     // Parse command-line arguments
     int opt;
     bool showHelp = false;
     static struct option long_options[] = {
-        {"help",                 no_argument,       0, 'h'},
-        {"alignment-discrepancy", no_argument,      0, 'a'},
-        {0,                      0,                 0,  0 }
-    };
+        {"help", no_argument, 0, 'h'}, {"alignment-discrepancy", no_argument, 0, 'a'}, {0, 0, 0, 0}};
 
     while ((opt = getopt_long(argc, argv, "ha", long_options, nullptr)) != -1) {
         switch (opt) {
-            case 'h':
-                showHelp = true;
-                break;
-            case 'a':
-                // Alignment-discrepancy mode (no extra actions needed here)
-                break;
-            default:
-                showHelp = true;
+        case 'h':
+            showHelp = true;
+            break;
+        case 'a':
+            // Alignment-discrepancy mode (no extra actions needed here)
+            break;
+        default:
+            showHelp = true;
         }
     }
 
@@ -79,7 +76,7 @@ void VCFXAlignmentChecker::displayHelp() {
               << "  VCFX_alignment_checker --alignment-discrepancy input.vcf reference.fasta > discrepancies.txt\n";
 }
 
-bool VCFXAlignmentChecker::loadReferenceGenome(const std::string& path) {
+bool VCFXAlignmentChecker::loadReferenceGenome(const std::string &path) {
     referencePath = path;
     referenceIndex.clear();
 
@@ -138,7 +135,7 @@ bool VCFXAlignmentChecker::loadReferenceGenome(const std::string& path) {
     return true;
 }
 
-std::string VCFXAlignmentChecker::normalizeChromosome(const std::string& chrom) {
+std::string VCFXAlignmentChecker::normalizeChromosome(const std::string &chrom) {
     std::string norm = chrom;
     // convert to upper and drop leading "CHR" if present
     if (norm.size() >= 3 && (norm.rfind("chr", 0) == 0 || norm.rfind("CHR", 0) == 0)) {
@@ -148,13 +145,13 @@ std::string VCFXAlignmentChecker::normalizeChromosome(const std::string& chrom) 
     return norm;
 }
 
-std::string VCFXAlignmentChecker::getReferenceBases(const std::string& chrom, int pos, int length) {
+std::string VCFXAlignmentChecker::getReferenceBases(const std::string &chrom, int pos, int length) {
     auto it = referenceIndex.find(normalizeChromosome(chrom));
     if (it == referenceIndex.end()) {
         return "";
     }
 
-    const FastaIndexEntry& entry = it->second;
+    const FastaIndexEntry &entry = it->second;
     if (pos < 1 || static_cast<std::size_t>(pos - 1) >= entry.length) {
         return "";
     }
@@ -183,7 +180,7 @@ std::string VCFXAlignmentChecker::getReferenceBases(const std::string& chrom, in
     return result;
 }
 
-void VCFXAlignmentChecker::checkDiscrepancies(std::istream& vcfIn, std::ostream& out) {
+void VCFXAlignmentChecker::checkDiscrepancies(std::istream &vcfIn, std::ostream &out) {
     // We do not need an extra reference stream parameter; the reference is already loaded in memory.
 
     std::string line;
@@ -212,10 +209,14 @@ void VCFXAlignmentChecker::checkDiscrepancies(std::istream& vcfIn, std::ostream&
                     headers[0].erase(0, 1); // drop leading '#'
                 }
                 for (size_t i = 0; i < headers.size(); ++i) {
-                    if (headers[i] == "CHROM") chrIndex = static_cast<int>(i);
-                    else if (headers[i] == "POS")   posIndex = static_cast<int>(i);
-                    else if (headers[i] == "REF")   refIndex = static_cast<int>(i);
-                    else if (headers[i] == "ALT")   altIndex = static_cast<int>(i);
+                    if (headers[i] == "CHROM")
+                        chrIndex = static_cast<int>(i);
+                    else if (headers[i] == "POS")
+                        posIndex = static_cast<int>(i);
+                    else if (headers[i] == "REF")
+                        refIndex = static_cast<int>(i);
+                    else if (headers[i] == "ALT")
+                        altIndex = static_cast<int>(i);
                 }
                 if (chrIndex == -1 || posIndex == -1 || refIndex == -1 || altIndex == -1) {
                     std::cerr << "Error: VCF header does not contain required CHROM, POS, REF, ALT fields.\n";
@@ -257,7 +258,7 @@ void VCFXAlignmentChecker::checkDiscrepancies(std::istream& vcfIn, std::ostream&
 
         std::string ref = fields[refIndex];
         std::string alt = fields[altIndex];
-        std::string id  = (fields.size() > 2) ? fields[2] : ".";
+        std::string id = (fields.size() > 2) ? fields[2] : ".";
 
         // Handle multi-allelic ALTs
         std::vector<std::string> alts;
@@ -269,7 +270,7 @@ void VCFXAlignmentChecker::checkDiscrepancies(std::istream& vcfIn, std::ostream&
         }
 
         // Check each ALT allele
-        for (const auto& allele : alts) {
+        for (const auto &allele : alts) {
             // If both REF and ALT are single bases, treat as SNP
             if (ref.size() == 1 && allele.size() == 1) {
                 std::string ref_base = getReferenceBases(chrom, posVal, 1);
@@ -279,8 +280,8 @@ void VCFXAlignmentChecker::checkDiscrepancies(std::istream& vcfIn, std::ostream&
                 }
                 // Compare REF in VCF vs reference genome
                 if (ref != ref_base) {
-                    out << chrom << "\t" << posVal << "\t" << id << "\t" << ref
-                        << "\t" << allele << "\t" << "REF_MISMATCH"
+                    out << chrom << "\t" << posVal << "\t" << id << "\t" << ref << "\t" << allele << "\t"
+                        << "REF_MISMATCH"
                         << "\t" << ref_base << "\t" << ref << "\n";
                 }
                 // Compare ALT to the reference base at the same position.
@@ -288,8 +289,8 @@ void VCFXAlignmentChecker::checkDiscrepancies(std::istream& vcfIn, std::ostream&
                 // same as the reference (i.e. not a true variant).
                 std::string alt_base = ref_base; // The reference at that position
                 if (allele == alt_base) {
-                    out << chrom << "\t" << posVal << "\t" << id << "\t" << ref
-                        << "\t" << allele << "\t" << "ALT_MISMATCH"
+                    out << chrom << "\t" << posVal << "\t" << id << "\t" << ref << "\t" << allele << "\t"
+                        << "ALT_MISMATCH"
                         << "\t" << alt_base << "\t" << allele << "\n";
                 }
             } else {
@@ -309,13 +310,13 @@ void VCFXAlignmentChecker::checkDiscrepancies(std::istream& vcfIn, std::ostream&
                 std::string vcf_alt = allele.substr(0, len);
 
                 if (vcf_ref != ref_seq) {
-                    out << chrom << "\t" << posVal << "\t" << id << "\t" << ref
-                        << "\t" << allele << "\t" << "REF_DISCREPANCY"
+                    out << chrom << "\t" << posVal << "\t" << id << "\t" << ref << "\t" << allele << "\t"
+                        << "REF_DISCREPANCY"
                         << "\t" << ref_seq << "\t" << vcf_ref << "\n";
                 }
                 if (vcf_alt != ref_seq) {
-                    out << chrom << "\t" << posVal << "\t" << id << "\t" << ref
-                        << "\t" << allele << "\t" << "ALT_DISCREPANCY"
+                    out << chrom << "\t" << posVal << "\t" << id << "\t" << ref << "\t" << allele << "\t"
+                        << "ALT_DISCREPANCY"
                         << "\t" << ref_seq << "\t" << vcf_alt << "\n";
                 }
             }
@@ -324,10 +325,17 @@ void VCFXAlignmentChecker::checkDiscrepancies(std::istream& vcfIn, std::ostream&
 }
 
 // Typical main(), linking to run()
-static void show_help() { VCFXAlignmentChecker obj; char arg0[] = "VCFX_alignment_checker"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+static void show_help() {
+    VCFXAlignmentChecker obj;
+    char arg0[] = "VCFX_alignment_checker";
+    char arg1[] = "--help";
+    char *argv2[] = {arg0, arg1, nullptr};
+    obj.run(2, argv2);
+}
 
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_common_flags(argc, argv, "VCFX_alignment_checker", show_help)) return 0;
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_alignment_checker", show_help))
+        return 0;
     VCFXAlignmentChecker alignmentChecker;
     return alignmentChecker.run(argc, argv);
 }

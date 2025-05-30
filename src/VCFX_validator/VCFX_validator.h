@@ -7,10 +7,10 @@
 #include <unordered_set>
 
 class VCFXValidator {
-public:
-    int run(int argc, char* argv[]);
+  public:
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     // If we add advanced checks for e.g. "strict" mode, we store a bool
     bool strictMode = false;
     bool reportDuplicates = false;

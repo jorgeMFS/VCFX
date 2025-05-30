@@ -1,15 +1,15 @@
 #include "vcfx_core.h"
-#include <iostream>
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
 #include <fstream>
+#include <getopt.h>
+#include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
-#include <vector>
 #include <unordered_map>
-#include <algorithm>
-#include <cstdlib>
-#include <getopt.h>
-#include <limits>
-#include <cmath>
+#include <vector>
 
 // ---------------------------------------------------------
 // A helper struct to store command-line options if needed
@@ -23,25 +23,25 @@ struct AncestryOptions {
 // Class: VCFXAncestryAssigner
 // ---------------------------------------------------------
 class VCFXAncestryAssigner {
-public:
+  public:
     // High-level entry point
-    int run(int argc, char* argv[]);
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     // Command-line usage
     void displayHelp();
 
     // Parse freq file
-    bool loadAncestralFrequencies(std::istream& in);
+    bool loadAncestralFrequencies(std::istream &in);
 
     // Parse one frequency line
     // Format (tab-separated): CHROM  POS  REF  ALT  POP1_FREQ  POP2_FREQ ...
-    bool parseFrequencyLine(const std::string& line);
+    bool parseFrequencyLine(const std::string &line);
 
     // Assign ancestry from VCF
-    void assignAncestry(std::istream& vcfIn, std::ostream& out);
+    void assignAncestry(std::istream &vcfIn, std::ostream &out);
 
-private:
+  private:
     // Populations in order
     std::vector<std::string> populations;
 
@@ -52,28 +52,25 @@ private:
 // ---------------------------------------------------------
 // VCFXAncestryAssigner::run
 // ---------------------------------------------------------
-int VCFXAncestryAssigner::run(int argc, char* argv[]) {
+int VCFXAncestryAssigner::run(int argc, char *argv[]) {
     // 1. Parse arguments
     int opt;
     bool showHelp = false;
     std::string freqFile;
 
     static struct option long_options[] = {
-        {"help",            no_argument,       0, 'h'},
-        {"assign-ancestry", required_argument, 0, 'a'},
-        {0, 0, 0, 0}
-    };
+        {"help", no_argument, 0, 'h'}, {"assign-ancestry", required_argument, 0, 'a'}, {0, 0, 0, 0}};
 
     while ((opt = getopt_long(argc, argv, "ha:", long_options, nullptr)) != -1) {
         switch (opt) {
-            case 'h':
-                showHelp = true;
-                break;
-            case 'a':
-                freqFile = std::string(optarg);
-                break;
-            default:
-                showHelp = true;
+        case 'h':
+            showHelp = true;
+            break;
+        case 'a':
+            freqFile = std::string(optarg);
+            break;
+        default:
+            showHelp = true;
         }
     }
 
@@ -123,7 +120,7 @@ void VCFXAncestryAssigner::displayHelp() {
 // parseFrequencyLine
 // Expects: CHROM  POS  REF  ALT  pop1Freq  pop2Freq ...
 // ---------------------------------------------------------
-bool VCFXAncestryAssigner::parseFrequencyLine(const std::string& line) {
+bool VCFXAncestryAssigner::parseFrequencyLine(const std::string &line) {
     std::stringstream ss(line);
     std::vector<std::string> fields;
     std::string field;
@@ -168,7 +165,7 @@ bool VCFXAncestryAssigner::parseFrequencyLine(const std::string& line) {
 // First line is header with columns:
 //   CHROM  POS  REF  ALT  pop1  pop2 ...
 // ---------------------------------------------------------
-bool VCFXAncestryAssigner::loadAncestralFrequencies(std::istream& in) {
+bool VCFXAncestryAssigner::loadAncestralFrequencies(std::istream &in) {
     std::string line;
     if (!std::getline(in, line)) {
         std::cerr << "Error: Frequency file is empty.\n";
@@ -210,7 +207,7 @@ bool VCFXAncestryAssigner::loadAncestralFrequencies(std::istream& in) {
 // assignAncestry
 // Reads VCF from vcfIn, writes "Sample <tab> AssignedPopulation" to out
 // ---------------------------------------------------------
-void VCFXAncestryAssigner::assignAncestry(std::istream& vcfIn, std::ostream& out) {
+void VCFXAncestryAssigner::assignAncestry(std::istream &vcfIn, std::ostream &out) {
     std::string line;
     bool haveHeader = false;
     int chrIndex = -1, posIndex = -1, refIndex = -1, altIndex = -1;
@@ -239,10 +236,14 @@ void VCFXAncestryAssigner::assignAncestry(std::istream& vcfIn, std::ostream& out
                 }
                 // Identify columns
                 for (size_t i = 0; i < headers.size(); ++i) {
-                    if (headers[i] == "#CHROM" || headers[i] == "CHROM") chrIndex = (int)i;
-                    else if (headers[i] == "POS") posIndex = (int)i;
-                    else if (headers[i] == "REF") refIndex = (int)i;
-                    else if (headers[i] == "ALT") altIndex = (int)i;
+                    if (headers[i] == "#CHROM" || headers[i] == "CHROM")
+                        chrIndex = (int)i;
+                    else if (headers[i] == "POS")
+                        posIndex = (int)i;
+                    else if (headers[i] == "REF")
+                        refIndex = (int)i;
+                    else if (headers[i] == "ALT")
+                        altIndex = (int)i;
                 }
                 if (chrIndex < 0 || posIndex < 0 || refIndex < 0 || altIndex < 0) {
                     std::cerr << "Error: #CHROM header missing required columns CHROM POS REF ALT.\n";
@@ -252,7 +253,7 @@ void VCFXAncestryAssigner::assignAncestry(std::istream& vcfIn, std::ostream& out
                 for (size_t i = 9; i < headers.size(); ++i) {
                     sampleNames.push_back(headers[i]);
                     // Initialize scores for this sample
-                    for (const auto& pop : populations) {
+                    for (const auto &pop : populations) {
                         sampleScores[headers[i]][pop] = 0.0;
                     }
                     sampleVariantCounts[headers[i]] = 0;
@@ -279,10 +280,10 @@ void VCFXAncestryAssigner::assignAncestry(std::istream& vcfIn, std::ostream& out
             continue;
         }
 
-        const std::string& chrom = fields[chrIndex];
-        const std::string& pos = fields[posIndex];
-        const std::string& ref = fields[refIndex];
-        const std::string& alt = fields[altIndex];
+        const std::string &chrom = fields[chrIndex];
+        const std::string &pos = fields[posIndex];
+        const std::string &ref = fields[refIndex];
+        const std::string &alt = fields[altIndex];
 
         // Build key for frequency lookup
         const std::string key = chrom + ":" + pos + ":" + ref + ":" + alt;
@@ -313,7 +314,7 @@ void VCFXAncestryAssigner::assignAncestry(std::istream& vcfIn, std::ostream& out
 
         // Process each sample
         for (size_t i = 0; i < sampleNames.size(); ++i) {
-            const std::string& sample = sampleNames[i];
+            const std::string &sample = sampleNames[i];
             if (i + 9 >= fields.size()) {
                 continue;
             }
@@ -330,7 +331,7 @@ void VCFXAncestryAssigner::assignAncestry(std::istream& vcfIn, std::ostream& out
                 continue; // Skip if GT field missing
             }
 
-            const std::string& gt = sampleFields[gtIndex];
+            const std::string &gt = sampleFields[gtIndex];
             if (gt == "./." || gt == ".|.") {
                 continue; // Skip missing genotypes
             }
@@ -339,8 +340,9 @@ void VCFXAncestryAssigner::assignAncestry(std::istream& vcfIn, std::ostream& out
             std::vector<std::string> alleles;
             std::string gtCopy = gt;
             // Replace '|' with '/' for consistency
-            for (char& c : gtCopy) {
-                if (c == '|') c = '/';
+            for (char &c : gtCopy) {
+                if (c == '|')
+                    c = '/';
             }
             std::stringstream gtSS(gtCopy);
             std::string allele;
@@ -354,9 +356,9 @@ void VCFXAncestryAssigner::assignAncestry(std::istream& vcfIn, std::ostream& out
             }
 
             // Calculate scores for each population
-            for (const auto& pop : populations) {
+            for (const auto &pop : populations) {
                 double altFreq = freqIt->second.at(pop);
-                
+
                 // Ensure frequencies are not too close to 0 or 1
                 altFreq = std::max(0.001, std::min(0.999, altFreq));
                 double refFreq = 1.0 - altFreq;
@@ -365,11 +367,9 @@ void VCFXAncestryAssigner::assignAncestry(std::istream& vcfIn, std::ostream& out
                 double p = 0.0;
                 if (gt == "0/0" || gt == "0|0") {
                     p = refFreq * refFreq;
-                }
-                else if (gt == "0/1" || gt == "1/0" || gt == "0|1" || gt == "1|0") {
+                } else if (gt == "0/1" || gt == "1/0" || gt == "0|1" || gt == "1|0") {
                     p = 2.0 * refFreq * altFreq;
-                }
-                else if (gt == "1/1" || gt == "1|1") {
+                } else if (gt == "1/1" || gt == "1|1") {
                     p = altFreq * altFreq;
                 }
 
@@ -382,7 +382,7 @@ void VCFXAncestryAssigner::assignAncestry(std::istream& vcfIn, std::ostream& out
     }
 
     // Output results
-    for (const auto& sample : sampleNames) {
+    for (const auto &sample : sampleNames) {
         if (sampleVariantCounts[sample] == 0) {
             out << sample << "\tUNKNOWN\n";
             continue;
@@ -393,7 +393,7 @@ void VCFXAncestryAssigner::assignAncestry(std::istream& vcfIn, std::ostream& out
         double bestScore = sampleScores[sample][populations[0]];
 
         std::cerr << "Final scores for " << sample << ":\n";
-        for (const auto& pop : populations) {
+        for (const auto &pop : populations) {
             std::cerr << "  " << pop << ": " << sampleScores[sample][pop] << "\n";
             if (sampleScores[sample][pop] < bestScore) {
                 bestScore = sampleScores[sample][pop];
@@ -408,10 +408,17 @@ void VCFXAncestryAssigner::assignAncestry(std::istream& vcfIn, std::ostream& out
 // ---------------------------------------------------------
 // main() - just instantiate and run
 // ---------------------------------------------------------
-static void show_help() { VCFXAncestryAssigner obj; char arg0[] = "VCFX_ancestry_assigner"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+static void show_help() {
+    VCFXAncestryAssigner obj;
+    char arg0[] = "VCFX_ancestry_assigner";
+    char arg1[] = "--help";
+    char *argv2[] = {arg0, arg1, nullptr};
+    obj.run(2, argv2);
+}
 
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_common_flags(argc, argv, "VCFX_ancestry_assigner", show_help)) return 0;
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_ancestry_assigner", show_help))
+        return 0;
     VCFXAncestryAssigner assigner;
     return assigner.run(argc, argv);
 }

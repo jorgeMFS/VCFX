@@ -52,6 +52,13 @@ the hook manually if needed:
 ```bash
 pre-commit run clang-format --files path/to/changed_file.cpp
 ```
+If running `pre-commit run --all-files` reports that the `clang-format`
+hook modified files, you can apply the formatting to the entire
+repository with:
+
+```bash
+pre-commit run clang-format --all-files
+```
 
 ### Prerequisites
 

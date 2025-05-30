@@ -1,12 +1,12 @@
 #include "vcfx_core.h"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <sstream>
-#include <unordered_map>
 #include <algorithm>
 #include <cstdlib>
 #include <getopt.h>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 // --------------------------------------------------------------
 // A small struct to store command-line options
@@ -59,57 +59,54 @@ static std::unordered_map<std::string, std::string> parseInfoToMap(const std::st
 // Show usage/help
 // --------------------------------------------------------------
 static void printHelp() {
-    std::cout 
-        << "VCFX_annotation_extractor: Extract variant annotations from a VCF file.\n\n"
-        << "Usage:\n"
-        << "  VCFX_annotation_extractor --annotation-extract \"ANN,Gene\" < input.vcf > out.tsv\n\n"
-        << "Options:\n"
-        << "  -a, --annotation-extract   Comma-separated list of annotations to extract (e.g., ANN,Gene)\n"
-        << "  -h, --help                 Display this help message and exit\n\n"
-        << "Description:\n"
-        << "  Reads a VCF from stdin and prints a tab-delimited output. For multi-ALT\n"
-        << "  lines, each ALT allele is printed on its own line. If an annotation field (like\n"
-        << "  'ANN=') has multiple comma-separated sub-entries, we attempt to align them with\n"
-        << "  the ALT alleles in order.\n\n"
-        << "Example:\n"
-        << "  VCFX_annotation_extractor --annotation-extract \"ANN,Gene\" < input.vcf > out.tsv\n";
+    std::cout << "VCFX_annotation_extractor: Extract variant annotations from a VCF file.\n\n"
+              << "Usage:\n"
+              << "  VCFX_annotation_extractor --annotation-extract \"ANN,Gene\" < input.vcf > out.tsv\n\n"
+              << "Options:\n"
+              << "  -a, --annotation-extract   Comma-separated list of annotations to extract (e.g., ANN,Gene)\n"
+              << "  -h, --help                 Display this help message and exit\n\n"
+              << "Description:\n"
+              << "  Reads a VCF from stdin and prints a tab-delimited output. For multi-ALT\n"
+              << "  lines, each ALT allele is printed on its own line. If an annotation field (like\n"
+              << "  'ANN=') has multiple comma-separated sub-entries, we attempt to align them with\n"
+              << "  the ALT alleles in order.\n\n"
+              << "Example:\n"
+              << "  VCFX_annotation_extractor --annotation-extract \"ANN,Gene\" < input.vcf > out.tsv\n";
 }
 
 // --------------------------------------------------------------
 // parseArguments: fill in AnnotationOptions
 // --------------------------------------------------------------
-static bool parseArguments(int argc, char* argv[], AnnotationOptions &opts) {
+static bool parseArguments(int argc, char *argv[], AnnotationOptions &opts) {
     bool showHelp = false;
 
     static struct option long_options[] = {
-        {"annotation-extract", required_argument, 0, 'a'},
-        {"help",               no_argument,       0, 'h'},
-        {0,                    0,                 0,  0 }
-    };
+        {"annotation-extract", required_argument, 0, 'a'}, {"help", no_argument, 0, 'h'}, {0, 0, 0, 0}};
 
     while (true) {
         int optIdx = 0;
         int c = getopt_long(argc, argv, "a:h", long_options, &optIdx);
-        if (c == -1) break;
+        if (c == -1)
+            break;
         switch (c) {
-            case 'a': {
-                // comma-separated annotation names
-                auto items = split(optarg, ',');
-                for (auto &it : items) {
-                    // trim spaces
-                    while (!it.empty() && (it.front() == ' ' || it.front() == '\t')) {
-                        it.erase(it.begin());
-                    }
-                    while (!it.empty() && (it.back() == ' ' || it.back() == '\t')) {
-                        it.pop_back();
-                    }
-                    opts.annotations.push_back(it);
+        case 'a': {
+            // comma-separated annotation names
+            auto items = split(optarg, ',');
+            for (auto &it : items) {
+                // trim spaces
+                while (!it.empty() && (it.front() == ' ' || it.front() == '\t')) {
+                    it.erase(it.begin());
                 }
-            } break;
-            case 'h':
-            default:
-                showHelp = true;
-                break;
+                while (!it.empty() && (it.back() == ' ' || it.back() == '\t')) {
+                    it.pop_back();
+                }
+                opts.annotations.push_back(it);
+            }
+        } break;
+        case 'h':
+        default:
+            showHelp = true;
+            break;
         }
     }
 
@@ -154,8 +151,8 @@ static void processVCF(std::istream &in, const AnnotationOptions &opts) {
 
         // If header line
         if (line[0] == '#') {
-            // If you want to preserve VCF headers, you can print them. 
-            // But here we do NOT, since we produce a new TSV. 
+            // If you want to preserve VCF headers, you can print them.
+            // But here we do NOT, since we produce a new TSV.
             // If you prefer, uncomment below:
             // std::cout << line << "\n";
             if (!foundChromHeader && line.rfind("#CHROM", 0) == 0) {
@@ -180,12 +177,12 @@ static void processVCF(std::istream &in, const AnnotationOptions &opts) {
         }
 
         const std::string &chrom = fields[0];
-        const std::string &pos   = fields[1];
-        const std::string &id    = fields[2];
-        const std::string &ref   = fields[3];
-        const std::string &altStr= fields[4];
+        const std::string &pos = fields[1];
+        const std::string &id = fields[2];
+        const std::string &ref = fields[3];
+        const std::string &altStr = fields[4];
         // skip fields[5]=QUAL, fields[6]=FILTER
-        const std::string &info  = fields[7];
+        const std::string &info = fields[7];
 
         // Split ALT on comma for multiple alt alleles
         std::vector<std::string> alts = split(altStr, ',');
@@ -197,8 +194,8 @@ static void processVCF(std::istream &in, const AnnotationOptions &opts) {
         // BUT if the annotation might have multiple comma-separated sub-entries (like ANN=),
         // we handle that separately:
         // We'll do a 2-phase approach:
-        //   1) gather strings for each annotation 
-        //   2) if it's something like "ANN" that has multiple commas, we split them 
+        //   1) gather strings for each annotation
+        //   2) if it's something like "ANN" that has multiple commas, we split them
         //      and try to align them with ALT alleles.
         std::unordered_map<std::string, std::string> rawAnnValues;
         for (auto &annName : opts.annotations) {
@@ -207,7 +204,7 @@ static void processVCF(std::istream &in, const AnnotationOptions &opts) {
                 rawAnnValues[annName] = "NA";
             } else {
                 // entire string for that annotation
-                rawAnnValues[annName] = it->second; 
+                rawAnnValues[annName] = it->second;
             }
         }
 
@@ -218,7 +215,7 @@ static void processVCF(std::istream &in, const AnnotationOptions &opts) {
         for (auto &annName : opts.annotations) {
             std::string val = rawAnnValues[annName];
             if (val == "NA") {
-                // no annotation => just store empty vector 
+                // no annotation => just store empty vector
                 splittedAnnValues[annName] = {};
                 continue;
             }
@@ -239,8 +236,7 @@ static void processVCF(std::istream &in, const AnnotationOptions &opts) {
             // For each annotation, we see if splittedAnnValues[annName].size() > altIndex
             // If yes, output that sub-value, else "NA"
             std::ostringstream outLine;
-            outLine << chrom << "\t" << pos << "\t" << id << "\t" 
-                    << ref << "\t" << thisAlt;
+            outLine << chrom << "\t" << pos << "\t" << id << "\t" << ref << "\t" << thisAlt;
 
             // For each requested annotation
             for (auto &annName : opts.annotations) {
@@ -275,8 +271,9 @@ static void processVCF(std::istream &in, const AnnotationOptions &opts) {
 // --------------------------------------------------------------
 static void show_help() { printHelp(); }
 
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_common_flags(argc, argv, "VCFX_annotation_extractor", show_help)) return 0;
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_annotation_extractor", show_help))
+        return 0;
     AnnotationOptions opts;
     if (!parseArguments(argc, argv, opts)) {
         // parseArguments already printed help if needed

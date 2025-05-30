@@ -6,14 +6,14 @@
 #include <vector>
 
 class VCFXHWETester {
-public:
-    int run(int argc, char* argv[]);
+  public:
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     void displayHelp();
-    void performHWE(std::istream& in);
+    void performHWE(std::istream &in);
     bool isBiallelic(const std::string &alt);
-    bool parseGenotypes(const std::vector<std::string>& genotypes, int& homRef, int& het, int& homAlt);
+    bool parseGenotypes(const std::vector<std::string> &genotypes, int &homRef, int &het, int &homAlt);
     double calculateHWE(int homRef, int het, int homAlt);
     double genotypeProbability(int homRef, int het, int homAlt);
 };

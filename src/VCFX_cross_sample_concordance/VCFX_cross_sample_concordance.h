@@ -3,21 +3,21 @@
 
 #include <iostream>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 // VCFXCrossSampleConcordance: Header file for Cross-Sample Variant Concordance Tool
 class VCFXCrossSampleConcordance {
-public:
+  public:
     // Entry point for the tool
-    int run(int argc, char* argv[]);
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     // Displays the help message
     void displayHelp();
 
     // Processes the VCF input and calculates concordance
-    void calculateConcordance(std::istream& in, std::ostream& out);
+    void calculateConcordance(std::istream &in, std::ostream &out);
 
     // Structure to hold variant information
     struct Variant {
