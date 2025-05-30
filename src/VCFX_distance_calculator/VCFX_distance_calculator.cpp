@@ -1,12 +1,12 @@
 #include "vcfx_core.h"
 // VCFX_distance_calculator.cpp
 #include "VCFX_distance_calculator.h"
+#include <algorithm>
+#include <cstdlib>
+#include <limits>
 #include <sstream>
 #include <unordered_map>
 #include <vector>
-#include <limits>
-#include <algorithm>
-#include <cstdlib>
 
 // --------------------------------------------------------------------------
 // printHelp: Displays usage information.
@@ -29,7 +29,7 @@ void printHelp() {
 // parseVCFLine: Parses a VCF data line and extracts CHROM and POS.
 // Returns false if the line is a header or cannot be parsed.
 // --------------------------------------------------------------------------
-bool parseVCFLine(const std::string& line, VCFVariant& variant) {
+bool parseVCFLine(const std::string &line, VCFVariant &variant) {
     // Skip header lines or empty lines.
     if (line.empty() || line[0] == '#')
         return false;
@@ -46,8 +46,7 @@ bool parseVCFLine(const std::string& line, VCFVariant& variant) {
     std::string chrom, pos_str;
 
     // We expect at least two tab-delimited columns: CHROM and POS.
-    if (!std::getline(ss, chrom, '\t') ||
-        !std::getline(ss, pos_str, '\t')) {
+    if (!std::getline(ss, chrom, '\t') || !std::getline(ss, pos_str, '\t')) {
         return false;
     }
 
@@ -70,20 +69,18 @@ bool parseVCFLine(const std::string& line, VCFVariant& variant) {
 // Structure to hold per-chromosome summary statistics.
 // --------------------------------------------------------------------------
 struct ChromStats {
-    int count;             // Number of inter-variant distances computed
-    long totalDistance;    // Sum of all distances
-    int minDistance;       // Minimum distance seen
-    int maxDistance;       // Maximum distance seen
-    ChromStats() : count(0), totalDistance(0),
-                   minDistance(std::numeric_limits<int>::max()),
-                   maxDistance(0) {}
+    int count;          // Number of inter-variant distances computed
+    long totalDistance; // Sum of all distances
+    int minDistance;    // Minimum distance seen
+    int maxDistance;    // Maximum distance seen
+    ChromStats() : count(0), totalDistance(0), minDistance(std::numeric_limits<int>::max()), maxDistance(0) {}
 };
 
 // --------------------------------------------------------------------------
 // calculateDistances: Reads a VCF stream, calculates inter-variant distances,
 // outputs a TSV line per variant, and writes summary statistics to stderr.
 // --------------------------------------------------------------------------
-bool calculateDistances(std::istream& in, std::ostream& out) {
+bool calculateDistances(std::istream &in, std::ostream &out) {
     std::string line;
     bool headerFound = false;
 
@@ -162,8 +159,9 @@ bool calculateDistances(std::istream& in, std::ostream& out) {
 // --------------------------------------------------------------------------
 static void show_help() { printHelp(); }
 
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_common_flags(argc, argv, "VCFX_distance_calculator", show_help)) return 0;
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_distance_calculator", show_help))
+        return 0;
     // Check for help option.
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];

@@ -8,6 +8,6 @@
 void printHelp();
 
 // Function to perform compression or decompression
-bool compressDecompressVCF(std::istream& in, std::ostream& out, bool compress);
+bool compressDecompressVCF(std::istream &in, std::ostream &out, bool compress);
 
 #endif // VCFX_COMPRESSOR_H

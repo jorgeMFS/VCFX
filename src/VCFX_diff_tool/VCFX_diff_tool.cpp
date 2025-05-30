@@ -1,13 +1,13 @@
 #include "vcfx_core.h"
-#include <iostream>
-#include <string>
-#include <fstream>
-#include <unordered_set>
-#include <vector>
-#include <sstream>
 #include <algorithm>
 #include <cstdlib>
+#include <fstream>
 #include <getopt.h>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
 // ----------------------------------------------------------------------
 // A helper function to split a string by a delimiter
@@ -26,22 +26,19 @@ static std::vector<std::string> split(const std::string &str, char delim) {
 // Class: VCFXDiffTool
 // ----------------------------------------------------------------------
 class VCFXDiffTool {
-public:
-    int run(int argc, char* argv[]);
+  public:
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     void displayHelp();
 
-    bool loadVariants(const std::string& filePath,
-                      std::unordered_set<std::string>& variants);
+    bool loadVariants(const std::string &filePath, std::unordered_set<std::string> &variants);
 
     // We unify multi-allelic lines by splitting ALT on commas,
-    // sorting them, and rejoining them. 
+    // sorting them, and rejoining them.
     // The final key is "chrom:pos:ref:sortedAltString"
-    std::string generateVariantKey(const std::string& chrom,
-                                   const std::string& pos,
-                                   const std::string& ref,
-                                   const std::string& altField);
+    std::string generateVariantKey(const std::string &chrom, const std::string &pos, const std::string &ref,
+                                   const std::string &altField);
 };
 
 // ----------------------------------------------------------------------
@@ -65,18 +62,16 @@ void VCFXDiffTool::displayHelp() {
 //   - We split on commas, sort them, rejoin => e.g. "G,T"
 //   - Then produce "chrom:pos:ref:thatSortedAlt"
 // ----------------------------------------------------------------------
-std::string VCFXDiffTool::generateVariantKey(const std::string& chrom,
-                                             const std::string& pos,
-                                             const std::string& ref,
-                                             const std::string& altField)
-{
+std::string VCFXDiffTool::generateVariantKey(const std::string &chrom, const std::string &pos, const std::string &ref,
+                                             const std::string &altField) {
     auto alts = split(altField, ',');
     // sort them lexicographically
     std::sort(alts.begin(), alts.end());
     // rejoin
     std::ostringstream altSS;
     for (size_t i = 0; i < alts.size(); ++i) {
-        if (i > 0) altSS << ",";
+        if (i > 0)
+            altSS << ",";
         altSS << alts[i];
     }
     std::string sortedAlt = altSS.str();
@@ -90,9 +85,7 @@ std::string VCFXDiffTool::generateVariantKey(const std::string& chrom,
 //   - parse CHROM, POS, ID, REF, ALT
 //   - generate key => add to set
 // ----------------------------------------------------------------------
-bool VCFXDiffTool::loadVariants(const std::string& filePath,
-                                std::unordered_set<std::string>& variants)
-{
+bool VCFXDiffTool::loadVariants(const std::string &filePath, std::unordered_set<std::string> &variants) {
     std::ifstream infile(filePath);
     if (!infile.is_open()) {
         std::cerr << "Error: Unable to open file " << filePath << "\n";
@@ -127,32 +120,30 @@ bool VCFXDiffTool::loadVariants(const std::string& filePath,
 //   - load sets from file1, file2
 //   - compare => print differences
 // ----------------------------------------------------------------------
-int VCFXDiffTool::run(int argc, char* argv[]) {
+int VCFXDiffTool::run(int argc, char *argv[]) {
     int opt;
     bool showHelp = false;
     std::string file1Path;
     std::string file2Path;
 
-    static struct option long_options[] = {
-        {"help",  no_argument,       0, 'h'},
-        {"file1", required_argument, 0, 'a'},
-        {"file2", required_argument, 0, 'b'},
-        {0,0,0,0}
-    };
+    static struct option long_options[] = {{"help", no_argument, 0, 'h'},
+                                           {"file1", required_argument, 0, 'a'},
+                                           {"file2", required_argument, 0, 'b'},
+                                           {0, 0, 0, 0}};
 
     while ((opt = getopt_long(argc, argv, "ha:b:", long_options, nullptr)) != -1) {
         switch (opt) {
-            case 'h':
-                showHelp = true;
-                break;
-            case 'a':
-                file1Path = optarg;
-                break;
-            case 'b':
-                file2Path = optarg;
-                break;
-            default:
-                showHelp = true;
+        case 'h':
+            showHelp = true;
+            break;
+        case 'a':
+            file1Path = optarg;
+            break;
+        case 'b':
+            file2Path = optarg;
+            break;
+        default:
+            showHelp = true;
         }
     }
 
@@ -205,10 +196,17 @@ int VCFXDiffTool::run(int argc, char* argv[]) {
 // ----------------------------------------------------------------------
 // main
 // ----------------------------------------------------------------------
-static void show_help() { VCFXDiffTool obj; char arg0[] = "VCFX_diff_tool"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+static void show_help() {
+    VCFXDiffTool obj;
+    char arg0[] = "VCFX_diff_tool";
+    char arg1[] = "--help";
+    char *argv2[] = {arg0, arg1, nullptr};
+    obj.run(2, argv2);
+}
 
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_common_flags(argc, argv, "VCFX_diff_tool", show_help)) return 0;
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_diff_tool", show_help))
+        return 0;
     VCFXDiffTool diffTool;
     return diffTool.run(argc, argv);
 }

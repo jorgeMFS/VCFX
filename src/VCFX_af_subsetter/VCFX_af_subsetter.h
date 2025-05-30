@@ -7,19 +7,19 @@
 
 // VCFXAfSubsetter: Header file for Alternate Allele Frequency Subsetter Tool
 class VCFXAfSubsetter {
-public:
+  public:
     // Entry point for the tool
-    int run(int argc, char* argv[]);
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     // Displays the help message
     void displayHelp();
 
     // Subsets VCF input based on alternate allele frequency range
-    void subsetByAlleleFrequency(std::istream& in, std::ostream& out, double minAF, double maxAF);
+    void subsetByAlleleFrequency(std::istream &in, std::ostream &out, double minAF, double maxAF);
 
     // Parses the AF values from the INFO field (handles multi-allelic AF as comma-delimited)
-    bool parseAF(const std::string& infoField, std::vector<double>& afValues);
+    bool parseAF(const std::string &infoField, std::vector<double> &afValues);
 };
 
 #endif // VCFX_AF_SUBSETTER_H

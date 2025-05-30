@@ -5,10 +5,10 @@
 #include <string>
 
 class VCFXPhredFilter {
-public:
-    int run(int argc, char* argv[]);
+  public:
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     void displayHelp();
     void processVCF(std::istream &in, double threshold, bool keepMissingAsPass);
     double parseQUAL(const std::string &qualStr, bool keepMissingAsPass);

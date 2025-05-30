@@ -1,11 +1,11 @@
-#include "vcfx_core.h"
 #include "VCFX_dosage_calculator.h"
-#include <getopt.h>
-#include <sstream>
+#include "vcfx_core.h"
 #include <algorithm>
-#include <iomanip>
-#include <cstdlib>
 #include <cctype>
+#include <cstdlib>
+#include <getopt.h>
+#include <iomanip>
+#include <sstream>
 
 // ---------------------------------------------------------------------------
 // displayHelp: Prints usage information to standard output.
@@ -31,22 +31,19 @@ void VCFXDosageCalculator::displayHelp() {
 // ---------------------------------------------------------------------------
 // run: Parses command-line arguments and calls calculateDosage.
 // ---------------------------------------------------------------------------
-int VCFXDosageCalculator::run(int argc, char* argv[]) {
+int VCFXDosageCalculator::run(int argc, char *argv[]) {
     int opt;
     bool showHelp = false;
 
-    static struct option long_options[] = {
-        {"help", no_argument, 0, 'h'},
-        {0,      0,           0,  0}
-    };
+    static struct option long_options[] = {{"help", no_argument, 0, 'h'}, {0, 0, 0, 0}};
 
     while ((opt = getopt_long(argc, argv, "h", long_options, nullptr)) != -1) {
         switch (opt) {
-            case 'h':
-                showHelp = true;
-                break;
-            default:
-                showHelp = true;
+        case 'h':
+            showHelp = true;
+            break;
+        default:
+            showHelp = true;
         }
     }
     if (showHelp) {
@@ -64,7 +61,7 @@ int VCFXDosageCalculator::run(int argc, char* argv[]) {
 // calculateDosage: Processes the VCF line by line, computes dosage for each sample,
 // and outputs a tab-delimited line per variant.
 // ---------------------------------------------------------------------------
-void VCFXDosageCalculator::calculateDosage(std::istream& in, std::ostream& out) {
+void VCFXDosageCalculator::calculateDosage(std::istream &in, std::ostream &out) {
     std::string line;
     bool headerParsed = false;
     std::vector<std::string> headerFields;
@@ -165,7 +162,7 @@ void VCFXDosageCalculator::calculateDosage(std::istream& in, std::ostream& out) 
             bool validGenotype = true;
             int dosage = 0;
             // For each allele, if it is "0", count 0; if it is any numeric >0, count 1.
-            for (const std::string& a : alleles) {
+            for (const std::string &a : alleles) {
                 if (a == "." || a.empty()) {
                     validGenotype = false;
                     break;
@@ -198,15 +195,14 @@ void VCFXDosageCalculator::calculateDosage(std::istream& in, std::ostream& out) 
         }
 
         // Output one line per variant with dosage information.
-        out << chrom << "\t" << pos << "\t" << id << "\t" << ref << "\t" << alt << "\t"
-            << dosagesOSS.str() << "\n";
+        out << chrom << "\t" << pos << "\t" << id << "\t" << ref << "\t" << alt << "\t" << dosagesOSS.str() << "\n";
     }
 }
 
 // ---------------------------------------------------------------------------
 // split: Helper function to split a string by a delimiter
 // ---------------------------------------------------------------------------
-std::vector<std::string> VCFXDosageCalculator::split(const std::string& str, char delimiter) {
+std::vector<std::string> VCFXDosageCalculator::split(const std::string &str, char delimiter) {
     std::vector<std::string> tokens;
     std::stringstream ss(str);
     std::string token;
@@ -216,10 +212,17 @@ std::vector<std::string> VCFXDosageCalculator::split(const std::string& str, cha
     return tokens;
 }
 
-static void show_help() { VCFXDosageCalculator obj; char arg0[] = "VCFX_dosage_calculator"; char arg1[] = "--help"; char* argv2[] = {arg0, arg1, nullptr}; obj.run(2, argv2); }
+static void show_help() {
+    VCFXDosageCalculator obj;
+    char arg0[] = "VCFX_dosage_calculator";
+    char arg1[] = "--help";
+    char *argv2[] = {arg0, arg1, nullptr};
+    obj.run(2, argv2);
+}
 
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_common_flags(argc, argv, "VCFX_dosage_calculator", show_help)) return 0;
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_dosage_calculator", show_help))
+        return 0;
     VCFXDosageCalculator dosageCalculator;
     return dosageCalculator.run(argc, argv);
 }

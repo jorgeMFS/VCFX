@@ -5,9 +5,10 @@
 #include <string>
 
 class VCFXIndexer {
-public:
-    int run(int argc, char* argv[]);
-private:
+  public:
+    int run(int argc, char *argv[]);
+
+  private:
     void displayHelp();
     void createVCFIndex(std::istream &in, std::ostream &out);
 };

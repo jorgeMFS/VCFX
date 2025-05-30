@@ -14,27 +14,27 @@ struct VariantData {
 
 // Stores the result of LD calculation
 struct LDResult {
-    double r;    // Correlation coefficient
-    double r2;   // Squared correlation coefficient
+    double r;  // Correlation coefficient
+    double r2; // Squared correlation coefficient
 };
 
 class VCFXHaplotypePhaser {
-public:
+  public:
     // main runner
-    int run(int argc, char* argv[]);
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     // prints usage
     void displayHelp();
 
     // Main function that does phasing
-    void phaseHaplotypes(std::istream& in, std::ostream& out, double ldThreshold);
+    void phaseHaplotypes(std::istream &in, std::ostream &out, double ldThreshold);
 
     // Groups variants into haplotype blocks by naive r^2 threshold
-    std::vector<std::vector<int>> groupVariants(const std::vector<VariantData>& variants, double ldThreshold);
+    std::vector<std::vector<int>> groupVariants(const std::vector<VariantData> &variants, double ldThreshold);
 
     // calculates r^2 between two variants
-    LDResult calculateLD(const VariantData& v1, const VariantData& v2);
+    LDResult calculateLD(const VariantData &v1, const VariantData &v2);
 };
 
 #endif // VCFX_HAPLOTYPE_PHASER_H

@@ -1,30 +1,31 @@
-#include "vcfx_core.h"
 #include "VCFX_info_parser.h"
-#include <sstream>
+#include "vcfx_core.h"
 #include <algorithm>
-#include <unordered_map>
 #include <cstdlib>
+#include <sstream>
+#include <unordered_map>
 
 // Function to display help message
 void printHelp() {
-    std::cout << "VCFX_info_parser\n"
-              << "Usage: VCFX_info_parser [OPTIONS]\n\n"
-              << "Options:\n"
-              << "  --info, -i \"FIELD1,FIELD2\"   Specify the INFO fields to display (e.g., \"DP,AF\").\n"
-              << "  --help, -h                    Display this help message and exit.\n\n"
-              << "Description:\n"
-              << "  Parses the INFO field of a VCF file and displays the selected INFO fields in a user-friendly format.\n\n"
-              << "Examples:\n"
-              << "  ./VCFX_info_parser --info \"DP,AF\" < input.vcf > output_info.tsv\n";
+    std::cout
+        << "VCFX_info_parser\n"
+        << "Usage: VCFX_info_parser [OPTIONS]\n\n"
+        << "Options:\n"
+        << "  --info, -i \"FIELD1,FIELD2\"   Specify the INFO fields to display (e.g., \"DP,AF\").\n"
+        << "  --help, -h                    Display this help message and exit.\n\n"
+        << "Description:\n"
+        << "  Parses the INFO field of a VCF file and displays the selected INFO fields in a user-friendly format.\n\n"
+        << "Examples:\n"
+        << "  ./VCFX_info_parser --info \"DP,AF\" < input.vcf > output_info.tsv\n";
 }
 
 // Function to parse command-line arguments
-bool parseArguments(int argc, char* argv[], std::vector<std::string>& info_fields) {
+bool parseArguments(int argc, char *argv[], std::vector<std::string> &info_fields) {
     bool foundAnyField = false;
 
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
-        
+
         if ((arg == "--info" || arg == "-i") && i + 1 < argc) {
             std::string fields_str = argv[++i];
             std::stringstream ss(fields_str);
@@ -38,8 +39,7 @@ bool parseArguments(int argc, char* argv[], std::vector<std::string>& info_field
                     foundAnyField = true;
                 }
             }
-        }
-        else if (arg.rfind("--info=", 0) == 0) {
+        } else if (arg.rfind("--info=", 0) == 0) {
             // e.g. --info=DP,AF
             std::string fields_str = arg.substr(7);
             std::stringstream ss(fields_str);
@@ -53,8 +53,7 @@ bool parseArguments(int argc, char* argv[], std::vector<std::string>& info_field
                     foundAnyField = true;
                 }
             }
-        }
-        else if (arg == "--help" || arg == "-h") {
+        } else if (arg == "--help" || arg == "-h") {
             printHelp();
             std::exit(0);
         }
@@ -65,7 +64,7 @@ bool parseArguments(int argc, char* argv[], std::vector<std::string>& info_field
 }
 
 // Splits a string by a delimiter
-std::vector<std::string> split(const std::string& s, char delimiter) {
+std::vector<std::string> split(const std::string &s, char delimiter) {
     std::vector<std::string> tokens;
     std::string token;
     std::stringstream ss(s);
@@ -76,11 +75,11 @@ std::vector<std::string> split(const std::string& s, char delimiter) {
 }
 
 // Parses the INFO field and display selected fields
-bool parseInfoFields(std::istream& in, std::ostream& out, const std::vector<std::string>& info_fields) {
+bool parseInfoFields(std::istream &in, std::ostream &out, const std::vector<std::string> &info_fields) {
     // If we have any fields, print header
     if (!info_fields.empty()) {
         out << "CHROM\tPOS\tID\tREF\tALT";
-        for (const auto& field : info_fields) {
+        for (const auto &field : info_fields) {
             out << "\t" << field;
         }
         out << "\n";
@@ -120,7 +119,7 @@ bool parseInfoFields(std::istream& in, std::ostream& out, const std::vector<std:
 
         // Print row
         out << chrom << "\t" << pos << "\t" << id << "\t" << ref << "\t" << alt;
-        for (const auto& field : info_fields) {
+        for (const auto &field : info_fields) {
             auto it = info_map.find(field);
             if (it != info_map.end()) {
                 // If it's a flag (empty string), print "."
@@ -141,8 +140,9 @@ bool parseInfoFields(std::istream& in, std::ostream& out, const std::vector<std:
 
 static void show_help() { printHelp(); }
 
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_common_flags(argc, argv, "VCFX_info_parser", show_help)) return 0;
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_info_parser", show_help))
+        return 0;
     std::vector<std::string> info_fields;
 
     // parse arguments

@@ -5,10 +5,10 @@
 #include <string>
 
 class VCFXSvHandler {
-public:
-    int run(int argc, char* argv[]);
+  public:
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     void displayHelp();
 
     // The main method to read lines from 'in' and apply filtering/modify logic, then write to 'out'.
@@ -27,9 +27,7 @@ private:
     int parsePos(const std::string &posField) const;
 
     // If we are modifying, do the manipulations (like adding SV_SIZE=..., etc.)
-    std::string manipulateSVInfo(const std::string &infoField,
-                                 const std::string &svType,
-                                 int pos, int endPos) const;
+    std::string manipulateSVInfo(const std::string &infoField, const std::string &svType, int pos, int endPos) const;
 };
 
 #endif

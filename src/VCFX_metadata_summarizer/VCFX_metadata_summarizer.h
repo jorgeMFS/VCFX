@@ -2,26 +2,26 @@
 #define VCFX_METADATA_SUMMARIZER_H
 
 #include <iostream>
-#include <string>
-#include <vector>
 #include <map>
+#include <string>
 #include <unordered_set>
+#include <vector>
 
 // VCFX_metadata_summarizer: Summarizes key metadata from a VCF file.
 class VCFXMetadataSummarizer {
-public:
+  public:
     // Entry point for the tool
-    int run(int argc, char* argv[]);
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     // Displays the help message
     void displayHelp();
 
     // Processes VCF input and summarizes metadata
-    void summarizeMetadata(std::istream& in);
+    void summarizeMetadata(std::istream &in);
 
     // Parses meta-information lines (##...) to extract contig/INFO/FILTER/FORMAT IDs
-    void parseHeader(const std::string& line);
+    void parseHeader(const std::string &line);
 
     // Prints the metadata summary
     void printSummary() const;
