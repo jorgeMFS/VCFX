@@ -4,6 +4,7 @@ DATA = Path(__file__).resolve().parents[1] / "data"
 
 
 def test_tool_wrappers_extra(vcfx):
+    from vcfx.tools import available_tools, run_tool
     tested = {
         'alignment_checker', 'allele_counter', 'variant_counter', 'allele_freq_calc',
         'info_aggregator', 'info_parser', 'info_summarizer', 'fasta_converter',
@@ -13,8 +14,8 @@ def test_tool_wrappers_extra(vcfx):
         'field_extractor', 'ancestry_assigner', 'dosage_calculator',
         'ancestry_inferrer', 'distance_calculator', 'indel_normalizer', 'validator',
     }
-    all_tools = vcfx.available_tools()
+    all_tools = available_tools()
     untested = sorted(set(all_tools) - tested)
     for tool in untested:
-        proc = vcfx.run_tool(tool, '--help', capture_output=True, text=True)
+        proc = run_tool(tool, '--help', capture_output=True, text=True)
         assert proc.returncode == 0

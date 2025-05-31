@@ -32,7 +32,7 @@ class CMakeBuild(build_ext):
 
 
 setup(
-    packages=['vcfx'],
+    packages=['vcfx', 'vcfx.tools'],
     package_dir={'vcfx': '.'},
     package_data={'vcfx': ['py.typed']},
     ext_modules=[CMakeExtension('vcfx._vcfx')],
