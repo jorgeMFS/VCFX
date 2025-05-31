@@ -1,4 +1,3 @@
-
 def test_python_bindings(vcfx):
     assert vcfx.trim("  hello  ") == "hello"
     assert vcfx.read_maybe_compressed(b"hello") == b"hello"
@@ -30,4 +29,3 @@ def test_split_and_get_version(vcfx):
     ).strip()
     assert vcfx.get_version() == expected
     assert vcfx.__version__ == expected
-

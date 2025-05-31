@@ -11,4 +11,3 @@ def test_variant_counter_wrapper(vcfx):
 def test_allele_freq_calc_wrapper(vcfx):
     freqs = vcfx.allele_freq_calc(DATA / "allele_freq_calc" / "simple.vcf")
     assert abs(freqs[0].Allele_Frequency - 0.5) < 1e-6
-
