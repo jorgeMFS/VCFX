@@ -29,6 +29,8 @@ __all__ = [
     "sv_handler",
     "validator",
 ]
+
+
 def ld_calculator(vcf_file: str, region: str | None = None) -> str:
     """Calculate pairwise linkage disequilibrium."""
 
@@ -490,8 +492,3 @@ def validator(
     )
 
     return result.stdout
-
-
-# Lazy attribute access for tool wrappers
-
-
