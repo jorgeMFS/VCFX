@@ -8,7 +8,7 @@ import os
 from typing import Any, Callable, Sequence, Type, TypeVar, get_type_hints
 from dataclasses import fields as dataclass_fields
 
-from .results import (
+from ..results import (
     AlignmentDiscrepancy,
     AlleleCount,
     AlleleFrequency,
