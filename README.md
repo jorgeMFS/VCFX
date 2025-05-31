@@ -220,3 +220,46 @@ If you use VCFX in your research, please cite (see also [CITATION.cff](CITATION.
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Development
+
+### Code Formatting
+
+This project uses `clang-format` for C/C++ code formatting. The clang-format hook is skipped in GitHub Actions CI to avoid version conflicts, but developers should run it locally before committing.
+
+#### Installing clang-format
+
+**macOS:**
+```bash
+brew install clang-format
+```
+
+**Ubuntu/Debian:**
+```bash
+sudo apt-get install clang-format
+```
+
+#### Formatting Code
+
+To format all C/C++ source files:
+```bash
+# Using the provided script
+./scripts/format-code.sh
+
+# Or manually
+find . -name "*.cpp" -o -name "*.c" -o -name "*.h" -o -name "*.hpp" | \
+  grep -v build | \
+  xargs clang-format -i --style=file
+```
+
+#### Pre-commit Hooks
+
+The project uses pre-commit hooks for code quality. Install them with:
+```bash
+pre-commit install
+```
+
+**Note:** If clang-format is not available on your system, you can skip it:
+```bash
+SKIP=clang-format pre-commit run --all-files
+```

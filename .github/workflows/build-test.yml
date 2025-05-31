@@ -15,44 +15,13 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      - name: Install clang-format
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y clang-format
       - name: Install lint dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
-      - name: Run pre-commit
-        run: pre-commit run --all-files
-      - name: Check C/C++ formatting (informational)
+      - name: Run pre-commit (skip clang-format in CI)
         run: |
-          echo "Checking C/C++ code formatting..."
-          
-          # Find all C/C++ files and check formatting
-          FILES=$(find . -name "*.cpp" -o -name "*.c" -o -name "*.h" -o -name "*.hpp" | grep -v build | tr '\n' ' ')
-          
-          if [ -n "$FILES" ]; then
-            echo "Files to check: $FILES"
-            
-            # Check if clang-format would make changes (dry-run)
-            CHANGES=$(echo $FILES | xargs clang-format --style=file --dry-run --Werror 2>&1 || true)
-            
-            if [ -n "$CHANGES" ]; then
-              echo "⚠️  C/C++ formatting issues found:"
-              echo "$CHANGES"
-              echo ""
-              echo "To fix these issues locally, run:"
-              echo "  ./scripts/format-code.sh"
-              echo ""
-              echo "Note: This is informational only and will not fail the build."
-            else
-              echo "✅ C/C++ code formatting looks good!"
-            fi
-          else
-            echo "No C/C++ files found to check."
-          fi
-        continue-on-error: true
+          SKIP=clang-format pre-commit run --all-files
 
   build-and-test:
     strategy:
