@@ -45,10 +45,17 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for pure Python envs
 
 __version__ = get_version()
 
-from . import tools as _tools  # noqa: E402
 try:
-    from .tools import TOOL_NAMES  # noqa: E402
-except FileNotFoundError:  # pragma: no cover - depends on external binaries
+    from . import tools as _tools  # noqa: E402
+except ImportError:  # pragma: no cover - optional subpackage
+    _tools = None  # type: ignore[assignment]
+
+if _tools is not None:
+    try:
+        from .tools import TOOL_NAMES  # noqa: E402
+    except FileNotFoundError:  # pragma: no cover - depends on external binaries
+        TOOL_NAMES = []
+else:  # pragma: no cover - tools package missing
     TOOL_NAMES = []
 from typing import Callable  # noqa: E402
 import subprocess  # noqa: E402
@@ -71,21 +78,31 @@ from .results import (  # noqa: E402
 )
 
 # Re-export helper functions for convenience
-available_tools = _tools.available_tools
-run_tool = _tools.run_tool
+if _tools is not None:
+    available_tools = _tools.available_tools
+    run_tool = _tools.run_tool
+else:  # pragma: no cover - tools package missing
+    def available_tools(refresh: bool = False) -> list[str]:
+        raise FileNotFoundError("vcfx tools package not installed")
+
+    from typing import Any
+
+    def run_tool(*args: str, **kwargs: Any) -> subprocess.CompletedProcess:
+        raise FileNotFoundError("vcfx tools package not installed")
 
 # Export command wrappers if the vcfx helper is available.  When the
 # wrapper cannot be located on ``PATH`` importing ``vcfx`` should still
 # succeed so that helper functions like :func:`trim` remain usable.  In
 # that case the tool wrappers will be resolved lazily via
 # ``__getattr__``.
-try:  # pragma: no cover - depends on external binaries being built
-    for _name in TOOL_NAMES:
-        if _name in vars(_tools):
-            globals()[_name] = getattr(_tools, _name)
-except FileNotFoundError:
-    # Tools are unavailable; they will be looked up on demand.
-    pass
+if _tools is not None:
+    try:  # pragma: no cover - depends on external binaries being built
+        for _name in TOOL_NAMES:
+            if _name in vars(_tools):
+                globals()[_name] = getattr(_tools, _name)
+    except FileNotFoundError:
+        # Tools are unavailable; they will be looked up on demand.
+        pass
 
 __all__ = [
     "trim",
@@ -133,4 +150,6 @@ def __getattr__(name: str) -> Callable[..., subprocess.CompletedProcess]:
     AttributeError
         If *name* does not correspond to an available tool.
     """
+    if _tools is None:
+        raise AttributeError(name)
     return getattr(_tools, name)
