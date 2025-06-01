@@ -41,7 +41,7 @@ freqs = vcfx.allele_freq_calc("input.vcf")
 
 ## Documentation
 
-For comprehensive documentation, visit: https://vcfx.readthedocs.io
+For comprehensive documentation, visit: https://ieeta-pt.github.io/VCFX/
 
 ## License
 
