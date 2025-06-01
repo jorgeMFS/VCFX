@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61", "cmake"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vcfx"
+dynamic = ["version"]
+description = "Python bindings for the VCFX toolkit - comprehensive VCF manipulation and analysis"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    { name = "Jorge Miguel Silva" },
+    { name = "José Luis Oliveira" },
+]
+keywords = ["vcf", "bioinformatics", "genomics", "variant-analysis", "python-bindings"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: C++",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: POSIX :: Linux",
+]
+
+[project.urls]
+Homepage = "https://github.com/ieeta-pt/VCFX"
+Documentation = "https://ieeta-pt.github.io/VCFX/"
+Repository = "https://github.com/ieeta-pt/VCFX.git"
+"Bug Tracker" = "https://github.com/ieeta-pt/VCFX/issues"
+
+[tool.setuptools.package-data]
+"vcfx" = ["py.typed"]

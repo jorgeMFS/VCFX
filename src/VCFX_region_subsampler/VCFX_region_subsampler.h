@@ -12,17 +12,16 @@ struct Region {
     int end;
 };
 
-// VCFXRegionSubsampler: 
+// VCFXRegionSubsampler:
 // Reads a BED file with multiple lines => chromosome -> sorted intervals
 // Then reads a VCF and keeps lines whose POS is within any interval for that CHROM.
 class VCFXRegionSubsampler {
-public:
-    int run(int argc, char* argv[]);
+  public:
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     void displayHelp();
-    bool loadRegions(const std::string &bedFile,
-                     std::unordered_map<std::string, std::vector<Region>> &chromRegions);
+    bool loadRegions(const std::string &bedFile, std::unordered_map<std::string, std::vector<Region>> &chromRegions);
     // after loading, we sort the intervals for each chromosome, possibly merge them
     void sortAndMergeIntervals(std::unordered_map<std::string, std::vector<Region>> &chromRegions);
 
@@ -32,7 +31,6 @@ private:
     std::unordered_map<std::string, std::vector<Region>> regions;
 
     void processVCF(std::istream &in, std::ostream &out);
-
 };
 
 #endif

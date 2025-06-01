@@ -1,30 +1,29 @@
 #include "vcfx_core.h"
+#include <cstring>
+#include <getopt.h>
 #include <iostream>
 #include <string>
 #include <zlib.h>
-#include <cstring>
-#include <getopt.h>
 
 // ---------------------------------------------------------------------------
 // Show help
 // ---------------------------------------------------------------------------
 static void printHelp() {
-    std::cout 
-        << "VCFX_compressor\n"
-        << "Usage: VCFX_compressor [OPTIONS]\n\n"
-        << "Options:\n"
-        << "  --compress, -c         Compress the input VCF file (to stdout).\n"
-        << "  --decompress, -d       Decompress the input VCF file (from stdin).\n"
-        << "  --help, -h             Display this help message and exit.\n\n"
-        << "Description:\n"
-        << "  Compresses or decompresses data using zlib's raw DEFLATE (similar to gzip).\n"
-        << "  Note that for .vcf.gz indexing via tabix, one typically needs BGZF blocks,\n"
-        << "  which is not implemented here.\n\n"
-        << "Examples:\n"
-        << "  Compress:\n"
-        << "    ./VCFX_compressor --compress < input.vcf > output.vcf.gz\n\n"
-        << "  Decompress:\n"
-        << "    ./VCFX_compressor --decompress < input.vcf.gz > output.vcf\n";
+    std::cout << "VCFX_compressor\n"
+              << "Usage: VCFX_compressor [OPTIONS]\n\n"
+              << "Options:\n"
+              << "  --compress, -c         Compress the input VCF file (to stdout).\n"
+              << "  --decompress, -d       Decompress the input VCF file (from stdin).\n"
+              << "  --help, -h             Display this help message and exit.\n\n"
+              << "Description:\n"
+              << "  Compresses or decompresses data using zlib's raw DEFLATE (similar to gzip).\n"
+              << "  Note that for .vcf.gz indexing via tabix, one typically needs BGZF blocks,\n"
+              << "  which is not implemented here.\n\n"
+              << "Examples:\n"
+              << "  Compress:\n"
+              << "    ./VCFX_compressor --compress < input.vcf > output.vcf.gz\n\n"
+              << "  Decompress:\n"
+              << "    ./VCFX_compressor --decompress < input.vcf.gz > output.vcf\n";
 }
 
 // ---------------------------------------------------------------------------
@@ -32,7 +31,7 @@ static void printHelp() {
 //   compress = true  => read from 'in', produce gzip to 'out'
 //   compress = false => read gzip from 'in', produce plain text to 'out'
 // ---------------------------------------------------------------------------
-static bool compressDecompressVCF(std::istream& in, std::ostream& out, bool compress) {
+static bool compressDecompressVCF(std::istream &in, std::ostream &out, bool compress) {
     constexpr int CHUNK = 16384;
     char inBuffer[CHUNK];
     char outBuffer[CHUNK];
@@ -54,12 +53,12 @@ static bool compressDecompressVCF(std::istream& in, std::ostream& out, bool comp
             flush = in.eof() ? Z_FINISH : Z_NO_FLUSH;
 
             strm.avail_in = static_cast<uInt>(bytesRead);
-            strm.next_in  = reinterpret_cast<Bytef*>(inBuffer);
+            strm.next_in = reinterpret_cast<Bytef *>(inBuffer);
 
             // compress until input is used up
             do {
                 strm.avail_out = CHUNK;
-                strm.next_out  = reinterpret_cast<Bytef*>(outBuffer);
+                strm.next_out = reinterpret_cast<Bytef *>(outBuffer);
 
                 int ret = deflate(&strm, flush);
                 if (ret == Z_STREAM_ERROR) {
@@ -107,17 +106,15 @@ static bool compressDecompressVCF(std::istream& in, std::ostream& out, bool comp
                 }
             }
             strm.avail_in = static_cast<uInt>(bytesRead);
-            strm.next_in  = reinterpret_cast<Bytef*>(inBuffer);
+            strm.next_in = reinterpret_cast<Bytef *>(inBuffer);
 
             // decompress until output buffer not needed
             do {
                 strm.avail_out = CHUNK;
-                strm.next_out  = reinterpret_cast<Bytef*>(outBuffer);
+                strm.next_out = reinterpret_cast<Bytef *>(outBuffer);
 
                 ret = inflate(&strm, Z_NO_FLUSH);
-                if (ret == Z_STREAM_ERROR || ret == Z_NEED_DICT ||
-                    ret == Z_DATA_ERROR || ret == Z_MEM_ERROR)
-                {
+                if (ret == Z_STREAM_ERROR || ret == Z_NEED_DICT || ret == Z_DATA_ERROR || ret == Z_MEM_ERROR) {
                     std::cerr << "Error: inflate failed with code " << ret << "\n";
                     inflateEnd(&strm);
                     return false;
@@ -149,28 +146,38 @@ static bool compressDecompressVCF(std::istream& in, std::ostream& out, bool comp
 // ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_compressor")) return 0;
+static void show_help() { printHelp(); }
+
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_compressor", show_help))
+        return 0;
     bool compress = false;
     bool decompress = false;
 
-    static struct option long_options[] = {
-        {"compress",   no_argument, 0, 'c'},
-        {"decompress", no_argument, 0, 'd'},
-        {"help",       no_argument, 0, 'h'},
-        {0, 0, 0, 0}
-    };
+    static struct option long_options[] = {{"compress", no_argument, 0, 'c'},
+                                           {"decompress", no_argument, 0, 'd'},
+                                           {"help", no_argument, 0, 'h'},
+                                           {0, 0, 0, 0}};
 
     while (true) {
         int optIndex = 0;
         int c = getopt_long(argc, argv, "cdh", long_options, &optIndex);
-        if (c == -1) break;
+        if (c == -1)
+            break;
 
         switch (c) {
-            case 'c': compress = true;       break;
-            case 'd': decompress = true;     break;
-            case 'h': printHelp(); return 0;
-            default:  printHelp(); return 1;
+        case 'c':
+            compress = true;
+            break;
+        case 'd':
+            decompress = true;
+            break;
+        case 'h':
+            printHelp();
+            return 0;
+        default:
+            printHelp();
+            return 1;
         }
     }
 

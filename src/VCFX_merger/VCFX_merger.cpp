@@ -1,43 +1,40 @@
-#include "vcfx_core.h"
 #include "VCFX_merger.h"
-#include <getopt.h>
-#include <fstream>
-#include <sstream>
-#include <queue>
+#include "vcfx_core.h"
 #include <algorithm>
-#include <iostream>
 #include <cstdlib>
+#include <fstream>
+#include <getopt.h>
+#include <iostream>
+#include <queue>
+#include <sstream>
 
 // Implementation of VCFX_merger
 
-int VCFXMerger::run(int argc, char* argv[]) {
+int VCFXMerger::run(int argc, char *argv[]) {
     // Parse command-line arguments
     int opt;
     bool showHelp = false;
     std::vector<std::string> inputFiles;
 
     static struct option long_options[] = {
-        {"merge", required_argument, 0, 'm'},
-        {"help",  no_argument,       0, 'h'},
-        {0,       0,               0,   0 }
-    };
+        {"merge", required_argument, 0, 'm'}, {"help", no_argument, 0, 'h'}, {0, 0, 0, 0}};
 
     while ((opt = getopt_long(argc, argv, "m:h", long_options, nullptr)) != -1) {
         switch (opt) {
-            case 'm': {
-                // Split comma-separated file names
-                std::string files = optarg;
-                size_t pos = 0;
-                while ((pos = files.find(',')) != std::string::npos) {
-                    inputFiles.emplace_back(files.substr(0, pos));
-                    files.erase(0, pos + 1);
-                }
-                inputFiles.emplace_back(files);
-                break;
+        case 'm': {
+            // Split comma-separated file names
+            std::string files = optarg;
+            size_t pos = 0;
+            while ((pos = files.find(',')) != std::string::npos) {
+                inputFiles.emplace_back(files.substr(0, pos));
+                files.erase(0, pos + 1);
             }
-            case 'h':
-            default:
-                showHelp = true;
+            inputFiles.emplace_back(files);
+            break;
+        }
+        case 'h':
+        default:
+            showHelp = true;
         }
     }
 
@@ -52,18 +49,17 @@ int VCFXMerger::run(int argc, char* argv[]) {
 }
 
 void VCFXMerger::displayHelp() {
-    std::cout
-        << "VCFX_merger: Merge multiple VCF files by variant position.\n\n"
-        << "Usage:\n"
-        << "  VCFX_merger --merge file1.vcf,file2.vcf,... [options]\n\n"
-        << "Options:\n"
-        << "  -m, --merge    Comma-separated list of VCF files to merge\n"
-        << "  -h, --help     Display this help message and exit\n\n"
-        << "Example:\n"
-        << "  VCFX_merger --merge sample1.vcf,sample2.vcf > merged.vcf\n";
+    std::cout << "VCFX_merger: Merge multiple VCF files by variant position.\n\n"
+              << "Usage:\n"
+              << "  VCFX_merger --merge file1.vcf,file2.vcf,... [options]\n\n"
+              << "Options:\n"
+              << "  -m, --merge    Comma-separated list of VCF files to merge\n"
+              << "  -h, --help     Display this help message and exit\n\n"
+              << "Example:\n"
+              << "  VCFX_merger --merge sample1.vcf,sample2.vcf > merged.vcf\n";
 }
 
-void VCFXMerger::mergeVCF(const std::vector<std::string>& inputFiles, std::ostream& out) {
+void VCFXMerger::mergeVCF(const std::vector<std::string> &inputFiles, std::ostream &out) {
     struct Variant {
         std::string chrom;
         long pos = 0;
@@ -74,7 +70,7 @@ void VCFXMerger::mergeVCF(const std::vector<std::string>& inputFiles, std::ostre
     std::vector<std::string> headers;
     bool headersCaptured = false;
 
-    for (const auto& file : inputFiles) {
+    for (const auto &file : inputFiles) {
         std::ifstream stream(file);
         if (!stream.is_open()) {
             std::cerr << "Failed to open file: " << file << "\n";
@@ -105,23 +101,32 @@ void VCFXMerger::mergeVCF(const std::vector<std::string>& inputFiles, std::ostre
             headersCaptured = true;
     }
 
-    for (const auto& h : headers) {
+    for (const auto &h : headers) {
         out << h << '\n';
     }
 
-    std::sort(variants.begin(), variants.end(), [](const Variant& a, const Variant& b) {
-        if (a.chrom == b.chrom) return a.pos < b.pos;
+    std::sort(variants.begin(), variants.end(), [](const Variant &a, const Variant &b) {
+        if (a.chrom == b.chrom)
+            return a.pos < b.pos;
         return a.chrom < b.chrom;
     });
 
-    for (const auto& v : variants) {
+    for (const auto &v : variants) {
         out << v.line << '\n';
     }
 }
 
+static void show_help() {
+    VCFXMerger obj;
+    char arg0[] = "VCFX_merger";
+    char arg1[] = "--help";
+    char *argv2[] = {arg0, arg1, nullptr};
+    obj.run(2, argv2);
+}
 
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_merger")) return 0;
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_merger", show_help))
+        return 0;
     VCFXMerger merger;
     return merger.run(argc, argv);
 }

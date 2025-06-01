@@ -31,7 +31,12 @@ echo "📥 Pulling the latest VCFX Docker image ($VCFX_IMAGE)..."
 if docker pull "$VCFX_IMAGE"; then
   check_success "Pulled VCFX Docker image"
 else
-  echo "⚠️  Unable to pull $VCFX_IMAGE. Building Docker image locally..."
+  echo "⚠️  Unable to pull $VCFX_IMAGE." >&2
+  if ! ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1; then
+    echo "⚠️  Network unavailable. Skipping Docker tests." >&2
+    exit 0
+  fi
+  echo "⚠️  Building Docker image locally..."
   docker build -t vcfx:local "${REPO_ROOT}"
   check_success "Built local Docker image"
   VCFX_IMAGE="vcfx:local"

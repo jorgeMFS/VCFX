@@ -7,16 +7,16 @@
 
 // VCFXFastaConverter: Tool for converting a "variant-only" VCF into per-sample FASTA sequences
 class VCFXFastaConverter {
-public:
+  public:
     // Entry point for the tool
-    int run(int argc, char* argv[]);
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     // Displays the help message
     void displayHelp();
 
     // Converts VCF input to FASTA format
-    void convertVCFtoFasta(std::istream& in, std::ostream& out);
+    void convertVCFtoFasta(std::istream &in, std::ostream &out);
 };
 
 #endif // VCFX_FASTA_CONVERTER_H

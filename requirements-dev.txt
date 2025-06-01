@@ -1,0 +1,6 @@
+pytest
+ruff
+flake8
+tomli
+mypy
+pre-commit

@@ -1,128 +1,96 @@
+# VCFX: Comprehensive VCF Manipulation Toolkit
+
 <p align="center">
   <img src="assets/images/VCFX.png" alt="VCFX Logo" width="180"/>
 </p>
 
-# Comprehensive VCF Manipulation Toolkit
-
-
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://ieeta-pt.github.io/VCFX/)
 [![Bioconda](https://img.shields.io/conda/vn/bioconda/vcfx.svg)](https://anaconda.org/bioconda/vcfx)
-[![Platforms](https://anaconda.org/bioconda/vcfx/badges/platforms.svg)](https://anaconda.org/bioconda/vcfx)
-[![Downloads](https://anaconda.org/bioconda/vcfx/badges/downloads.svg)](https://anaconda.org/bioconda/vcfx)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Docker](https://img.shields.io/badge/Docker-GHCR-blue)](https://ieeta-pt.github.io/VCFX/docker/)
+[![PyPI version](https://img.shields.io/pypi/v/vcfx.svg)](https://pypi.org/project/vcfx/)
+[![PyPI downloads](https://img.shields.io/pypi/dm/vcfx.svg)](https://pypi.org/project/vcfx/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/vcfx.svg)](https://pypi.org/project/vcfx/)
 
-VCFX is a collection of specialized C/C++ command-line tools designed for efficient manipulation, analysis, and transformation of VCF (Variant Call Format) files used in genomic research and bioinformatics. Each tool is an independent executable that follows the Unix philosophy: do one thing well and work seamlessly with other tools through standard input/output streams.
+VCFX is a set of small C/C++ command line tools for manipulating and analysing Variant Call Format (VCF) files. Each tool does one job well and they can be chained together using standard streams.
 
-## Documentation
+## Features
 
-**[View the full documentation](https://ieeta-pt.github.io/VCFX/)**
+- **60+ Specialized Tools** for filtering, transforming and analysing variants
+- **Pipeline Ready**: tools read from stdin and write to stdout
+- **Fast**: designed for large genomic datasets
+- **Cross Platform**: Linux and macOS support
+- **WebAssembly Builds** for browser or Node.js usage
+- **Easy Installation** via PyPI, Bioconda or Docker
+- **Python Bindings** for programmatic access
 
-For local documentation, see the `docs` directory or build the documentation site:
+## Installation
 
+### PyPI (Python Package)
 ```bash
-pip install mkdocs-material pymdown-extensions
-mkdocs serve
+pip install vcfx
+```
+After installing the Python bindings you can run any tool directly:
+```python
+import vcfx
+vcfx.run_tool("alignment_checker", "--help")
 ```
 
-## Key Features
-
-- **60 Specialized Tools**: Each optimized for a specific VCF-related task
-- **Pipeline-Ready**: All tools work with standard input/output for easy integration
-- **Performance-Focused**: Designed for handling large genomic datasets efficiently
-- **Cross-Platform**: Works on Linux and macOS
-- **WebAssembly Support**: Optional WASM builds for browser/Node.js environments
-- **Bioconda Available**: Easy installation through Bioconda package manager
-- **Docker Support**: Ready-to-use Docker image available via GitHub Container Registry
-
-## Tool Categories
-
-- **Data Analysis**: Extract statistical information from variant data
-- **Data Filtering**: Select variants based on specific criteria
-- **Data Transformation**: Convert or reformat VCF data
-- **Quality Control**: Validate and check data quality
-- **File Management**: Handle VCF files efficiently
-- **Annotation and Reporting**: Add or extract annotations from VCF files
-- **Data Processing**: Process variants and samples
-
-## Quick Start
-
-### Installation
-
-#### Using Bioconda
-
+### Bioconda
 ```bash
 conda install -c bioconda vcfx
 ```
 
-#### Building from Source
+### Docker
+```bash
+docker pull ghcr.io/jorgemfs/vcfx:latest
+docker run --rm ghcr.io/jorgemfs/vcfx:latest VCFX_tool_name --help
+```
 
+### Build from Source
 ```bash
 git clone https://github.com/ieeta-pt/VCFX.git
 cd VCFX
-mkdir -p build && cd build
-cmake ..
+mkdir build && cd build
+cmake .. -DPYTHON_BINDINGS=ON
 make
 ```
+Optionally run `make install` to place the tools in `~/.local/bin`.
 
-### Basic Usage Example
-
+## Quick Example
 ```bash
-# Calculate allele frequencies for SNPs only
 cat input.vcf | \
   VCFX_variant_classifier --append-info | \
   grep 'VCF_CLASS=SNP' | \
   VCFX_allele_freq_calc > snp_frequencies.tsv
 ```
 
-### Listing Available Tools
+## Documentation
 
+Full documentation is available at [ieeta-pt.github.io/VCFX](https://ieeta-pt.github.io/VCFX/). The `docs` folder contains the sources and can be served locally with `mkdocs serve`.
+
+## Repository Layout
+
+- `src/` – C++ source code for all tools
+- `python/` – optional Python bindings
+- `docs/` – documentation sources
+- `tests/` – shell and Python tests
+- `examples/` – usage examples and workflows
+
+## Development
+
+Run tests with `pytest` and `ctest` from the build directory. Code style is enforced with `clang-format` and pre-commit hooks:
 ```bash
-vcfx list
+pre-commit install
 ```
-
-### Show Tool Documentation
-
-```bash
-vcfx help allele_counter
-```
-
-## Building for WebAssembly
-
-If you have [Emscripten](https://emscripten.org/) installed:
-
-```bash
-mkdir build_wasm && cd build_wasm
-emcmake cmake -DBUILD_WASM=ON ..
-cmake --build .
-```
-
-## Running Tests
-
-From your build directory, run:
-
-```bash
-ctest --output-on-failure
-```
-
-You can also execute all shell scripts directly with:
-
-```bash
-bash ../tests/test_all.sh
-```
-
-## Contributing
-
-Contributions are welcome! Please see [CONTRIBUTING.md](docs/CONTRIBUTING.md) for details.
 
 ## Citation
 
-If you use VCFX in your research, please cite:
-
+If you use VCFX in your research please cite:
 ```
 @inproceedings{silva2025vcfx,
   title={VCFX: A Minimalist, Modular Toolkit for Streamlined Variant Analysis},
-  author={Silva, Jorge Miguel and Oliveira, Jos{\'e} Luis},
+  author={Silva, Jorge Miguel and Oliveira, José Luis},
   booktitle={12th International Work-Conference on Bioinformatics and Biomedical Engineering (IWBBIO 2025)},
   year={2025},
   organization={Springer}
@@ -131,4 +99,4 @@ If you use VCFX in your research, please cite:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+VCFX is distributed under the [MIT License](LICENSE).

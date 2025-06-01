@@ -1,10 +1,19 @@
 # VCFX: A Comprehensive VCF Manipulation Toolkit
 
-VCFX is a collection of specialized command-line tools designed for efficient manipulation, analysis, and transformation of VCF (Variant Call Format) files used in genomic research and bioinformatics.
+VCFX is a collection of specialized command-line tools designed for efficient manipulation, analysis, and transformation of VCF (Variant Call Format) files used in genomic research and bioinformatics. Available via PyPI, Bioconda, and Docker.
 
 ## What is VCFX?
 
-VCFX follows the Unix philosophy of creating small, focused tools that do one thing well and can be combined together to form powerful workflows. Each tool in the VCFX suite is optimized for a specific VCF-related task, enabling researchers and bioinformaticians to:
+VCFX follows the Unix philosophy of creating small, focused tools that do one thing well and can be combined together to form powerful workflows. Each tool in the VCFX suite is optimized for a specific VCF-related task, with optional Python bindings for programmatic access.
+
+Key features:
+- 60+ specialized command-line tools
+- Python API with structured data types
+- Easy installation via `pip install vcfx`
+- Cross-platform support (Linux, macOS)
+- Composable tools for pipeline integration
+
+VCFX enables researchers and bioinformaticians to:
 
 - Extract specific information from VCF files
 - Filter variants based on various criteria
@@ -19,33 +28,53 @@ To begin using VCFX, first follow the [installation instructions](#installation)
 
 ### Installation
 
-VCFX tools are built using CMake. To build the entire toolkit:
+Choose your preferred installation method:
 
+#### PyPI (Python users)
+```bash
+pip install vcfx
+```
+
+#### Bioconda (includes all tools)
+```bash
+conda install -c bioconda vcfx
+```
+
+#### Build from source
 ```bash
 git clone https://github.com/ieeta-pt/VCFX.git
 cd VCFX
 mkdir -p build
 cd build
-cmake ..
+cmake -DPYTHON_BINDINGS=ON ..
 make
 ```
 
-To build a specific tool:
-
-```bash
-make VCFX_tool_name
-```
+See the [full installation guide](installation.md) for more options including Docker.
 
 ### Basic Example
 
 Here's a simple example of using VCFX to analyze variants:
 
 ```bash
-# Calculate allele frequencies for SNPs only
+# Command line usage
 cat input.vcf | \
   VCFX_variant_classifier --append-info | \
   grep 'VCF_CLASS=SNP' | \
   VCFX_allele_freq_calc > snp_frequencies.tsv
+```
+
+```python
+# Python API usage
+import vcfx
+
+# Count variants
+count = vcfx.variant_counter("input.vcf")
+
+# Calculate allele frequencies with structured output
+freqs = vcfx.allele_freq_calc("input.vcf")
+for f in freqs:
+    print(f"Position {f.Pos}: AF={f.Allele_Frequency}")
 ```
 
 ## Tool Categories
@@ -118,6 +147,28 @@ Tools for processing variants and samples:
 - [View all processing tools...](tools_overview.md#data-processing)
 
 For a complete list of all tools and detailed usage examples, see the [tools overview](tools_overview.md).
+
+## Python API
+
+VCFX provides comprehensive Python bindings that wrap all command-line tools and provide additional conveniences:
+
+- **Structured data types**: Tool outputs are parsed into dataclasses with proper typing
+- **Easy integration**: All tools accessible via `vcfx.tool_name()` functions
+- **Error handling**: Clear exceptions when tools fail
+- **Helper functions**: Utilities for reading compressed files, text processing, etc.
+
+Example:
+```python
+import vcfx
+
+# Tools return structured data, not just strings
+results = vcfx.hwe_tester("variants.vcf")
+for variant in results:
+    if variant.HWE_pvalue < 0.05:
+        print(f"Variant at {variant.Pos} deviates from HWE (p={variant.HWE_pvalue})")
+```
+
+See the [Python API documentation](python_api.md) for complete details.
 
 ## Who Should Use VCFX?
 

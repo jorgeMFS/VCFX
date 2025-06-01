@@ -190,6 +190,50 @@ EOF
 printf '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE1\n' >> data/format_mismatch.vcf
 printf 'chr1\t100\t.\tA\tT\t60\tPASS\t.\tGT:DP\t0/1:30:7\n' >> data/format_mismatch.vcf
 
+# Undefined INFO field
+cat > data/undefined_info.vcf << EOF
+##fileformat=VCFv4.2
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Depth">
+EOF
+printf '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n' >> data/undefined_info.vcf
+printf 'chr1\t100\t.\tA\tT\t60\tPASS\tDP=5;FOO=1\n' >> data/undefined_info.vcf
+
+# Undefined FORMAT field
+cat > data/undefined_format.vcf << EOF
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+EOF
+printf '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE1\n' >> data/undefined_format.vcf
+printf 'chr1\t100\t.\tA\tT\t60\tPASS\t.\tGT:XY\t0/1:10\n' >> data/undefined_format.vcf
+
+# Invalid genotype string
+cat > data/invalid_genotype.vcf << EOF
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+EOF
+printf '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE1\n' >> data/invalid_genotype.vcf
+printf 'chr1\t100\t.\tA\tT\t60\tPASS\t.\tGT\t0//1\n' >> data/invalid_genotype.vcf
+
+# Invalid REF/ALT bases
+cat > data/invalid_bases.vcf << EOF
+##fileformat=VCFv4.2
+EOF
+printf '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n' >> data/invalid_bases.vcf
+printf 'chr1\t100\t.\tA\tR\t60\tPASS\t.\n' >> data/invalid_bases.vcf
+
+# Duplicate records
+cat > data/duplicate_records.vcf << EOF
+##fileformat=VCFv4.2
+EOF
+printf '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n' >> data/duplicate_records.vcf
+printf 'chr1\t100\t.\tA\tT\t60\tPASS\t.\n' >> data/duplicate_records.vcf
+printf 'chr1\t100\t.\tA\tT\t60\tPASS\t.\n' >> data/duplicate_records.vcf
+
+# gzipped input
+if [ ! -f data/valid.vcf.gz ]; then
+    gzip -c data/valid.vcf > data/valid.vcf.gz
+fi
+
 # Run each test separately and track failures
 failures=0
 
@@ -257,6 +301,30 @@ run_test_failure 14 "Strict mismatched columns" "data/mismatched_columns.vcf" "c
 
 # Test 15 - FORMAT/sample mismatch in strict mode
 run_test_failure 15 "Strict format mismatch" "data/format_mismatch.vcf" "FORMAT" "--strict"
+[ $? -ne 0 ] && failures=$((failures + 1))
+
+# Test 16 - undefined INFO field
+run_test_failure 16 "Undefined INFO" "data/undefined_info.vcf" "INFO field" "--strict"
+[ $? -ne 0 ] && failures=$((failures + 1))
+
+# Test 17 - undefined FORMAT field
+run_test_failure 17 "Undefined FORMAT" "data/undefined_format.vcf" "FORMAT field" "--strict"
+[ $? -ne 0 ] && failures=$((failures + 1))
+
+# Test 18 - invalid genotype
+run_test_failure 18 "Invalid genotype" "data/invalid_genotype.vcf" "invalid genotype" "--strict"
+[ $? -ne 0 ] && failures=$((failures + 1))
+
+# Test 19 - invalid bases
+run_test_failure 19 "Invalid bases" "data/invalid_bases.vcf" "invalid characters" "--strict"
+[ $? -ne 0 ] && failures=$((failures + 1))
+
+# Test 20 - duplicate detection
+run_test_failure 20 "Duplicate records" "data/duplicate_records.vcf" "duplicate variant" "--strict --report-dups"
+[ $? -ne 0 ] && failures=$((failures + 1))
+
+# Test 21 - gzipped input
+run_test_success 21 "Gzip input" "data/valid.vcf.gz"
 [ $? -ne 0 ] && failures=$((failures + 1))
 
 if [ $failures -eq 0 ]; then

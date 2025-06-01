@@ -12,16 +12,16 @@
  *   as “not guaranteed hom-ref,” so we keep that variant.
  */
 class VCFXNonRefFilter {
-public:
+  public:
     // main entry point
-    int run(int argc, char* argv[]);
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     // prints usage
     void displayHelp();
 
     // checks the input line-by-line, printing lines that pass the filter
-    void filterNonRef(std::istream& in, std::ostream& out);
+    void filterNonRef(std::istream &in, std::ostream &out);
 
     // parse a sample’s genotype from a field => returns true if definitely hom-ref
     bool isDefinitelyHomRef(const std::string &genotypeField) const;

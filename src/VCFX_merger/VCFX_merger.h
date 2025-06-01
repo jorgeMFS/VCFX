@@ -7,17 +7,16 @@
 
 // VCFX_merger: Header file for VCF file merging tool
 class VCFXMerger {
-public:
+  public:
     // Entry point for the tool
-    int run(int argc, char* argv[]);
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     // Displays the help message
     void displayHelp();
 
     // Processes and merges VCF files
-    void mergeVCF(const std::vector<std::string>& inputFiles, std::ostream& out);
-
+    void mergeVCF(const std::vector<std::string> &inputFiles, std::ostream &out);
 };
 
 #endif // VCFX_MERGER_H

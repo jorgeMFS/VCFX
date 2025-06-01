@@ -1,14 +1,14 @@
 #include "vcfx_core.h"
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <vector>
-#include <unordered_map>
 #include <algorithm>
 #include <cstdlib>
+#include <fstream>
 #include <getopt.h>
+#include <iostream>
 #include <set>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 // ----------------------------------------------------
 // A helper struct for storing freq data by population
@@ -32,21 +32,21 @@ typedef std::unordered_map<std::string, std::unordered_map<std::string, double>>
 // Class: VCFXAncestryInferrer
 // ----------------------------------------------------
 class VCFXAncestryInferrer {
-public:
-    int run(int argc, char* argv[]);
+  public:
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     // Show usage
     void displayHelp();
 
     // Load population frequencies from a file that has lines:
     // CHROM  POS  REF  ALT  POPULATION  FREQUENCY
-    bool loadPopulationFrequencies(const std::string& freqFilePath);
+    bool loadPopulationFrequencies(const std::string &freqFilePath);
 
     // Infer ancestry from VCF, returns true if successful
-    bool inferAncestry(std::istream& vcfInput, std::ostream& output);
+    bool inferAncestry(std::istream &vcfInput, std::ostream &output);
 
-private:
+  private:
     // Frequencies keyed by "chr:pos:ref:alt:pop"
     FrequencyMap freqData;
     // More efficient structure: variant key -> (pop -> freq)
@@ -58,8 +58,17 @@ private:
 // ----------------------------------------------------
 // main() - create the inferrer and run
 // ----------------------------------------------------
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_ancestry_inferrer")) return 0;
+static void show_help() {
+    VCFXAncestryInferrer obj;
+    char arg0[] = "VCFX_ancestry_inferrer";
+    char arg1[] = "--help";
+    char *argv2[] = {arg0, arg1, nullptr};
+    obj.run(2, argv2);
+}
+
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_ancestry_inferrer", show_help))
+        return 0;
     VCFXAncestryInferrer inferrer;
     return inferrer.run(argc, argv);
 }
@@ -67,27 +76,24 @@ int main(int argc, char* argv[]) {
 // ----------------------------------------------------
 // run() - parse arguments, load freq, run inference
 // ----------------------------------------------------
-int VCFXAncestryInferrer::run(int argc, char* argv[]) {
+int VCFXAncestryInferrer::run(int argc, char *argv[]) {
     int opt;
     bool showHelp = false;
     std::string freqFilePath;
 
     static struct option longOpts[] = {
-        {"help",       no_argument,       0, 'h'},
-        {"frequency",  required_argument, 0, 'f'},
-        {0, 0, 0, 0}
-    };
+        {"help", no_argument, 0, 'h'}, {"frequency", required_argument, 0, 'f'}, {0, 0, 0, 0}};
 
     while ((opt = getopt_long(argc, argv, "hf:", longOpts, nullptr)) != -1) {
         switch (opt) {
-            case 'h':
-                showHelp = true;
-                break;
-            case 'f':
-                freqFilePath = optarg;
-                break;
-            default:
-                showHelp = true;
+        case 'h':
+            showHelp = true;
+            break;
+        case 'f':
+            freqFilePath = optarg;
+            break;
+        default:
+            showHelp = true;
         }
     }
 
@@ -115,27 +121,26 @@ int VCFXAncestryInferrer::run(int argc, char* argv[]) {
 // displayHelp
 // ----------------------------------------------------
 void VCFXAncestryInferrer::displayHelp() {
-    std::cout 
-        << "VCFX_ancestry_inferrer: Infer population ancestry based on allele frequencies.\n\n"
-        << "Usage:\n"
-        << "  VCFX_ancestry_inferrer --frequency <freq_file> [options]\n\n"
-        << "Description:\n"
-        << "  Reads a VCF from standard input and outputs a 2-column table:\n"
-        << "    Sample  Inferred_Population\n\n"
-        << "  The frequency file must have lines of the form:\n"
-        << "    CHROM  POS  REF  ALT  POPULATION  FREQUENCY\n"
-        << "  (tab-separated). For multi-allelic VCF sites, an ALT allele index 1\n"
-        << "  corresponds to the first item in the comma-separated ALT list,\n"
-        << "  index 2 => second ALT, etc.\n\n"
-        << "Example:\n"
-        << "  VCFX_ancestry_inferrer --frequency pop_frequencies.txt < input.vcf > ancestry_results.txt\n";
+    std::cout << "VCFX_ancestry_inferrer: Infer population ancestry based on allele frequencies.\n\n"
+              << "Usage:\n"
+              << "  VCFX_ancestry_inferrer --frequency <freq_file> [options]\n\n"
+              << "Description:\n"
+              << "  Reads a VCF from standard input and outputs a 2-column table:\n"
+              << "    Sample  Inferred_Population\n\n"
+              << "  The frequency file must have lines of the form:\n"
+              << "    CHROM  POS  REF  ALT  POPULATION  FREQUENCY\n"
+              << "  (tab-separated). For multi-allelic VCF sites, an ALT allele index 1\n"
+              << "  corresponds to the first item in the comma-separated ALT list,\n"
+              << "  index 2 => second ALT, etc.\n\n"
+              << "Example:\n"
+              << "  VCFX_ancestry_inferrer --frequency pop_frequencies.txt < input.vcf > ancestry_results.txt\n";
 }
 
 // ----------------------------------------------------
 // loadPopulationFrequencies
 //   freq file lines: CHROM, POS, REF, ALT, POP, FREQUENCY
 // ----------------------------------------------------
-bool VCFXAncestryInferrer::loadPopulationFrequencies(const std::string& freqFilePath) {
+bool VCFXAncestryInferrer::loadPopulationFrequencies(const std::string &freqFilePath) {
     std::ifstream freqFile(freqFilePath);
     if (!freqFile.is_open()) {
         std::cerr << "Error: Cannot open frequency file: " << freqFilePath << "\n";
@@ -170,11 +175,11 @@ bool VCFXAncestryInferrer::loadPopulationFrequencies(const std::string& freqFile
         // Build a key: "chr:pos:ref:alt:pop"
         std::string key = chrom + ":" + pos + ":" + ref + ":" + alt + ":" + pop;
         freqData[key] = freq;
-        
+
         // Also store in the more efficient structure
         std::string variantKey = chrom + ":" + pos + ":" + ref + ":" + alt;
         variantPopFreqs[variantKey][pop] = freq;
-        
+
         // Add to the set of known populations
         populations.insert(pop);
     }
@@ -195,7 +200,7 @@ bool VCFXAncestryInferrer::loadPopulationFrequencies(const std::string& freqFile
 //      population score = sum of freq for each ALT allele
 //   4) after all lines, pick population with highest score
 // ----------------------------------------------------
-bool VCFXAncestryInferrer::inferAncestry(std::istream& vcfInput, std::ostream& out) {
+bool VCFXAncestryInferrer::inferAncestry(std::istream &vcfInput, std::ostream &out) {
     std::string line;
     bool foundChromHeader = false;
     std::vector<std::string> headerFields;
@@ -231,18 +236,18 @@ bool VCFXAncestryInferrer::inferAncestry(std::istream& vcfInput, std::ostream& o
                         headerFields.push_back(tok);
                     }
                 }
-                
+
                 // Validate header has at least the required fields
                 if (headerFields.size() < 9) {
                     std::cerr << "Error: Invalid VCF header format. Expected at least 9 columns.\n";
                     return false;
                 }
-                
+
                 // sample columns start at index 9
                 for (size_t c = 9; c < headerFields.size(); ++c) {
                     sampleNames.push_back(headerFields[c]);
                     // Initialize scores for each known population to 0
-                    for (const auto& pop : populations) {
+                    for (const auto &pop : populations) {
                         sampleScores[headerFields[c]][pop] = 0.0;
                     }
                 }
@@ -272,14 +277,14 @@ bool VCFXAncestryInferrer::inferAncestry(std::istream& vcfInput, std::ostream& o
             std::cerr << "Warning: Line " << lineNum << " has fewer than 10 columns, skipping.\n";
             continue;
         }
-        
+
         // Indices: 0=CHROM, 1=POS, 2=ID, 3=REF, 4=ALT, 5=QUAL, 6=FILTER, 7=INFO, 8=FORMAT, 9+ = samples
         const std::string &chrom = fields[0];
-        const std::string &pos   = fields[1];
+        const std::string &pos = fields[1];
         // skip ID
-        const std::string &ref   = fields[3];
-        const std::string &altStr= fields[4];
-        const std::string &format= fields[8];
+        const std::string &ref = fields[3];
+        const std::string &altStr = fields[4];
+        const std::string &format = fields[8];
 
         // Split ALT by comma for multi-allelic
         std::vector<std::string> altAlleles;
@@ -290,7 +295,7 @@ bool VCFXAncestryInferrer::inferAncestry(std::istream& vcfInput, std::ostream& o
                 altAlleles.push_back(altTok);
             }
         }
-        
+
         // Validate ALT field
         if (altAlleles.empty()) {
             std::cerr << "Warning: Line " << lineNum << " has empty ALT field, skipping.\n";
@@ -325,7 +330,7 @@ bool VCFXAncestryInferrer::inferAncestry(std::istream& vcfInput, std::ostream& o
             // sample data is fields[9 + s]
             size_t sampleCol = 9 + s;
             if (sampleCol >= fields.size()) {
-                continue; 
+                continue;
             }
             const std::string &sampleData = fields[sampleCol];
 
@@ -358,13 +363,13 @@ bool VCFXAncestryInferrer::inferAncestry(std::istream& vcfInput, std::ostream& o
             if (alleleNums.empty()) {
                 continue;
             }
-            
+
             // For each allele: 0 => REF, 1 => altAlleles[0], 2 => altAlleles[1], etc.
             for (auto &aStr : alleleNums) {
                 if (aStr.empty() || aStr == ".") {
                     continue; // missing
                 }
-                
+
                 // Validate allele is numeric
                 bool numeric = true;
                 for (char c : aStr) {
@@ -376,42 +381,42 @@ bool VCFXAncestryInferrer::inferAncestry(std::istream& vcfInput, std::ostream& o
                 if (!numeric) {
                     continue;
                 }
-                
+
                 int aVal = std::stoi(aStr);
                 if (aVal == 0) {
-                    // REF allele, skip 
+                    // REF allele, skip
                     continue;
                 }
-                
+
                 if (aVal > 0 && (size_t)aVal <= altAlleles.size()) {
                     // This is an ALT allele
                     std::string actualAlt = altAlleles[aVal - 1];
-                    
+
                     // Build the variant key for lookup
                     std::string variantKey = chrom + ":" + pos + ":" + ref + ":" + actualAlt;
-                    
+
                     // Use the more efficient lookup structure
                     auto variantIt = variantPopFreqs.find(variantKey);
                     if (variantIt != variantPopFreqs.end()) {
-                        const auto& popFreqs = variantIt->second;
-                        
+                        const auto &popFreqs = variantIt->second;
+
                         // Find the population with the highest frequency
                         double bestFreq = -1.0;
                         std::string bestPop;
-                        
-                        for (const auto& popFreq : popFreqs) {
+
+                        for (const auto &popFreq : popFreqs) {
                             if (popFreq.second > bestFreq) {
                                 bestFreq = popFreq.second;
                                 bestPop = popFreq.first;
                             }
                         }
-                        
+
                         if (!bestPop.empty() && bestFreq >= 0.0) {
                             // Add the bestFreq to the sample's population score
                             sampleScores[sampleNames[s]][bestPop] += bestFreq;
                         }
                     }
-                } 
+                }
                 // Skip if aVal > altAlleles.size()
             }
         }
@@ -433,22 +438,20 @@ bool VCFXAncestryInferrer::inferAncestry(std::istream& vcfInput, std::ostream& o
             out << sName << "\tUnknown\n";
             continue;
         }
-        
+
         const auto &popMap = it->second;
         std::string bestPop = "Unknown";
         double bestScore = -1.0;
-        
+
         for (auto &ps : popMap) {
             if (ps.second > bestScore) {
                 bestScore = ps.second;
                 bestPop = ps.first;
             }
         }
-        
+
         out << sName << "\t" << bestPop << "\n";
     }
-    
+
     return true;
 }
-
-

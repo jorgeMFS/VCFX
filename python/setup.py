@@ -1,24 +1,31 @@
+# mypy: ignore-errors
 import pathlib
-import re
 import subprocess
-from setuptools import setup, Extension
+import os
+from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext
 
-def read_version():
-    """Extract the project version from the top-level CMakeLists.txt."""
-    root = pathlib.Path(__file__).resolve().parent.parent / "CMakeLists.txt"
-    text = root.read_text()
-    major = re.search(r"set\(VCFX_VERSION_MAJOR\s+([0-9]+)\)", text)
-    minor = re.search(r"set\(VCFX_VERSION_MINOR\s+([0-9]+)\)", text)
-    patch = re.search(r"set\(VCFX_VERSION_PATCH\s+([0-9]+)\)", text)
-    if major and minor and patch:
-        return f"{major.group(1)}.{minor.group(1)}.{patch.group(1)}"
-    m = re.search(r"project\(VCFX.*VERSION\s+([0-9]+\.[0-9]+\.[0-9]+)\b", text)
-    return m.group(1) if m else "0.0.0"
+
+def get_version():
+    """Get version from VERSION file or environment variable."""
+    # Try environment variable first
+    env_version = os.environ.get("VCFX_VERSION")
+    if env_version:
+        return env_version
+
+    # Try VERSION file
+    version_file = pathlib.Path(__file__).parent / "VERSION"
+    if version_file.exists():
+        return version_file.read_text().strip()
+
+    # Fallback
+    return "0.0.0"
+
 
 class CMakeExtension(Extension):
     def __init__(self, name):
         super().__init__(name, sources=[])
+
 
 class CMakeBuild(build_ext):
     def build_extension(self, ext):
@@ -30,15 +37,32 @@ class CMakeBuild(build_ext):
         ]
         build_temp = pathlib.Path(self.build_temp)
         build_temp.mkdir(parents=True, exist_ok=True)
+
+        # Find the source directory - look for CMakeLists.txt
         source_dir = pathlib.Path(__file__).resolve().parent.parent
-        subprocess.check_call(['cmake', str(source_dir)] + cmake_args, cwd=build_temp)
-        subprocess.check_call(['cmake', '--build', '.', '--target', '_vcfx'], cwd=build_temp)
+
+        # If we're in a temporary build directory, we need to find the original source
+        if not (source_dir / "CMakeLists.txt").exists():
+            # This might happen during wheel building from sdist
+            # In this case, we should skip building the C++ extension
+            print("Warning: CMakeLists.txt not found, building without C++ extension")
+            return
+
+        subprocess.check_call(
+            ['cmake', str(source_dir)] + cmake_args,
+            cwd=build_temp,
+        )
+        subprocess.check_call(
+            ['cmake', '--build', '.', '--target', '_vcfx'],
+            cwd=build_temp,
+        )
+
 
 setup(
-    name='vcfx',
-    version=read_version(),
-    packages=['vcfx'],
+    version=get_version(),
+    packages=['vcfx', 'vcfx.tools'],
     package_dir={'vcfx': '.'},
+    package_data={'vcfx': ['py.typed']},
     ext_modules=[CMakeExtension('vcfx._vcfx')],
     cmdclass={'build_ext': CMakeBuild},
     zip_safe=False,

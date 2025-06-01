@@ -1,12 +1,12 @@
 #include "vcfx_core.h"
 // VCFX_allele_balance_calc.cpp
 
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <vector>
-#include <unordered_map>
 #include <cstdlib>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 // ---------------------------------------------------------------
 // Header / Declarations
@@ -17,14 +17,14 @@ struct AlleleBalanceArguments {
 
 // Forward declarations
 void printHelp();
-bool parseArguments(int argc, char* argv[], AlleleBalanceArguments& args);
-bool calculateAlleleBalance(std::istream& in, std::ostream& out, const AlleleBalanceArguments& args);
-double computeAlleleBalance(const std::string& genotype);
+bool parseArguments(int argc, char *argv[], AlleleBalanceArguments &args);
+bool calculateAlleleBalance(std::istream &in, std::ostream &out, const AlleleBalanceArguments &args);
+double computeAlleleBalance(const std::string &genotype);
 
 // ---------------------------------------------------------------
 // Utility Functions
 // ---------------------------------------------------------------
-static std::vector<std::string> splitString(const std::string& str, char delimiter) {
+static std::vector<std::string> splitString(const std::string &str, char delimiter) {
     std::vector<std::string> tokens;
     std::stringstream ss(str);
     std::string temp;
@@ -36,26 +36,25 @@ static std::vector<std::string> splitString(const std::string& str, char delimit
 
 // Print help message
 void printHelp() {
-    std::cout 
-        << "VCFX_allele_balance_calc\n"
-        << "Usage: VCFX_allele_balance_calc [OPTIONS] < input.vcf > allele_balance.tsv\n\n"
-        << "Options:\n"
-        << "  --samples, -s \"Sample1 Sample2\"   Specify the sample names to calculate allele balance for.\n"
-        << "  --help, -h                        Display this help message and exit.\n\n"
-        << "Description:\n"
-        << "  Calculates the allele balance (ratio of reference to alternate alleles) for each sample.\n"
-        << "  Allele balance is computed as (#RefAlleles / #AltAlleles), using the genotype field.\n"
-        << "  This simple logic treats all non-zero alleles as 'alt' and 0 as 'ref',\n"
-        << "  so multi-allelic sites are lumped into an overall alt count.\n\n"
-        << "Examples:\n"
-        << "  1) Calculate allele balance for SampleA and SampleB:\n"
-        << "     ./VCFX_allele_balance_calc --samples \"SampleA SampleB\" < input.vcf > allele_balance.tsv\n\n"
-        << "  2) Calculate allele balance for all samples:\n"
-        << "     ./VCFX_allele_balance_calc < input.vcf > allele_balance_all.tsv\n\n";
+    std::cout << "VCFX_allele_balance_calc\n"
+              << "Usage: VCFX_allele_balance_calc [OPTIONS] < input.vcf > allele_balance.tsv\n\n"
+              << "Options:\n"
+              << "  --samples, -s \"Sample1 Sample2\"   Specify the sample names to calculate allele balance for.\n"
+              << "  --help, -h                        Display this help message and exit.\n\n"
+              << "Description:\n"
+              << "  Calculates the allele balance (ratio of reference to alternate alleles) for each sample.\n"
+              << "  Allele balance is computed as (#RefAlleles / #AltAlleles), using the genotype field.\n"
+              << "  This simple logic treats all non-zero alleles as 'alt' and 0 as 'ref',\n"
+              << "  so multi-allelic sites are lumped into an overall alt count.\n\n"
+              << "Examples:\n"
+              << "  1) Calculate allele balance for SampleA and SampleB:\n"
+              << "     ./VCFX_allele_balance_calc --samples \"SampleA SampleB\" < input.vcf > allele_balance.tsv\n\n"
+              << "  2) Calculate allele balance for all samples:\n"
+              << "     ./VCFX_allele_balance_calc < input.vcf > allele_balance_all.tsv\n\n";
 }
 
 // Parse command-line arguments
-bool parseArguments(int argc, char* argv[], AlleleBalanceArguments& args) {
+bool parseArguments(int argc, char *argv[], AlleleBalanceArguments &args) {
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         if ((arg == "--samples" || arg == "-s") && i + 1 < argc) {
@@ -69,12 +68,10 @@ bool parseArguments(int argc, char* argv[], AlleleBalanceArguments& args) {
                 // right trim
                 sample.erase(sample.find_last_not_of(" \t\n\r\f\v") + 1);
             }
-        }
-        else if (arg == "--help" || arg == "-h") {
+        } else if (arg == "--help" || arg == "-h") {
             printHelp();
             std::exit(0);
-        }
-        else {
+        } else {
             std::cerr << "Warning: Unrecognized argument '" << arg << "'.\n";
         }
     }
@@ -85,7 +82,7 @@ bool parseArguments(int argc, char* argv[], AlleleBalanceArguments& args) {
 // If genotype is "0/0", result= ref_count / alt_count => 2 / 0 => 0.0
 // If genotype is "0/1", result= 1 / 1 => 1.0
 // If genotype is "1/2", result= 0 / 2 => 0.0, etc.
-double computeAlleleBalance(const std::string& genotype) {
+double computeAlleleBalance(const std::string &genotype) {
     if (genotype.empty() || genotype == "." || genotype == "./." || genotype == ".|.") {
         return -1.0; // missing genotype
     }
@@ -93,13 +90,14 @@ double computeAlleleBalance(const std::string& genotype) {
     // Split by '/' or '|'. For a simple approach, we can replace '|' with '/' and split on '/':
     std::string g = genotype;
     for (auto &ch : g) {
-        if (ch == '|') ch = '/';
+        if (ch == '|')
+            ch = '/';
     }
     auto alleles = splitString(g, '/');
 
     int ref_count = 0;
     int alt_count = 0;
-    for (const auto& allele : alleles) {
+    for (const auto &allele : alleles) {
         if (allele == "0") {
             ++ref_count;
         } else if (allele != "." && !allele.empty()) {
@@ -108,15 +106,17 @@ double computeAlleleBalance(const std::string& genotype) {
     }
 
     // If alt_count is 0 but we have some reference calls, ratio is 0.0
-    if (alt_count == 0 && ref_count > 0) return 0.0;
+    if (alt_count == 0 && ref_count > 0)
+        return 0.0;
     // If no meaningful data, return -1
-    if (ref_count + alt_count == 0) return -1.0;
+    if (ref_count + alt_count == 0)
+        return -1.0;
 
     return static_cast<double>(ref_count) / alt_count;
 }
 
 // Main function to read VCF, parse genotypes, and calculate allele balance
-bool calculateAlleleBalance(std::istream& in, std::ostream& out, const AlleleBalanceArguments& args) {
+bool calculateAlleleBalance(std::istream &in, std::ostream &out, const AlleleBalanceArguments &args) {
     std::string line;
     bool headerFound = false;
     std::vector<std::string> headerFields;
@@ -144,7 +144,7 @@ bool calculateAlleleBalance(std::istream& in, std::ostream& out, const AlleleBal
                 }
                 // If user specified samples, pick them out; otherwise take all
                 if (!args.samples.empty()) {
-                    for (const auto& sample : args.samples) {
+                    for (const auto &sample : args.samples) {
                         auto it = sampleMap.find(sample);
                         if (it == sampleMap.end()) {
                             std::cerr << "Error: Sample '" << sample << "' not found in VCF header.\n";
@@ -178,10 +178,10 @@ bool calculateAlleleBalance(std::istream& in, std::ostream& out, const AlleleBal
 
         // Basic VCF columns
         const std::string &chrom = fields[0];
-        const std::string &pos   = fields[1];
-        const std::string &id    = fields[2];
-        const std::string &ref   = fields[3];
-        const std::string &alt   = fields[4];
+        const std::string &pos = fields[1];
+        const std::string &id = fields[2];
+        const std::string &ref = fields[3];
+        const std::string &alt = fields[4];
         // The genotype info starts at index 9
 
         // Calculate AB for each requested sample
@@ -192,9 +192,9 @@ bool calculateAlleleBalance(std::istream& in, std::ostream& out, const AlleleBal
             }
             const std::string &genotypeStr = fields[idx];
             // genotype is typically the first colon-delimited field
-            // e.g. genotypeStr = "0/1:..." 
+            // e.g. genotypeStr = "0/1:..."
             // but we only need the actual genotype for computing ratio
-            // split on ':' 
+            // split on ':'
             auto subFields = splitString(genotypeStr, ':');
             if (subFields.empty()) {
                 continue;
@@ -205,16 +205,10 @@ bool calculateAlleleBalance(std::istream& in, std::ostream& out, const AlleleBal
             std::string abStr = (ab < 0.0) ? "NA" : std::to_string(ab);
 
             // The sample name is from the VCF header
-            std::string sampleName = (idx < static_cast<int>(headerFields.size()))
-                                     ? headerFields[idx]
-                                     : ("Sample_" + std::to_string(idx));
+            std::string sampleName =
+                (idx < static_cast<int>(headerFields.size())) ? headerFields[idx] : ("Sample_" + std::to_string(idx));
 
-            out << chrom << "\t"
-                << pos   << "\t"
-                << id    << "\t"
-                << ref   << "\t"
-                << alt   << "\t"
-                << sampleName << "\t"
+            out << chrom << "\t" << pos << "\t" << id << "\t" << ref << "\t" << alt << "\t" << sampleName << "\t"
                 << abStr << "\n";
         }
     }
@@ -224,8 +218,11 @@ bool calculateAlleleBalance(std::istream& in, std::ostream& out, const AlleleBal
 // ---------------------------------------------------------------
 // main()
 // ---------------------------------------------------------------
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_allele_balance_calc")) return 0;
+static void show_help() { printHelp(); }
+
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_allele_balance_calc", show_help))
+        return 0;
     AlleleBalanceArguments args;
     parseArguments(argc, argv, args);
 

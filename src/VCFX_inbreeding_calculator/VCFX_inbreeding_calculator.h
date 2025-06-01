@@ -21,23 +21,23 @@ enum class FrequencyMode {
 
 // VCFXInbreedingCalculator: calculates individual inbreeding coefficients
 class VCFXInbreedingCalculator {
-public:
-    int run(int argc, char* argv[]);
+  public:
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     // Command-line settings
-    FrequencyMode freqMode_          = FrequencyMode::EXCLUDE_SAMPLE;
-    bool skipBoundary_               = false;
-    bool countBoundaryAsUsed_        = false;
+    FrequencyMode freqMode_ = FrequencyMode::EXCLUDE_SAMPLE;
+    bool skipBoundary_ = false;
+    bool countBoundaryAsUsed_ = false;
 
     // Print help
     void displayHelp();
 
     // Main function: read VCF => store biallelic variants => compute F
-    void calculateInbreeding(std::istream& in, std::ostream& out);
+    void calculateInbreeding(std::istream &in, std::ostream &out);
 
     // Utility to parse a single genotype string => 0,1,2, or -1
-    int parseGenotype(const std::string& s);
+    int parseGenotype(const std::string &s);
 
     // Helper to decide if ALT is biallelic
     bool isBiallelic(const std::string &alt);

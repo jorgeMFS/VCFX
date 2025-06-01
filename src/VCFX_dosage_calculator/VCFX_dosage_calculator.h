@@ -7,19 +7,19 @@
 
 // VCFX_dosage_calculator: Header file for Genotype Dosage Calculation tool
 class VCFXDosageCalculator {
-public:
+  public:
     // Entry point for the tool
-    int run(int argc, char* argv[]);
+    int run(int argc, char *argv[]);
 
-private:
+  private:
     // Displays the help message
     void displayHelp();
 
     // Calculates genotype dosage from VCF input and writes output
-    void calculateDosage(std::istream& in, std::ostream& out);
+    void calculateDosage(std::istream &in, std::ostream &out);
 
     // Helper function to split a string by a delimiter
-    std::vector<std::string> split(const std::string& str, char delimiter);
+    std::vector<std::string> split(const std::string &str, char delimiter);
 };
 
 #endif // VCFX_DOSAGE_CALCULATOR_H

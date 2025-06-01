@@ -1,0 +1,4 @@
+include VERSION
+include py.typed
+include README.md
+recursive-include tools *.py 

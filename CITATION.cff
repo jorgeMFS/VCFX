@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it."
+title: "VCFX: A Minimalist, Modular Toolkit for Streamlined Variant Analysis"
+version: "1.0.3"
+authors:
+  - family-names: Silva
+    given-names: Jorge Miguel
+  - family-names: Oliveira
+    given-names: José Luis
+date-released: "2025-01-01"
+preferred-citation:
+  type: conference-paper
+  title: "VCFX: A Minimalist, Modular Toolkit for Streamlined Variant Analysis"
+  authors:
+    - family-names: Silva
+      given-names: Jorge Miguel
+    - family-names: Oliveira
+      given-names: José Luis
+  conference:
+    name: "12th International Work-Conference on Bioinformatics and Biomedical Engineering (IWBBIO 2025)"
+  year: "2025"
+  note: "Accepted for presentation; to appear in the IWBBIO 2025 proceedings."
+

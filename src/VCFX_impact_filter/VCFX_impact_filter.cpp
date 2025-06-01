@@ -1,27 +1,22 @@
-#include "vcfx_core.h"
 #include "VCFX_impact_filter.h"
-#include <getopt.h>
-#include <sstream>
+#include "vcfx_core.h"
 #include <algorithm>
 #include <cctype>
-#include <regex>
+#include <getopt.h>
 #include <iostream>
+#include <regex>
+#include <sstream>
 
 // Helper function: convert string to uppercase
 static std::string toUpper(const std::string &s) {
     std::string t(s);
-    for (auto &c: t) c = std::toupper((unsigned char)c);
+    for (auto &c : t)
+        c = std::toupper((unsigned char)c);
     return t;
 }
 
 // Simple classification of a (possibly extended) Impact value, e.g. "HIGH_SOMETHING"
-enum class ImpactLevel {
-    UNKNOWN,
-    MODIFIER,
-    LOW,
-    MODERATE,
-    HIGH
-};
+enum class ImpactLevel { UNKNOWN, MODIFIER, LOW, MODERATE, HIGH };
 
 static ImpactLevel classifyImpact(const std::string &rawImpact) {
     std::string u = toUpper(rawImpact);
@@ -42,41 +37,43 @@ static ImpactLevel classifyImpact(const std::string &rawImpact) {
 // Our hierarchy is: HIGH > MODERATE > LOW > MODIFIER > UNKNOWN
 static bool meetsThreshold(ImpactLevel variantLevel, ImpactLevel targetLevel) {
     // Convert to int or we can do a switch-based approach
-    auto rank = [](ImpactLevel lv)->int {
+    auto rank = [](ImpactLevel lv) -> int {
         switch (lv) {
-            case ImpactLevel::HIGH:     return 4;
-            case ImpactLevel::MODERATE: return 3;
-            case ImpactLevel::LOW:      return 2;
-            case ImpactLevel::MODIFIER: return 1;
-            default:                    return 0; // UNKNOWN
+        case ImpactLevel::HIGH:
+            return 4;
+        case ImpactLevel::MODERATE:
+            return 3;
+        case ImpactLevel::LOW:
+            return 2;
+        case ImpactLevel::MODIFIER:
+            return 1;
+        default:
+            return 0; // UNKNOWN
         }
     };
     return rank(variantLevel) >= rank(targetLevel);
 }
 
 // Implementation of VCFXImpactFilter
-int VCFXImpactFilter::run(int argc, char* argv[]) {
+int VCFXImpactFilter::run(int argc, char *argv[]) {
     // Parse command-line arguments
     int opt;
     bool showHelp = false;
     std::string targetImpact;
 
     static struct option long_options[] = {
-        {"help",          no_argument,       0, 'h'},
-        {"filter-impact", required_argument, 0, 'i'},
-        {0,               0,                 0,  0}
-    };
+        {"help", no_argument, 0, 'h'}, {"filter-impact", required_argument, 0, 'i'}, {0, 0, 0, 0}};
 
     while ((opt = getopt_long(argc, argv, "hi:", long_options, nullptr)) != -1) {
         switch (opt) {
-            case 'h':
-                showHelp = true;
-                break;
-            case 'i':
-                targetImpact = optarg;
-                break;
-            default:
-                showHelp = true;
+        case 'h':
+            showHelp = true;
+            break;
+        case 'i':
+            targetImpact = optarg;
+            break;
+        default:
+            showHelp = true;
         }
     }
 
@@ -106,10 +103,7 @@ void VCFXImpactFilter::displayHelp() {
               << "  VCFX_impact_filter --filter-impact HIGH < input.vcf > filtered.vcf\n";
 }
 
-void VCFXImpactFilter::filterByImpact(std::istream& in,
-                                      std::ostream& out,
-                                      const std::string& targetImpact)
-{
+void VCFXImpactFilter::filterByImpact(std::istream &in, std::ostream &out, const std::string &targetImpact) {
     // interpret targetImpact
     ImpactLevel targetLevel = classifyImpact(targetImpact);
     if (targetLevel == ImpactLevel::UNKNOWN) {
@@ -131,12 +125,13 @@ void VCFXImpactFilter::filterByImpact(std::istream& in,
         // If header
         if (line[0] == '#') {
             // If we see #CHROM and haven't inserted our meta line, do so
-            if (!wroteInfoMeta && line.rfind("#CHROM",0)==0) {
-                out << "##INFO=<ID=EXTRACTED_IMPACT,Number=1,Type=String,Description=\"Extracted from IMPACT=... in info.\">\n";
+            if (!wroteInfoMeta && line.rfind("#CHROM", 0) == 0) {
+                out << "##INFO=<ID=EXTRACTED_IMPACT,Number=1,Type=String,Description=\"Extracted from IMPACT=... in "
+                       "info.\">\n";
                 wroteInfoMeta = true;
             }
             out << line << "\n";
-            if (line.rfind("#CHROM",0)==0) {
+            if (line.rfind("#CHROM", 0) == 0) {
                 wroteHeader = true;
             }
             continue;
@@ -157,7 +152,7 @@ void VCFXImpactFilter::filterByImpact(std::istream& in,
                 fields.push_back(f);
             }
         }
-        if (fields.size()<8) {
+        if (fields.size() < 8) {
             // invalid line
             continue;
         }
@@ -183,7 +178,7 @@ void VCFXImpactFilter::filterByImpact(std::istream& in,
         if (meetsThreshold(varLevel, targetLevel)) {
             // We append ;EXTRACTED_IMPACT=extracted to the info field
             // If info=="." => replace it with "EXTRACTED_IMPACT=extracted"
-            if (info=="."||info.empty()) {
+            if (info == "." || info.empty()) {
                 info = "EXTRACTED_IMPACT=" + extracted;
             } else {
                 info += ";EXTRACTED_IMPACT=" + extracted;
@@ -191,8 +186,9 @@ void VCFXImpactFilter::filterByImpact(std::istream& in,
             fields[7] = info;
             // rejoin line
             std::ostringstream joined;
-            for (size_t i=0; i<fields.size(); i++) {
-                if (i>0) joined << "\t";
+            for (size_t i = 0; i < fields.size(); i++) {
+                if (i > 0)
+                    joined << "\t";
                 joined << fields[i];
             }
             out << joined.str() << "\n";
@@ -200,8 +196,17 @@ void VCFXImpactFilter::filterByImpact(std::istream& in,
     }
 }
 
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_impact_filter")) return 0;
+static void show_help() {
+    VCFXImpactFilter obj;
+    char arg0[] = "VCFX_impact_filter";
+    char arg1[] = "--help";
+    char *argv2[] = {arg0, arg1, nullptr};
+    obj.run(2, argv2);
+}
+
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_impact_filter", show_help))
+        return 0;
     VCFXImpactFilter filt;
     return filt.run(argc, argv);
 }
