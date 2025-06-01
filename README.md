@@ -45,6 +45,17 @@ mkdocs serve
 - **Annotation and Reporting**: Add or extract annotations from VCF files
 - **Data Processing**: Process variants and samples
 
+## Repository Structure
+
+- `src/` - C++ source code for all command-line tools.
+- `docs/` - MkDocs documentation sources.
+- `python/` - Optional Python bindings and helper modules.
+- `tests/` - Shell and Python tests with sample data.
+- `examples/` - Small usage examples and workflow demos.
+- `scripts/` - Utility scripts for development and CI.
+- `include/` - Public C++ headers.
+- `assets/` - Project logos and other media assets.
+
 ## Quick Start
 
 ### Installation
