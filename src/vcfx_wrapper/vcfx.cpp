@@ -11,6 +11,7 @@
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
 #endif
+#include <filesystem>
 #include <fstream>
 #include <set>
 
@@ -101,12 +102,25 @@ static std::vector<std::string> get_doc_dirs() {
 
 static int print_tool_doc(const std::string &tool) {
     std::string fname = "VCFX_" + tool + ".md";
+    namespace fs = std::filesystem;
     for (const auto &dir : get_doc_dirs()) {
-        std::string path = dir + "/" + fname;
-        std::ifstream in(path);
+        fs::path base(dir);
+        fs::path direct = base / fname;
+        std::ifstream in(direct);
         if (in) {
             std::cout << in.rdbuf();
             return 0;
+        }
+        if (fs::exists(base) && fs::is_directory(base)) {
+            for (const auto &entry : fs::recursive_directory_iterator(base)) {
+                if (entry.path().filename() == fname && entry.is_regular_file()) {
+                    std::ifstream rin(entry.path());
+                    if (rin) {
+                        std::cout << rin.rdbuf();
+                        return 0;
+                    }
+                }
+            }
         }
     }
     std::cerr << "Documentation for '" << tool << "' not found." << std::endl;
