@@ -159,8 +159,8 @@ conc = vcfx.concordance_checker(
 )
 print(conc[0].Concordance)  # 'Concordant'
 ```
-```python
 
+```python
 # Query variants with heterozygous genotypes
 filtered = vcfx.genotype_query(
     "tests/data/genotype_query/sample.vcf",
@@ -258,3 +258,109 @@ print(normalized.startswith("##"))
 report = vcfx.validator("tests/data/variant_counter_normal.vcf")
 print("VCF" in report)
 ```
+
+## Installation from PyPI
+
+The easiest way to install VCFX Python bindings is via PyPI:
+
+```bash
+pip install vcfx
+```
+
+This installs:
+- Python bindings to the C++ helper functions
+- Wrapper functions for all VCFX tools
+- Type definitions and dataclasses for structured output
+
+Note: The command-line tools themselves need to be installed separately (via Bioconda, Docker, or building from source) for the tool wrappers to work.
+
+## Performance Considerations
+
+The Python wrappers execute command-line tools via subprocess, which means:
+
+1. **Overhead**: There's a small overhead for process creation
+2. **Streaming**: Large files are processed in a streaming fashion by the underlying tools
+3. **Memory**: Memory usage is determined by the C++ tools, not Python
+
+For maximum performance with large datasets:
+```python
+# Process multiple files in parallel
+from concurrent.futures import ProcessPoolExecutor
+import vcfx
+
+files = ["sample1.vcf", "sample2.vcf", "sample3.vcf"]
+
+with ProcessPoolExecutor() as executor:
+    results = list(executor.map(vcfx.variant_counter, files))
+```
+
+## Best Practices
+
+### 1. Check tool availability
+```python
+import vcfx
+
+# List available tools
+tools = vcfx.available_tools()
+if "variant_counter" not in tools:
+    print("VCFX tools not found in PATH!")
+```
+
+### 2. Handle errors gracefully
+```python
+import subprocess
+
+try:
+    result = vcfx.hwe_tester("input.vcf")
+except subprocess.CalledProcessError as e:
+    print(f"Error: {e.stderr}")
+except FileNotFoundError:
+    print("VCFX tools not installed")
+```
+
+### 3. Use structured outputs
+```python
+# Prefer structured outputs over parsing text
+frequencies = vcfx.allele_freq_calc("input.vcf")
+# Good: Access typed fields
+mean_af = sum(f.Allele_Frequency for f in frequencies) / len(frequencies)
+
+# Avoid: Manual text parsing
+output = vcfx.run_tool("allele_freq_calc", "input.vcf")
+# Don't parse stdout manually when wrappers are available
+```
+
+### 4. Chain operations efficiently
+```python
+# Use pipes at the shell level for efficiency
+import subprocess
+
+# Efficient: Single pipeline
+cmd = "VCFX_variant_classifier --append-info input.vcf | VCFX_phred_filter --min-qual 30"
+result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+
+# Less efficient: Multiple Python calls
+classified = vcfx.variant_classifier("input.vcf", append_info=True)
+# Writing intermediate files is slower
+```
+
+## Troubleshooting
+
+### Tools not found
+If you get "command not found" errors:
+1. Ensure VCFX tools are installed (via Bioconda or built from source)
+2. Add tools to PATH: `export PATH=$PATH:/path/to/vcfx/build/src`
+3. Or use the vcfx wrapper: `source /path/to/VCFX/add_vcfx_tools_to_path.sh`
+
+### Import errors
+If `import vcfx` fails:
+1. Ensure you've installed the package: `pip install vcfx`
+2. Check Python version: requires Python 3.10+
+3. For development: `pip install -e /path/to/VCFX/python`
+
+### Performance issues
+For large files:
+1. Ensure you have sufficient memory
+2. Use streaming tools that process line-by-line
+3. Consider splitting large files with `VCFX_file_splitter`
+4. Process chunks in parallel when possible
