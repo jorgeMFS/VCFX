@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-"""Python bindings for the VCFX toolkit."""
-
 import os
+
+"""Python bindings for the VCFX toolkit."""
 
 try:
     from ._vcfx import *  # type: ignore  # noqa: F401,F403
@@ -36,7 +36,7 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for pure Python envs
         env_version = os.environ.get("VCFX_VERSION")
         if env_version:
             return env_version
-            
+
         try:
             return version(__package__ or "vcfx")
         except PackageNotFoundError:
