@@ -20,17 +20,17 @@ class CMakeBuild(build_ext):
         ]
         build_temp = pathlib.Path(self.build_temp)
         build_temp.mkdir(parents=True, exist_ok=True)
-        
+
         # Find the source directory - look for CMakeLists.txt
         source_dir = pathlib.Path(__file__).resolve().parent.parent
-        
+
         # If we're in a temporary build directory, we need to find the original source
         if not (source_dir / "CMakeLists.txt").exists():
             # This might happen during wheel building from sdist
             # In this case, we should skip building the C++ extension
             print("Warning: CMakeLists.txt not found, building without C++ extension")
             return
-        
+
         subprocess.check_call(
             ['cmake', str(source_dir)] + cmake_args,
             cwd=build_temp,

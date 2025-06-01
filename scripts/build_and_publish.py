@@ -19,7 +19,9 @@ def run_command(cmd, cwd=None, check=True):
     """Run a command and handle errors."""
     print(f"Running: {' '.join(cmd)}")
     try:
-        result = subprocess.run(cmd, cwd=cwd, check=check, capture_output=True, text=True)
+        result = subprocess.run(
+            cmd, cwd=cwd, check=check, capture_output=True, text=True
+        )
         if result.stdout:
             print(result.stdout)
         return result
@@ -36,7 +38,7 @@ def clean_build_dirs():
     """Clean previous build artifacts."""
     python_dir = Path(__file__).parent.parent / "python"
     dirs_to_clean = ["build", "dist", "*.egg-info"]
-    
+
     for pattern in dirs_to_clean:
         for path in python_dir.glob(pattern):
             if path.is_dir():
@@ -51,16 +53,16 @@ def clean_build_dirs():
 def build_package():
     """Build the Python package."""
     python_dir = Path(__file__).parent.parent / "python"
-    
+
     print("Building package...")
     run_command([sys.executable, "-m", "build"], cwd=python_dir)
-    
+
     # Check if dist directory was created
     dist_dir = python_dir / "dist"
     if not dist_dir.exists():
         print("Error: dist directory not created")
         sys.exit(1)
-    
+
     files = list(dist_dir.glob("*"))
     print(f"Built files: {[f.name for f in files]}")
     return dist_dir
@@ -76,7 +78,7 @@ def publish_to_testpypi(dist_dir):
     """Publish to TestPyPI."""
     print("Publishing to TestPyPI...")
     run_command([
-        sys.executable, "-m", "twine", "upload", 
+        sys.executable, "-m", "twine", "upload",
         "--repository", "testpypi",
         str(dist_dir / "*")
     ])
@@ -92,33 +94,49 @@ def publish_to_pypi(dist_dir):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Build and publish VCFX Python package")
-    parser.add_argument("--clean", action="store_true", help="Clean build directories first")
-    parser.add_argument("--test", action="store_true", help="Publish to TestPyPI instead of PyPI")
-    parser.add_argument("--skip-build", action="store_true", help="Skip building, use existing dist files")
-    parser.add_argument("--dry-run", action="store_true", help="Build and check but don't publish")
-    
+    parser = argparse.ArgumentParser(
+        description="Build and publish VCFX Python package"
+    )
+    parser.add_argument(
+        "--clean", action="store_true", help="Clean build directories first"
+    )
+    parser.add_argument(
+        "--test", action="store_true",
+        help="Publish to TestPyPI instead of PyPI"
+    )
+    parser.add_argument(
+        "--skip-build", action="store_true",
+        help="Skip building, use existing dist files"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true",
+        help="Build and check but don't publish"
+    )
+
     args = parser.parse_args()
-    
+
     python_dir = Path(__file__).parent.parent / "python"
-    
+
     if args.clean:
         clean_build_dirs()
-    
+
     if not args.skip_build:
         dist_dir = build_package()
     else:
         dist_dir = python_dir / "dist"
         if not dist_dir.exists():
-            print("Error: dist directory doesn't exist. Run without --skip-build first.")
+            print(
+                "Error: dist directory doesn't exist. "
+                "Run without --skip-build first."
+            )
             sys.exit(1)
-    
+
     check_package(dist_dir)
-    
+
     if args.dry_run:
         print("Dry run complete. Package built and checked successfully.")
         return
-    
+
     if args.test:
         publish_to_testpypi(dist_dir)
     else:
@@ -131,4 +149,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()
