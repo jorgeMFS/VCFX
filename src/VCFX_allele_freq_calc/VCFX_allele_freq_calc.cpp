@@ -1,34 +1,33 @@
 #include "vcfx_core.h"
+#include <cctype>
+#include <cstdlib>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <sstream>
-#include <iomanip>
-#include <cstdlib>
-#include <cctype>
 
 // ---------------------------------------------------------
 // Print help message
 // ---------------------------------------------------------
 static void printHelp() {
-    std::cout 
-        << "VCFX_allele_freq_calc\n"
-        << "Usage: VCFX_allele_freq_calc [OPTIONS]\n\n"
-        << "Options:\n"
-        << "  --help, -h   Display this help message and exit.\n\n"
-        << "Description:\n"
-        << "  Reads a VCF from stdin and outputs a TSV file:\n"
-        << "    CHROM  POS  ID  REF  ALT  Allele_Frequency\n\n"
-        << "  Allele frequency is computed as (#ALT alleles / total #alleles),\n"
-        << "  counting any non-zero numeric allele (1,2,3,...) as ALT.\n\n"
-        << "Example:\n"
-        << "  ./VCFX_allele_freq_calc < input.vcf > allele_frequencies.tsv\n";
+    std::cout << "VCFX_allele_freq_calc\n"
+              << "Usage: VCFX_allele_freq_calc [OPTIONS]\n\n"
+              << "Options:\n"
+              << "  --help, -h   Display this help message and exit.\n\n"
+              << "Description:\n"
+              << "  Reads a VCF from stdin and outputs a TSV file:\n"
+              << "    CHROM  POS  ID  REF  ALT  Allele_Frequency\n\n"
+              << "  Allele frequency is computed as (#ALT alleles / total #alleles),\n"
+              << "  counting any non-zero numeric allele (1,2,3,...) as ALT.\n\n"
+              << "Example:\n"
+              << "  ./VCFX_allele_freq_calc < input.vcf > allele_frequencies.tsv\n";
 }
 
 // ---------------------------------------------------------
 // Utility: split a string by a delimiter
 // ---------------------------------------------------------
-static std::vector<std::string> split(const std::string& s, char delimiter) {
+static std::vector<std::string> split(const std::string &s, char delimiter) {
     std::vector<std::string> tokens;
     std::stringstream ss(s);
     std::string token;
@@ -41,18 +40,19 @@ static std::vector<std::string> split(const std::string& s, char delimiter) {
 // ---------------------------------------------------------
 // parseGenotype: counts how many are alt vs total among numeric alleles
 // ---------------------------------------------------------
-static void parseGenotype(const std::string& genotype, int &alt_count, int &total_count) {
+static void parseGenotype(const std::string &genotype, int &alt_count, int &total_count) {
     // e.g. genotype might be "0/1" or "2|3", etc.
     // First, unify the separators by replacing '|' with '/'
     std::string gt = genotype;
     for (char &c : gt) {
-        if (c == '|') c = '/';
+        if (c == '|')
+            c = '/';
     }
 
     // Split on '/'
     auto alleles = split(gt, '/');
 
-    for (const auto & allele : alleles) {
+    for (const auto &allele : alleles) {
         if (allele.empty() || allele == ".") {
             // Skip missing
             continue;
@@ -84,7 +84,7 @@ static void parseGenotype(const std::string& genotype, int &alt_count, int &tota
 // ---------------------------------------------------------
 // Main calculation: read VCF from 'in', write results to 'out'
 // ---------------------------------------------------------
-static void calculateAlleleFrequency(std::istream& in, std::ostream& out) {
+static void calculateAlleleFrequency(std::istream &in, std::ostream &out) {
     std::string line;
 
     // We'll track how many samples are in the VCF, though we only need it
@@ -115,27 +115,25 @@ static void calculateAlleleFrequency(std::istream& in, std::ostream& out) {
 
         // We expect #CHROM line before actual data lines
         if (!foundChromHeader) {
-            std::cerr << "Warning: Data line encountered before #CHROM header. Skipping line:\n"
-                      << line << "\n";
+            std::cerr << "Warning: Data line encountered before #CHROM header. Skipping line:\n" << line << "\n";
             continue;
         }
 
         // Split the data line
         auto fields = split(line, '\t');
         if (fields.size() < 9) {
-            std::cerr << "Warning: Skipping invalid VCF line (fewer than 9 fields):\n"
-                      << line << "\n";
+            std::cerr << "Warning: Skipping invalid VCF line (fewer than 9 fields):\n" << line << "\n";
             continue;
         }
 
         // Standard VCF columns:
         //  0:CHROM, 1:POS, 2:ID, 3:REF, 4:ALT, 5:QUAL, 6:FILTER, 7:INFO, 8:FORMAT, 9+:samples
         const std::string &chrom = fields[0];
-        const std::string &pos   = fields[1];
-        const std::string &id    = fields[2];
-        const std::string &ref   = fields[3];
-        const std::string &alt   = fields[4];
-        const std::string &fmt   = fields[8];
+        const std::string &pos = fields[1];
+        const std::string &id = fields[2];
+        const std::string &ref = fields[3];
+        const std::string &alt = fields[4];
+        const std::string &fmt = fields[8];
 
         // Look for the "GT" field index in the FORMAT column
         auto formatFields = split(fmt, ':');
@@ -174,17 +172,19 @@ static void calculateAlleleFrequency(std::istream& in, std::ostream& out) {
         }
 
         // Print the row with a fixed decimal precision
-        out << chrom << "\t" << pos << "\t" << id << "\t"
-            << ref   << "\t" << alt << "\t"
-            << std::fixed << std::setprecision(4) << freq << "\n";
+        out << chrom << "\t" << pos << "\t" << id << "\t" << ref << "\t" << alt << "\t" << std::fixed
+            << std::setprecision(4) << freq << "\n";
     }
 }
 
 // ---------------------------------------------------------
 // main()
 // ---------------------------------------------------------
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_allele_freq_calc")) return 0;
+static void show_help() { printHelp(); }
+
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_allele_freq_calc", show_help))
+        return 0;
     // Parse arguments for help
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];

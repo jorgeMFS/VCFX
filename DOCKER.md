@@ -57,6 +57,19 @@ docker build -t vcfx:local .
 docker-compose build
 ```
 
+## Entrypoint Script and Passing Commands
+
+The image uses `/usr/local/bin/docker_entrypoint.sh` as its entrypoint. This script
+adds all VCFX tools to the `PATH` and then executes whatever command you pass to
+`docker run`.
+
+```bash
+docker run --rm ghcr.io/jorgemfs/vcfx:latest VCFX_variant_counter < input.vcf
+```
+
+You can substitute `VCFX_variant_counter` with any other tool or quote a more
+complex shell command.
+
 ## Running VCFX Tools
 
 There are several ways to run VCFX tools with Docker:

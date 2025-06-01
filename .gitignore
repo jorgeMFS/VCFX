@@ -60,3 +60,7 @@ tests/expected/genotype_query/single_sample_strict_01.vcf
 tests/tmp/
 tests/out/
 tmp/
+# Python tooling caches
+.mypy_cache/
+.ruff_cache/
+python/VERSION

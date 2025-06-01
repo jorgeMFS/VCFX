@@ -1,12 +1,12 @@
-#include "vcfx_core.h"
 #include "VCFX_phase_quality_filter.h"
+#include "vcfx_core.h"
+#include <cctype>
+#include <cstdlib>
 #include <getopt.h>
-#include <sstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <cstdlib>
-#include <cctype>
 
 static void split(const std::string &s, char delim, std::vector<std::string> &tokens) {
     tokens.clear();
@@ -17,28 +17,26 @@ static void split(const std::string &s, char delim, std::vector<std::string> &to
     }
 }
 
-int VCFXPhaseQualityFilter::run(int argc, char* argv[]) {
+int VCFXPhaseQualityFilter::run(int argc, char *argv[]) {
     bool showHelp = false;
     std::string condition;
 
     static struct option long_opts[] = {
-        {"help",       no_argument,       0, 'h'},
-        {"filter-pq",  required_argument, 0, 'f'},
-        {0,            0,                 0,  0}
-    };
+        {"help", no_argument, 0, 'h'}, {"filter-pq", required_argument, 0, 'f'}, {0, 0, 0, 0}};
 
-    while(true) {
+    while (true) {
         int c = ::getopt_long(argc, argv, "hf:", long_opts, nullptr);
-        if (c == -1) break;
+        if (c == -1)
+            break;
         switch (c) {
-            case 'h':
-                showHelp = true;
-                break;
-            case 'f':
-                condition = optarg;
-                break;
-            default:
-                showHelp = true;
+        case 'h':
+            showHelp = true;
+            break;
+        case 'f':
+            condition = optarg;
+            break;
+        default:
+            showHelp = true;
         }
     }
 
@@ -69,29 +67,26 @@ int VCFXPhaseQualityFilter::run(int argc, char* argv[]) {
 }
 
 void VCFXPhaseQualityFilter::displayHelp() {
-    std::cout
-        << "VCFX_phase_quality_filter: Filter variants by phasing quality (PQ) in the INFO field.\n\n"
-        << "Usage:\n"
-        << "  VCFX_phase_quality_filter --filter-pq \"PQ<OP><THRESHOLD>\" < input.vcf > output.vcf\n\n"
-        << "Options:\n"
-        << "  -h, --help             Print this help message.\n"
-        << "  -f, --filter-pq <COND> Condition like 'PQ>30', 'PQ>=20', 'PQ!=10', etc.\n\n"
-        << "Description:\n"
-        << "  Reads each variant line, extracts 'PQ=' from INFO. If missing or invalid, PQ=0.\n"
-        << "  Keeps lines if 'PQ <OP> THRESHOLD' is true. Otherwise, discards.\n\n"
-        << "Supported operators: >, >=, <, <=, ==, !=\n\n"
-        << "Examples:\n"
-        << "  1) Keep variants with PQ>30:\n"
-        << "     VCFX_phase_quality_filter --filter-pq \"PQ>30\" < in.vcf > out.vcf\n"
-        << "  2) Keep PQ<=15:\n"
-        << "     VCFX_phase_quality_filter --filter-pq \"PQ<=15\" < in.vcf > out.vcf\n";
+    std::cout << "VCFX_phase_quality_filter: Filter variants by phasing quality (PQ) in the INFO field.\n\n"
+              << "Usage:\n"
+              << "  VCFX_phase_quality_filter --filter-pq \"PQ<OP><THRESHOLD>\" < input.vcf > output.vcf\n\n"
+              << "Options:\n"
+              << "  -h, --help             Print this help message.\n"
+              << "  -f, --filter-pq <COND> Condition like 'PQ>30', 'PQ>=20', 'PQ!=10', etc.\n\n"
+              << "Description:\n"
+              << "  Reads each variant line, extracts 'PQ=' from INFO. If missing or invalid, PQ=0.\n"
+              << "  Keeps lines if 'PQ <OP> THRESHOLD' is true. Otherwise, discards.\n\n"
+              << "Supported operators: >, >=, <, <=, ==, !=\n\n"
+              << "Examples:\n"
+              << "  1) Keep variants with PQ>30:\n"
+              << "     VCFX_phase_quality_filter --filter-pq \"PQ>30\" < in.vcf > out.vcf\n"
+              << "  2) Keep PQ<=15:\n"
+              << "     VCFX_phase_quality_filter --filter-pq \"PQ<=15\" < in.vcf > out.vcf\n";
 }
 
-bool VCFXPhaseQualityFilter::parseCondition(const std::string &condition,
-                                            std::string &op,
-                                            double &threshold)
-{
-    if (condition.size() < 3) return false;
+bool VCFXPhaseQualityFilter::parseCondition(const std::string &condition, std::string &op, double &threshold) {
+    if (condition.size() < 3)
+        return false;
     if (condition.rfind("PQ", 0) != 0) {
         return false;
     }
@@ -114,26 +109,24 @@ bool VCFXPhaseQualityFilter::parseCondition(const std::string &condition,
 
     // The remainder is the threshold
     std::string valStr = sub.substr(op.size());
-    if (valStr.empty()) return false;
+    if (valStr.empty())
+        return false;
 
     try {
         threshold = std::stod(valStr);
-    } catch(...) {
+    } catch (...) {
         return false;
     }
     return true;
 }
 
-void VCFXPhaseQualityFilter::filterByPQ(std::istream &in,
-                                        std::ostream &out,
-                                        const std::string &op,
-                                        double threshold)
-{
+void VCFXPhaseQualityFilter::filterByPQ(std::istream &in, std::ostream &out, const std::string &op, double threshold) {
     bool headerFound = false;
     std::string line;
 
     while (true) {
-        if (!std::getline(in, line)) break;
+        if (!std::getline(in, line))
+            break;
         if (line.empty()) {
             out << line << "\n";
             continue;
@@ -168,12 +161,25 @@ void VCFXPhaseQualityFilter::filterByPQ(std::istream &in,
         double pq = parsePQScore(fields[7]);
         bool keep = false;
 
-        if      (op == ">")  { if (pq >  threshold) keep = true; }
-        else if (op == ">=") { if (pq >= threshold) keep = true; }
-        else if (op == "<")  { if (pq <  threshold) keep = true; }
-        else if (op == "<=") { if (pq <= threshold) keep = true; }
-        else if (op == "==") { if (pq == threshold) keep = true; }
-        else if (op == "!=") { if (pq != threshold) keep = true; }
+        if (op == ">") {
+            if (pq > threshold)
+                keep = true;
+        } else if (op == ">=") {
+            if (pq >= threshold)
+                keep = true;
+        } else if (op == "<") {
+            if (pq < threshold)
+                keep = true;
+        } else if (op == "<=") {
+            if (pq <= threshold)
+                keep = true;
+        } else if (op == "==") {
+            if (pq == threshold)
+                keep = true;
+        } else if (op == "!=") {
+            if (pq != threshold)
+                keep = true;
+        }
 
         if (keep) {
             out << line << "\n";
@@ -201,8 +207,17 @@ double VCFXPhaseQualityFilter::parsePQScore(const std::string &info) {
     return 0.0;
 }
 
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_phase_quality_filter")) return 0;
+static void show_help() {
+    VCFXPhaseQualityFilter obj;
+    char arg0[] = "VCFX_phase_quality_filter";
+    char arg1[] = "--help";
+    char *argv2[] = {arg0, arg1, nullptr};
+    obj.run(2, argv2);
+}
+
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_phase_quality_filter", show_help))
+        return 0;
     VCFXPhaseQualityFilter f;
     return f.run(argc, argv);
 }

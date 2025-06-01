@@ -1,30 +1,22 @@
-#include "vcfx_core.h"
 #include "VCFX_fasta_converter.h"
+#include "vcfx_core.h"
+#include <algorithm>
+#include <cctype>
 #include <getopt.h>
+#include <iomanip>
+#include <map>
 #include <sstream>
 #include <unordered_map>
-#include <algorithm>
-#include <iomanip>
-#include <cctype>
-#include <map>
 
 // A small map from two distinct bases to an IUPAC ambiguity code
 // e.g. A + G => R, C + T => Y, etc.
-static const std::map<std::string, char> IUPAC_ambiguities = {
-    {"AG", 'R'}, {"GA", 'R'},
-    {"CT", 'Y'}, {"TC", 'Y'},
-    {"AC", 'M'}, {"CA", 'M'},
-    {"GT", 'K'}, {"TG", 'K'},
-    {"AT", 'W'}, {"TA", 'W'},
-    {"CG", 'S'}, {"GC", 'S'}
-};
+static const std::map<std::string, char> IUPAC_ambiguities = {{"AG", 'R'}, {"GA", 'R'}, {"CT", 'Y'}, {"TC", 'Y'},
+                                                              {"AC", 'M'}, {"CA", 'M'}, {"GT", 'K'}, {"TG", 'K'},
+                                                              {"AT", 'W'}, {"TA", 'W'}, {"CG", 'S'}, {"GC", 'S'}};
 
 // Utility to convert a single numeric allele index into the corresponding base
 // returns '\0' on failure
-static char alleleIndexToBase(int alleleIndex,
-                              const std::string& ref,
-                              const std::vector<std::string>& altAlleles)
-{
+static char alleleIndexToBase(int alleleIndex, const std::string &ref, const std::vector<std::string> &altAlleles) {
     // 0 => ref, 1 => altAlleles[0], 2 => altAlleles[1], etc.
     if (alleleIndex == 0) {
         if (ref.size() == 1) {
@@ -53,7 +45,7 @@ static char alleleIndexToBase(int alleleIndex,
 // Otherwise returns 'N'
 static char combineBasesIUPAC(char b1, char b2) {
     if (b1 == b2) {
-        return b1;  // e.g. A + A => A
+        return b1; // e.g. A + A => A
     }
     // build 2-char string in alphabetical order
     std::string pair;
@@ -66,21 +58,18 @@ static char combineBasesIUPAC(char b1, char b2) {
     return 'N'; // unknown combination
 }
 
-int VCFXFastaConverter::run(int argc, char* argv[]) {
+int VCFXFastaConverter::run(int argc, char *argv[]) {
     // Parse command-line arguments
     int opt;
     bool showHelp = false;
 
-    static struct option long_options[] = {
-        {"help", no_argument, 0, 'h'},
-        {0,      0,           0,  0 }
-    };
+    static struct option long_options[] = {{"help", no_argument, 0, 'h'}, {0, 0, 0, 0}};
 
     while ((opt = getopt_long(argc, argv, "h", long_options, nullptr)) != -1) {
         switch (opt) {
-            case 'h':
-            default:
-                showHelp = true;
+        case 'h':
+        default:
+            showHelp = true;
         }
     }
 
@@ -108,7 +97,7 @@ void VCFXFastaConverter::displayHelp() {
               << "  VCFX_fasta_converter < input.vcf > output.fasta\n\n";
 }
 
-void VCFXFastaConverter::convertVCFtoFasta(std::istream& in, std::ostream& out) {
+void VCFXFastaConverter::convertVCFtoFasta(std::istream &in, std::ostream &out) {
     std::string line;
     std::vector<std::string> sampleNames;
     // Each sampleName -> sequence string
@@ -170,7 +159,7 @@ void VCFXFastaConverter::convertVCFtoFasta(std::istream& in, std::ostream& out) 
         // const std::string &id  = fields[2];
         const std::string &ref = fields[3];
         const std::string &altField = fields[4];
-        const std::string &format   = fields[8];
+        const std::string &format = fields[8];
 
         // Split alt on commas
         std::vector<std::string> altAlleles;
@@ -233,7 +222,8 @@ void VCFXFastaConverter::convertVCFtoFasta(std::istream& in, std::ostream& out) 
             std::string genotype = sampleParts[gtIndex];
             // unify separators
             for (char &c : genotype) {
-                if (c == '|') c = '/';
+                if (c == '|')
+                    c = '/';
             }
             if (genotype.empty() || genotype == ".") {
                 sampleSequences[sampleName] += "N";
@@ -269,16 +259,24 @@ void VCFXFastaConverter::convertVCFtoFasta(std::istream& in, std::ostream& out) 
                 // parse first allele
                 {
                     for (char c : alleles[0]) {
-                        if (!std::isdigit(c)) {okA1=false; break;}
+                        if (!std::isdigit(c)) {
+                            okA1 = false;
+                            break;
+                        }
                     }
-                    if (okA1) a1 = std::stoi(alleles[0]);
+                    if (okA1)
+                        a1 = std::stoi(alleles[0]);
                 }
                 // parse second allele
                 {
                     for (char c : alleles[1]) {
-                        if (!std::isdigit(c)) {okA2=false; break;}
+                        if (!std::isdigit(c)) {
+                            okA2 = false;
+                            break;
+                        }
                     }
-                    if (okA2) a2 = std::stoi(alleles[1]);
+                    if (okA2)
+                        a2 = std::stoi(alleles[1]);
                 }
                 if (!okA1 || !okA2) {
                     sampleSequences[sampleName] += "N";
@@ -298,11 +296,12 @@ void VCFXFastaConverter::convertVCFtoFasta(std::istream& in, std::ostream& out) 
             // If different => try IUPAC
             char finalBase = '\0';
             if (b1 == b2) {
-                finalBase = b1;  // e.g. both 'A'
+                finalBase = b1; // e.g. both 'A'
             } else {
                 finalBase = combineBasesIUPAC(b1, b2); // might yield R, Y, etc., or 'N'
             }
-            if (finalBase == '\0') finalBase = 'N';
+            if (finalBase == '\0')
+                finalBase = 'N';
             sampleSequences[sampleName] += finalBase;
         }
     }
@@ -320,8 +319,17 @@ void VCFXFastaConverter::convertVCFtoFasta(std::istream& in, std::ostream& out) 
     }
 }
 
-int main(int argc, char* argv[]){
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_fasta_converter")) return 0;
+static void show_help() {
+    VCFXFastaConverter obj;
+    char arg0[] = "VCFX_fasta_converter";
+    char arg1[] = "--help";
+    char *argv2[] = {arg0, arg1, nullptr};
+    obj.run(2, argv2);
+}
+
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_fasta_converter", show_help))
+        return 0;
     VCFXFastaConverter app;
     return app.run(argc, argv);
 }

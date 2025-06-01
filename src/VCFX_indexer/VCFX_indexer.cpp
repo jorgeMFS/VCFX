@@ -1,14 +1,14 @@
-#include "vcfx_core.h"
 #include "VCFX_indexer.h"
+#include "vcfx_core.h"
+#include <algorithm> // for std::find_if_not, if you want a neat trim
+#include <cstdint>
+#include <cstring>
 #include <getopt.h>
 #include <iostream>
-#include <vector>
 #include <sstream>
-#include <string>
 #include <stdexcept>
-#include <cstring>
-#include <cstdint>
-#include <algorithm> // for std::find_if_not, if you want a neat trim
+#include <string>
+#include <vector>
 
 // A helper to split a string by literal '\t' characters
 static std::vector<std::string> splitTabs(const std::string &s) {
@@ -36,33 +36,30 @@ static std::string ltrim(const std::string &str) {
 }
 
 void VCFXIndexer::displayHelp() {
-    std::cout
-        << "VCFX_indexer\n"
-        << "Usage: VCFX_indexer [--help]\n\n"
-        << "Description:\n"
-        << "  Reads a VCF from stdin (raw bytes) and writes a 3-column index\n"
-        << "  (CHROM, POS, FILE_OFFSET) to stdout. FILE_OFFSET is the byte offset\n"
-        << "  from the start of the file to the beginning of each variant line.\n\n"
-        << "Example:\n"
-        << "  VCFX_indexer < input.vcf > index.tsv\n";
+    std::cout << "VCFX_indexer\n"
+              << "Usage: VCFX_indexer [--help]\n\n"
+              << "Description:\n"
+              << "  Reads a VCF from stdin (raw bytes) and writes a 3-column index\n"
+              << "  (CHROM, POS, FILE_OFFSET) to stdout. FILE_OFFSET is the byte offset\n"
+              << "  from the start of the file to the beginning of each variant line.\n\n"
+              << "Example:\n"
+              << "  VCFX_indexer < input.vcf > index.tsv\n";
 }
 
-int VCFXIndexer::run(int argc, char* argv[]) {
-    static struct option long_opts[] = {
-        {"help", no_argument, 0, 'h'},
-        {0,0,0,0}
-    };
+int VCFXIndexer::run(int argc, char *argv[]) {
+    static struct option long_opts[] = {{"help", no_argument, 0, 'h'}, {0, 0, 0, 0}};
 
-    while(true) {
+    while (true) {
         int c = getopt_long(argc, argv, "h", long_opts, nullptr);
-        if (c == -1) break;
-        switch(c) {
-            case 'h':
-                displayHelp();
-                return 0;
-            default:
-                displayHelp();
-                return 1;
+        if (c == -1)
+            break;
+        switch (c) {
+        case 'h':
+            displayHelp();
+            return 0;
+        default:
+            displayHelp();
+            return 1;
         }
     }
 
@@ -73,8 +70,8 @@ int VCFXIndexer::run(int argc, char* argv[]) {
 
 void VCFXIndexer::createVCFIndex(std::istream &in, std::ostream &out) {
     bool foundChromHeader = false;
-    bool warnedNoChromYet  = false;
-    bool sawAnyHeaderLine  = false;
+    bool warnedNoChromYet = false;
+    bool sawAnyHeaderLine = false;
 
     static const size_t BUF_SIZE = 64 * 1024;
     char buffer[BUF_SIZE];
@@ -189,8 +186,17 @@ void VCFXIndexer::createVCFIndex(std::istream &in, std::ostream &out) {
 }
 
 // Optional main if you build as a single executable
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_indexer")) return 0;
+static void show_help() {
+    VCFXIndexer obj;
+    char arg0[] = "VCFX_indexer";
+    char arg1[] = "--help";
+    char *argv2[] = {arg0, arg1, nullptr};
+    obj.run(2, argv2);
+}
+
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_indexer", show_help))
+        return 0;
     VCFXIndexer idx;
     return idx.run(argc, argv);
 }

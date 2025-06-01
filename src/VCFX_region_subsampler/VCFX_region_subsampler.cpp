@@ -1,23 +1,20 @@
-#include "vcfx_core.h"
 #include "VCFX_region_subsampler.h"
-#include <getopt.h>
-#include <sstream>
-#include <fstream>
+#include "vcfx_core.h"
 #include <algorithm>
-#include <iostream>
-#include <vector>
-#include <string>
 #include <cctype>
 #include <cstdlib>
+#include <fstream>
+#include <getopt.h>
+#include <iostream>
+#include <sstream>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 static void mergeIntervals(std::vector<Region> &ivs) {
-    if (ivs.empty()) return;
-    std::sort(ivs.begin(), ivs.end(),
-        [](const Region &a, const Region &b) {
-            return a.start < b.start;
-        }
-    );
+    if (ivs.empty())
+        return;
+    std::sort(ivs.begin(), ivs.end(), [](const Region &a, const Region &b) { return a.start < b.start; });
     std::vector<Region> merged;
     merged.push_back(ivs[0]);
     for (size_t i = 1; i < ivs.size(); i++) {
@@ -52,29 +49,27 @@ static bool inRegions(const std::vector<Region> &ivs, int pos) {
     return false;
 }
 
-int VCFXRegionSubsampler::run(int argc, char* argv[]) {
+int VCFXRegionSubsampler::run(int argc, char *argv[]) {
     bool showHelp = false;
     std::string bedFile;
 
     static struct option long_opts[] = {
-        {"help",       no_argument,       0, 'h'},
-        {"region-bed", required_argument, 0, 'b'},
-        {0,            0,                 0,  0}
-    };
+        {"help", no_argument, 0, 'h'}, {"region-bed", required_argument, 0, 'b'}, {0, 0, 0, 0}};
 
     // Parse arguments
     while (true) {
         int c = ::getopt_long(argc, argv, "hb:", long_opts, nullptr);
-        if (c == -1) break;
+        if (c == -1)
+            break;
         switch (c) {
-            case 'h':
-                showHelp = true;
-                break;
-            case 'b':
-                bedFile = optarg;
-                break;
-            default:
-                showHelp = true;
+        case 'h':
+            showHelp = true;
+            break;
+        case 'b':
+            bedFile = optarg;
+            break;
+        default:
+            showHelp = true;
         }
     }
 
@@ -106,25 +101,22 @@ int VCFXRegionSubsampler::run(int argc, char* argv[]) {
 }
 
 void VCFXRegionSubsampler::displayHelp() {
-    std::cout
-        << "VCFX_region_subsampler: Keep only variants whose (CHROM,POS) is in a set of regions.\n\n"
-        << "Usage:\n"
-        << "  VCFX_region_subsampler --region-bed FILE < input.vcf > out.vcf\n\n"
-        << "Options:\n"
-        << "  -h, --help             Show help.\n"
-        << "  -b, --region-bed FILE  BED file listing multiple regions.\n\n"
-        << "Description:\n"
-        << "  Reads the BED, which is <chrom> <start> <end> in 0-based. This tool converts\n"
-        << "  them to 1-based [start+1 .. end]. Then merges intervals per chrom.\n"
-        << "  Then only lines in the VCF that fall in those intervals for that CHROM are printed.\n\n"
-        << "Example:\n"
-        << "  VCFX_region_subsampler --region-bed myregions.bed < input.vcf > out.vcf\n";
+    std::cout << "VCFX_region_subsampler: Keep only variants whose (CHROM,POS) is in a set of regions.\n\n"
+              << "Usage:\n"
+              << "  VCFX_region_subsampler --region-bed FILE < input.vcf > out.vcf\n\n"
+              << "Options:\n"
+              << "  -h, --help             Show help.\n"
+              << "  -b, --region-bed FILE  BED file listing multiple regions.\n\n"
+              << "Description:\n"
+              << "  Reads the BED, which is <chrom> <start> <end> in 0-based. This tool converts\n"
+              << "  them to 1-based [start+1 .. end]. Then merges intervals per chrom.\n"
+              << "  Then only lines in the VCF that fall in those intervals for that CHROM are printed.\n\n"
+              << "Example:\n"
+              << "  VCFX_region_subsampler --region-bed myregions.bed < input.vcf > out.vcf\n";
 }
 
-bool VCFXRegionSubsampler::loadRegions(
-    const std::string &bedFilePath,
-    std::unordered_map<std::string, std::vector<Region>> &chromRegions)
-{
+bool VCFXRegionSubsampler::loadRegions(const std::string &bedFilePath,
+                                       std::unordered_map<std::string, std::vector<Region>> &chromRegions) {
     std::ifstream in(bedFilePath);
     if (!in.is_open()) {
         std::cerr << "Error: cannot open BED " << bedFilePath << "\n";
@@ -134,9 +126,11 @@ bool VCFXRegionSubsampler::loadRegions(
     int lineCount = 0;
 
     while (true) {
-        if (!std::getline(in, line)) break;
+        if (!std::getline(in, line))
+            break;
         lineCount++;
-        if (line.empty() || line[0] == '#') continue;
+        if (line.empty() || line[0] == '#')
+            continue;
 
         std::stringstream ss(line);
         std::string chrom;
@@ -145,10 +139,11 @@ bool VCFXRegionSubsampler::loadRegions(
             std::cerr << "Warning: skipping invalid bed line " << lineCount << ": " << line << "\n";
             continue;
         }
-        if (start < 0) start = 0;
+        if (start < 0)
+            start = 0;
         Region r;
         r.start = start + 1; // 1-based
-        r.end   = end;
+        r.end = end;
 
         if (r.end < r.start) {
             // ignore negative or zero-length intervals
@@ -162,8 +157,7 @@ bool VCFXRegionSubsampler::loadRegions(
 void VCFXRegionSubsampler::sortAndMergeIntervals(std::unordered_map<std::string, std::vector<Region>> &chromRegions) {
     for (auto &kv : chromRegions) {
         auto &ivs = kv.second;
-        std::sort(ivs.begin(), ivs.end(),
-                  [](const Region &a, const Region &b){ return a.start < b.start; });
+        std::sort(ivs.begin(), ivs.end(), [](const Region &a, const Region &b) { return a.start < b.start; });
 
         std::vector<Region> merged;
         merged.reserve(ivs.size());
@@ -185,7 +179,8 @@ void VCFXRegionSubsampler::sortAndMergeIntervals(std::unordered_map<std::string,
 
 bool VCFXRegionSubsampler::isInAnyRegion(const std::string &chrom, int pos) const {
     auto it = regions.find(chrom);
-    if (it == regions.end()) return false;
+    if (it == regions.end())
+        return false;
     const auto &ivs = it->second;
 
     int left = 0, right = (int)ivs.size() - 1;
@@ -208,7 +203,8 @@ void VCFXRegionSubsampler::processVCF(std::istream &in, std::ostream &out) {
     std::string line;
 
     while (true) {
-        if (!std::getline(in, line)) break;
+        if (!std::getline(in, line))
+            break;
         if (line.empty()) {
             out << line << "\n";
             continue;
@@ -243,7 +239,7 @@ void VCFXRegionSubsampler::processVCF(std::istream &in, std::ostream &out) {
         int pos = 0;
         try {
             pos = std::stoi(posStr);
-        } catch(...) {
+        } catch (...) {
             std::cerr << "Warning: invalid POS => skipping.\n";
             continue;
         }
@@ -254,8 +250,17 @@ void VCFXRegionSubsampler::processVCF(std::istream &in, std::ostream &out) {
     }
 }
 
-int main(int argc, char* argv[]){
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_region_subsampler")) return 0;
+static void show_help() {
+    VCFXRegionSubsampler obj;
+    char arg0[] = "VCFX_region_subsampler";
+    char arg1[] = "--help";
+    char *argv2[] = {arg0, arg1, nullptr};
+    obj.run(2, argv2);
+}
+
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_region_subsampler", show_help))
+        return 0;
     VCFXRegionSubsampler app;
     return app.run(argc, argv);
 }

@@ -25,6 +25,30 @@ For example:
 VCFX_variant_classifier < input.vcf > classified.vcf
 ```
 
+## Python API Usage
+
+If you've installed VCFX via PyPI (`pip install vcfx`), you can use the Python API:
+
+```python
+import vcfx
+
+# Count variants
+n_variants = vcfx.variant_counter("input.vcf")
+print(f"Total variants: {n_variants}")
+
+# Get allele frequencies as structured data
+frequencies = vcfx.allele_freq_calc("input.vcf")
+for freq in frequencies:
+    print(f"Chr {freq.Chromosome}, Pos {freq.Pos}: AF={freq.Allele_Frequency}")
+
+# Check sample concordance
+concordance = vcfx.concordance_checker("input.vcf", "SAMPLE1", "SAMPLE2")
+discordant = [r for r in concordance if r.Concordance != "Concordant"]
+print(f"Found {len(discordant)} discordant sites")
+```
+
+Note: The Python API requires the VCFX command-line tools to be installed and available in your PATH.
+
 ## Common Examples
 
 Here are some common use cases for VCFX tools:
@@ -140,6 +164,34 @@ cat input.vcf | VCFX_population_filter --population AFR --pop-map pop_map.txt > 
 # Calculate allele frequencies for each population
 cat eur.vcf | VCFX_allele_freq_calc > eur_afs.tsv
 cat afr.vcf | VCFX_allele_freq_calc > afr_afs.tsv
+```
+
+### Python Workflow Example
+
+Here's the same population analysis using the Python API:
+
+```python
+import vcfx
+import pandas as pd
+
+# Filter by population and calculate frequencies
+eur_vcf = vcfx.population_filter("input.vcf", population="EUR", pop_map="pop_map.txt")
+afr_vcf = vcfx.population_filter("input.vcf", population="AFR", pop_map="pop_map.txt")
+
+# Get allele frequencies as structured data
+eur_freqs = vcfx.allele_freq_calc(eur_vcf)
+afr_freqs = vcfx.allele_freq_calc(afr_vcf)
+
+# Compare frequencies
+eur_df = pd.DataFrame(eur_freqs)
+afr_df = pd.DataFrame(afr_freqs)
+
+# Find variants with large frequency differences
+merged = eur_df.merge(afr_df, on=['Chromosome', 'Pos'], suffixes=('_EUR', '_AFR'))
+merged['freq_diff'] = abs(merged['Allele_Frequency_EUR'] - merged['Allele_Frequency_AFR'])
+differentiated = merged[merged['freq_diff'] > 0.2]
+
+print(f"Found {len(differentiated)} highly differentiated variants")
 ```
 
 ## Next Steps

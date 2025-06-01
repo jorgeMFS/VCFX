@@ -59,7 +59,11 @@ set(TEST_SCRIPTS
     test_validator.sh
     test_variant_classifier.sh
     test_variant_counter.sh
+    test_doc_lookup.sh
     test_python_bindings.sh
+    test_python_tool_wrappers.sh
+    test_python_tool_wrappers_extra.sh
+    test_python_version_fallback.sh
 )
 
 foreach(script ${TEST_SCRIPTS})

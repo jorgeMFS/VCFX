@@ -1,44 +1,43 @@
-#include "vcfx_core.h"
 #include "VCFX_genotype_query.h"
-#include <sstream>
-#include <vector>
+#include "vcfx_core.h"
 #include <algorithm>
+#include <cctype>
 #include <cstdlib>
 #include <iostream>
-#include <cctype>
+#include <sstream>
+#include <vector>
 
 // ------------------------------------------------------------------
 // printHelp
 // ------------------------------------------------------------------
 void printHelp() {
-    std::cout 
-        << "VCFX_genotype_query\n"
-        << "Usage: VCFX_genotype_query [OPTIONS]\n\n"
-        << "Options:\n"
-        << "  --genotype-query, -g \"GENOTYPE\"  Specify the genotype to query (e.g., \"0/1\", \"1/1\").\n"
-        << "  --strict                        Use strict string compare (no phasing unify or allele sorting).\n"
-        << "  --help, -h                      Display this help message and exit.\n\n"
-        << "Description:\n"
-        << "  Reads a VCF from stdin, outputs only the lines (plus all header lines) where\n"
-        << "  at least one sample has the specified genotype in the 'GT' subfield.\n\n"
-        << "Examples:\n"
-        << "  # Flexible matching 0/1 or 0|1 => both become 0/1\n"
-        << "  ./VCFX_genotype_query --genotype-query \"0/1\" < input.vcf > out.vcf\n\n"
-        << "  # Strict matching => \"0|1\" won't match \"0/1\"\n"
-        << "  ./VCFX_genotype_query --genotype-query \"0|1\" --strict < input.vcf > out.vcf\n";
+    std::cout << "VCFX_genotype_query\n"
+              << "Usage: VCFX_genotype_query [OPTIONS]\n\n"
+              << "Options:\n"
+              << "  --genotype-query, -g \"GENOTYPE\"  Specify the genotype to query (e.g., \"0/1\", \"1/1\").\n"
+              << "  --strict                        Use strict string compare (no phasing unify or allele sorting).\n"
+              << "  --help, -h                      Display this help message and exit.\n\n"
+              << "Description:\n"
+              << "  Reads a VCF from stdin, outputs only the lines (plus all header lines) where\n"
+              << "  at least one sample has the specified genotype in the 'GT' subfield.\n\n"
+              << "Examples:\n"
+              << "  # Flexible matching 0/1 or 0|1 => both become 0/1\n"
+              << "  ./VCFX_genotype_query --genotype-query \"0/1\" < input.vcf > out.vcf\n\n"
+              << "  # Strict matching => \"0|1\" won't match \"0/1\"\n"
+              << "  ./VCFX_genotype_query --genotype-query \"0|1\" --strict < input.vcf > out.vcf\n";
 }
 
 // ------------------------------------------------------------------
 // parseArguments
 // ------------------------------------------------------------------
-bool parseArguments(int argc, char* argv[], std::string& genotype_query, bool &strictCompare) {
+bool parseArguments(int argc, char *argv[], std::string &genotype_query, bool &strictCompare) {
     genotype_query.clear();
     strictCompare = false;
-    for (int i=1; i<argc; i++) {
+    for (int i = 1; i < argc; i++) {
         std::string arg = argv[i];
-        if ((arg == "--genotype-query" || arg == "-g") && i+1<argc) {
+        if ((arg == "--genotype-query" || arg == "-g") && i + 1 < argc) {
             genotype_query = argv[++i];
-        } else if (arg.rfind("--genotype-query=",0)==0) {
+        } else if (arg.rfind("--genotype-query=", 0) == 0) {
             // e.g. --genotype-query=0/1
             genotype_query = arg.substr(17);
         } else if (arg == "--strict") {
@@ -58,7 +57,8 @@ bool parseArguments(int argc, char* argv[], std::string& genotype_query, bool &s
 //   - Return empty if malformed
 // ------------------------------------------------------------------
 static std::string unifyGenotype(const std::string &gt, bool strict) {
-    if (gt.empty()) return "";
+    if (gt.empty())
+        return "";
 
     // If user wants strict compare, do no changes
     if (strict) {
@@ -68,7 +68,8 @@ static std::string unifyGenotype(const std::string &gt, bool strict) {
     // unify phasing
     std::string g = gt;
     for (char &c : g) {
-        if (c=='|') c = '/';
+        if (c == '|')
+            c = '/';
     }
 
     // Split on '/'
@@ -76,7 +77,7 @@ static std::string unifyGenotype(const std::string &gt, bool strict) {
     {
         std::stringstream ss(g);
         std::string t;
-        while (std::getline(ss,t,'/')) {
+        while (std::getline(ss, t, '/')) {
             tokens.push_back(t);
         }
     }
@@ -88,7 +89,7 @@ static std::string unifyGenotype(const std::string &gt, bool strict) {
     // Check numeric; if not numeric or ".", leave as is
     std::vector<int> vals;
     for (auto &tk : tokens) {
-        if (tk=="." || tk.empty()) {
+        if (tk == "." || tk.empty()) {
             // missing
             return g;
         }
@@ -111,10 +112,7 @@ static std::string unifyGenotype(const std::string &gt, bool strict) {
 // ------------------------------------------------------------------
 // genotypeQuery: stream-based approach
 // ------------------------------------------------------------------
-void genotypeQuery(std::istream& in, std::ostream& out,
-                   const std::string& genotype_query,
-                   bool strictCompare) 
-{
+void genotypeQuery(std::istream &in, std::ostream &out, const std::string &genotype_query, bool strictCompare) {
     bool foundChrom = false;
     bool printedHeader = false;
     std::vector<std::string> headerLines;
@@ -183,7 +181,7 @@ void genotypeQuery(std::istream& in, std::ostream& out,
                 }
             }
             int gtIndex = -1;
-            for (int i=0; i<(int)fmts.size(); i++) {
+            for (int i = 0; i < (int)fmts.size(); i++) {
                 if (fmts[i] == "GT") {
                     gtIndex = i;
                     break;
@@ -206,7 +204,7 @@ void genotypeQuery(std::istream& in, std::ostream& out,
                     }
                 }
                 if (gtIndex >= (int)sampleTokens.size()) {
-                    continue; 
+                    continue;
                 }
                 // unify genotype
                 std::string gtVal = unifyGenotype(sampleTokens[gtIndex], strictCompare);
@@ -239,8 +237,11 @@ void genotypeQuery(std::istream& in, std::ostream& out,
 // ------------------------------------------------------------------
 // main
 // ------------------------------------------------------------------
-int main(int argc, char* argv[]) {
-    if (vcfx::handle_version_flag(argc, argv, "VCFX_genotype_query")) return 0;
+static void show_help() { printHelp(); }
+
+int main(int argc, char *argv[]) {
+    if (vcfx::handle_common_flags(argc, argv, "VCFX_genotype_query", show_help))
+        return 0;
     std::string genotypeQueryStr;
     bool strictCompare = false;
     if (!parseArguments(argc, argv, genotypeQueryStr, strictCompare)) {
