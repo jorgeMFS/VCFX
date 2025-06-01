@@ -483,6 +483,39 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pypi-python-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      PyPI (Python users)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bioconda-includes-all-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bioconda (includes all tools)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build-from-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      Build from source
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -574,6 +607,15 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#python-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      Python API
+    </span>
+  </a>
   
 </li>
       
@@ -2750,6 +2792,39 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pypi-python-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      PyPI (Python users)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bioconda-includes-all-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bioconda (includes all tools)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build-from-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      Build from source
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -2841,6 +2916,15 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#python-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      Python API
+    </span>
+  </a>
   
 </li>
       
@@ -2942,9 +3026,16 @@
 
 
 <h1 id="vcfx-a-comprehensive-vcf-manipulation-toolkit">VCFX: A Comprehensive VCF Manipulation Toolkit<a class="headerlink" href="#vcfx-a-comprehensive-vcf-manipulation-toolkit" title="Permanent link">&para;</a></h1>
-<p>VCFX is a collection of specialized command-line tools designed for efficient manipulation, analysis, and transformation of VCF (Variant Call Format) files used in genomic research and bioinformatics.</p>
+<p>VCFX is a collection of specialized command-line tools designed for efficient manipulation, analysis, and transformation of VCF (Variant Call Format) files used in genomic research and bioinformatics. Available via PyPI, Bioconda, and Docker.</p>
 <h2 id="what-is-vcfx">What is VCFX?<a class="headerlink" href="#what-is-vcfx" title="Permanent link">&para;</a></h2>
-<p>VCFX follows the Unix philosophy of creating small, focused tools that do one thing well and can be combined together to form powerful workflows. Each tool in the VCFX suite is optimized for a specific VCF-related task, enabling researchers and bioinformaticians to:</p>
+<p>VCFX follows the Unix philosophy of creating small, focused tools that do one thing well and can be combined together to form powerful workflows. Each tool in the VCFX suite is optimized for a specific VCF-related task, with optional Python bindings for programmatic access.</p>
+<p>Key features:
+- 60+ specialized command-line tools
+- Python API with structured data types
+- Easy installation via <code>pip install vcfx</code>
+- Cross-platform support (Linux, macOS)
+- Composable tools for pipeline integration</p>
+<p>VCFX enables researchers and bioinformaticians to:</p>
 <ul>
 <li>Extract specific information from VCF files</li>
 <li>Filter variants based on various criteria</li>
@@ -2956,24 +3047,40 @@
 <h2 id="getting-started">Getting Started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h2>
 <p>To begin using VCFX, first follow the <a href="#installation">installation instructions</a> below, then explore the <a href="#tool-categories">tool categories</a> to find the right components for your workflow.</p>
 <h3 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h3>
-<p>VCFX tools are built using CMake. To build the entire toolkit:</p>
+<p>Choose your preferred installation method:</p>
+<h4 id="pypi-python-users">PyPI (Python users)<a class="headerlink" href="#pypi-python-users" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>vcfx
+</code></pre></div>
+<h4 id="bioconda-includes-all-tools">Bioconda (includes all tools)<a class="headerlink" href="#bioconda-includes-all-tools" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>bioconda<span class="w"> </span>vcfx
+</code></pre></div>
+<h4 id="build-from-source">Build from source<a class="headerlink" href="#build-from-source" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/ieeta-pt/VCFX.git
 <span class="nb">cd</span><span class="w"> </span>VCFX
 mkdir<span class="w"> </span>-p<span class="w"> </span>build
 <span class="nb">cd</span><span class="w"> </span>build
-cmake<span class="w"> </span>..
+cmake<span class="w"> </span>-DPYTHON_BINDINGS<span class="o">=</span>ON<span class="w"> </span>..
 make
 </code></pre></div>
-<p>To build a specific tool:</p>
-<div class="highlight"><pre><span></span><code>make<span class="w"> </span>VCFX_tool_name
-</code></pre></div>
+<p>See the <a href="installation/">full installation guide</a> for more options including Docker.</p>
 <h3 id="basic-example">Basic Example<a class="headerlink" href="#basic-example" title="Permanent link">&para;</a></h3>
 <p>Here's a simple example of using VCFX to analyze variants:</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># Calculate allele frequencies for SNPs only</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># Command line usage</span>
 cat<span class="w"> </span>input.vcf<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>VCFX_variant_classifier<span class="w"> </span>--append-info<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>grep<span class="w"> </span><span class="s1">&#39;VCF_CLASS=SNP&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>VCFX_allele_freq_calc<span class="w"> </span>&gt;<span class="w"> </span>snp_frequencies.tsv
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="c1"># Python API usage</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">vcfx</span>
+
+<span class="c1"># Count variants</span>
+<span class="n">count</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">variant_counter</span><span class="p">(</span><span class="s2">&quot;input.vcf&quot;</span><span class="p">)</span>
+
+<span class="c1"># Calculate allele frequencies with structured output</span>
+<span class="n">freqs</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">allele_freq_calc</span><span class="p">(</span><span class="s2">&quot;input.vcf&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">freqs</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Position </span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">Pos</span><span class="si">}</span><span class="s2">: AF=</span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">Allele_Frequency</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="tool-categories">Tool Categories<a class="headerlink" href="#tool-categories" title="Permanent link">&para;</a></h2>
 <p>The VCFX toolkit includes tools in the following categories:</p>
@@ -3036,6 +3143,24 @@ cat<span class="w"> </span>input.vcf<span class="w"> </span><span class="p">|</s
 <li><a href="tools_overview/#data-processing">View all processing tools...</a></li>
 </ul>
 <p>For a complete list of all tools and detailed usage examples, see the <a href="tools_overview/">tools overview</a>.</p>
+<h2 id="python-api">Python API<a class="headerlink" href="#python-api" title="Permanent link">&para;</a></h2>
+<p>VCFX provides comprehensive Python bindings that wrap all command-line tools and provide additional conveniences:</p>
+<ul>
+<li><strong>Structured data types</strong>: Tool outputs are parsed into dataclasses with proper typing</li>
+<li><strong>Easy integration</strong>: All tools accessible via <code>vcfx.tool_name()</code> functions</li>
+<li><strong>Error handling</strong>: Clear exceptions when tools fail</li>
+<li><strong>Helper functions</strong>: Utilities for reading compressed files, text processing, etc.</li>
+</ul>
+<p>Example:
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">vcfx</span>
+
+<span class="c1"># Tools return structured data, not just strings</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">vcfx</span><span class="o">.</span><span class="n">hwe_tester</span><span class="p">(</span><span class="s2">&quot;variants.vcf&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">variant</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">variant</span><span class="o">.</span><span class="n">HWE_pvalue</span> <span class="o">&lt;</span> <span class="mf">0.05</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Variant at </span><span class="si">{</span><span class="n">variant</span><span class="o">.</span><span class="n">Pos</span><span class="si">}</span><span class="s2"> deviates from HWE (p=</span><span class="si">{</span><span class="n">variant</span><span class="o">.</span><span class="n">HWE_pvalue</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</code></pre></div></p>
+<p>See the <a href="python_api/">Python API documentation</a> for complete details.</p>
 <h2 id="who-should-use-vcfx">Who Should Use VCFX?<a class="headerlink" href="#who-should-use-vcfx" title="Permanent link">&para;</a></h2>
 <p>VCFX is designed for:</p>
 <ul>
