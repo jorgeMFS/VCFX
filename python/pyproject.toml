@@ -4,6 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vcfx"
+dynamic = ["version"]
 description = "Python bindings for the VCFX toolkit - comprehensive VCF manipulation and analysis"
 readme = "README.md"
 requires-python = ">=3.10"
