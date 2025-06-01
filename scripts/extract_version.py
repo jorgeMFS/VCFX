@@ -1,8 +1,10 @@
+#!/usr/bin/env python3
 import re
 from pathlib import Path
+from typing import Union, Optional
 
 
-def extract_version(cmake_path: Path | str | None = None) -> str:
+def extract_version(cmake_path: Optional[Union[Path, str]] = None) -> str:
     """Return the toolkit version as defined in CMakeLists.txt."""
     if cmake_path is None:
         cmake_path = Path(__file__).resolve().parents[1] / "CMakeLists.txt"
