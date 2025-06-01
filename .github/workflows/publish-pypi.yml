@@ -45,7 +45,10 @@ jobs:
     - name: Extract version
       run: |
         # Extract version from CMakeLists.txt
-        VERSION=$(grep -E "project\(VCFX VERSION" CMakeLists.txt | sed -E 's/.*VERSION ([0-9.]+).*/\1/')
+        MAJOR=$(grep -E "^set\(VCFX_VERSION_MAJOR" CMakeLists.txt | sed -E 's/.*MAJOR ([0-9]+).*/\1/')
+        MINOR=$(grep -E "^set\(VCFX_VERSION_MINOR" CMakeLists.txt | sed -E 's/.*MINOR ([0-9]+).*/\1/')
+        PATCH=$(grep -E "^set\(VCFX_VERSION_PATCH" CMakeLists.txt | sed -E 's/.*PATCH ([0-9]+).*/\1/')
+        VERSION="${MAJOR}.${MINOR}.${PATCH}"
         echo "VCFX_VERSION=$VERSION" >> $GITHUB_ENV
         echo "Package version: $VERSION"
         

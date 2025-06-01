@@ -5,8 +5,11 @@ set -e
 
 echo "Testing PyPI package build..."
 
-# Extract version
-VERSION=$(grep -E "project\(VCFX VERSION" CMakeLists.txt | sed -E 's/.*VERSION ([0-9.]+).*/\1/')
+# Extract version from CMakeLists.txt
+MAJOR=$(grep -E "^set\(VCFX_VERSION_MAJOR" CMakeLists.txt | sed -E 's/.*MAJOR ([0-9]+).*/\1/')
+MINOR=$(grep -E "^set\(VCFX_VERSION_MINOR" CMakeLists.txt | sed -E 's/.*MINOR ([0-9]+).*/\1/')
+PATCH=$(grep -E "^set\(VCFX_VERSION_PATCH" CMakeLists.txt | sed -E 's/.*PATCH ([0-9]+).*/\1/')
+VERSION="${MAJOR}.${MINOR}.${PATCH}"
 echo "Version from CMakeLists.txt: $VERSION"
 
 # Create temporary build directory
