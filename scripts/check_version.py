@@ -35,6 +35,8 @@ def parse_pyproject(path: Path, cmake_version: str) -> str:
         )
         if isinstance(dyn, dict) and dyn.get("attr") == "vcfx.__version__":
             return cmake_version
+        # If no specific setuptools config, assume version comes from CMakeLists.txt
+        return cmake_version
     raise RuntimeError("Unable to determine version from pyproject.toml")
 
 
