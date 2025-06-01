@@ -7,15 +7,32 @@ This guide explains how to install the VCFX toolkit on your system.
 Before installing VCFX, ensure you have the following prerequisites:
 
 - A Unix-like operating system (Linux, macOS)
-- C++ compiler (GCC 5.0+ or Clang 3.8+)
-- CMake (version 3.10 or higher)
-- Git (for cloning the repository)
+- Python 3.10+ (for PyPI installation)
+- C++ compiler (GCC 5.0+ or Clang 3.8+) - only for building from source
+- CMake (version 3.10 or higher) - only for building from source
 
 ## Installation Methods
 
-### Method 1: Using Bioconda (Recommended)
+### Method 1: Using PyPI (Python Package Index)
 
-VCFX is available in the Bioconda channel, providing an easy installation method:
+The simplest way to install VCFX with Python bindings:
+
+```bash
+pip install vcfx
+```
+
+This installs the Python package with bindings to the C++ library. To use the command-line tools, you'll also need to install them separately via one of the other methods below.
+
+For development or to install directly from the repository:
+```bash
+git clone https://github.com/ieeta-pt/VCFX.git
+cd VCFX
+pip install -e ./python
+```
+
+### Method 2: Using Bioconda
+
+VCFX is available in the Bioconda channel, providing both the command-line tools and Python bindings:
 
 ```bash
 # Set up Bioconda channels if you haven't already
@@ -27,9 +44,9 @@ conda config --add channels conda-forge
 conda install vcfx
 ```
 
-This method automatically handles all dependencies and provides a ready-to-use installation of VCFX.
+This method automatically handles all dependencies and provides a ready-to-use installation of VCFX with all command-line tools.
 
-### Method 2: Using Docker
+### Method 3: Using Docker
 
 The simplest way to use VCFX is with Docker, which requires no compilation:
 
@@ -51,7 +68,7 @@ This method is ideal for:
 
 For more advanced Docker usage, see the [Docker Guide](docker.md).
 
-### Method 3: Building from Source
+### Method 4: Building from Source
 
 This method ensures you have the latest version of VCFX.
 
@@ -82,7 +99,28 @@ This method ensures you have the latest version of VCFX.
 
 After installation, you should be able to run VCFX tools from your terminal.
 
-### Method 4: Building Individual Tools
+### Method 5: Building with Python Bindings
+
+To build VCFX with Python bindings from source:
+
+```bash
+git clone https://github.com/ieeta-pt/VCFX.git
+cd VCFX
+mkdir -p build
+cd build
+cmake -DPYTHON_BINDINGS=ON ..
+make
+```
+
+Then install the Python package:
+```bash
+cd ../python
+pip install .
+```
+
+This gives you both the command-line tools and the Python API.
+
+### Method 6: Building Individual Tools
 
 If you only need specific tools, you can build them individually:
 
@@ -93,7 +131,7 @@ make VCFX_tool_name
 
 Replace `VCFX_tool_name` with the actual tool name (e.g., `VCFX_allele_freq_calc`).
 
-### Method 5: Building Your Own Docker Image
+### Method 7: Building Your Own Docker Image
 
 If you need to customize the Docker image, you can build it yourself:
 
