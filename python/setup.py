@@ -12,12 +12,12 @@ def get_version():
     env_version = os.environ.get("VCFX_VERSION")
     if env_version:
         return env_version
-    
+
     # Try VERSION file
     version_file = pathlib.Path(__file__).parent / "VERSION"
     if version_file.exists():
         return version_file.read_text().strip()
-    
+
     # Fallback
     return "0.0.0"
 
