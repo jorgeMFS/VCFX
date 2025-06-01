@@ -58,18 +58,35 @@ jobs:
     - name: Build package
       run: |
         cd python
+        # Clean any existing builds
+        rm -rf dist/ build/ *.egg-info
+        
         # Build only source distribution for now to avoid platform issues
         VCFX_VERSION=${{ env.VCFX_VERSION }} python -m build --sdist
         
         # List built files
         ls -la dist/
+        
+        # Remove any wheel files that might have been created
+        rm -f dist/*.whl
     
     - name: Check built package
       run: |
         cd python
         twine check dist/*
         # Verify version in package
+        echo "Checking package contents..."
         tar -tzf dist/*.tar.gz | head -20
+        
+        # Extract and verify version
+        mkdir -p /tmp/check
+        tar -xzf dist/*.tar.gz -C /tmp/check
+        PACKAGE_DIR=$(ls -d /tmp/check/vcfx-*)
+        echo "Package directory: $PACKAGE_DIR"
+        if [ -f "$PACKAGE_DIR/VERSION" ]; then
+          echo "VERSION file contents: $(cat $PACKAGE_DIR/VERSION)"
+        fi
+        rm -rf /tmp/check
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
