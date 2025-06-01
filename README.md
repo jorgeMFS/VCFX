@@ -8,6 +8,9 @@
 [![Bioconda](https://img.shields.io/conda/vn/bioconda/vcfx.svg)](https://anaconda.org/bioconda/vcfx)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Docker](https://img.shields.io/badge/Docker-GHCR-blue)](https://ieeta-pt.github.io/VCFX/docker/)
+[![PyPI version](https://img.shields.io/pypi/v/vcfx.svg)](https://pypi.org/project/vcfx/)
+[![PyPI downloads](https://img.shields.io/pypi/dm/vcfx.svg)](https://pypi.org/project/vcfx/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/vcfx.svg)](https://pypi.org/project/vcfx/)
 
 VCFX is a set of small C/C++ command line tools for manipulating and analysing Variant Call Format (VCF) files. Each tool does one job well and they can be chained together using standard streams.
 
@@ -18,9 +21,20 @@ VCFX is a set of small C/C++ command line tools for manipulating and analysing V
 - **Fast**: designed for large genomic datasets
 - **Cross Platform**: Linux and macOS support
 - **WebAssembly Builds** for browser or Node.js usage
-- **Easy Installation** via Bioconda or Docker
+- **Easy Installation** via PyPI, Bioconda or Docker
+- **Python Bindings** for programmatic access
 
 ## Installation
+
+### PyPI (Python Package)
+```bash
+pip install vcfx
+```
+After installing the Python bindings you can run any tool directly:
+```python
+import vcfx
+vcfx.run_tool("alignment_checker", "--help")
+```
 
 ### Bioconda
 ```bash
@@ -42,16 +56,6 @@ cmake .. -DPYTHON_BINDINGS=ON
 make
 ```
 Optionally run `make install` to place the tools in `~/.local/bin`.
-
-### Python Package
-```bash
-pip install vcfx                  # from PyPI
-```
-After installing the Python bindings you can run any tool directly:
-```python
-import vcfx
-vcfx.run_tool("alignment_checker", "--help")
-```
 
 ## Quick Example
 ```bash
@@ -81,6 +85,7 @@ pre-commit install
 ```
 
 ## Citation
+
 If you use VCFX in your research please cite:
 ```
 @inproceedings{silva2025vcfx,
