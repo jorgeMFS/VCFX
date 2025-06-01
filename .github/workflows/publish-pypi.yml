@@ -42,15 +42,31 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y cmake build-essential
     
+    - name: Extract version
+      run: |
+        # Extract version from CMakeLists.txt
+        VERSION=$(grep -E "project\(VCFX VERSION" CMakeLists.txt | sed -E 's/.*VERSION ([0-9.]+).*/\1/')
+        echo "VCFX_VERSION=$VERSION" >> $GITHUB_ENV
+        echo "Package version: $VERSION"
+        
+        # Create version file for Python package
+        echo "$VERSION" > python/VERSION
+    
     - name: Build package
       run: |
         cd python
-        python -m build
+        # Build only source distribution for now to avoid platform issues
+        VCFX_VERSION=${{ env.VCFX_VERSION }} python -m build --sdist
+        
+        # List built files
+        ls -la dist/
     
     - name: Check built package
       run: |
         cd python
         twine check dist/*
+        # Verify version in package
+        tar -tzf dist/*.tar.gz | head -20
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
@@ -104,4 +120,9 @@ jobs:
         path: dist/
     
     - name: Publish to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1 
+      uses: pypa/gh-action-pypi-publish@release/v1
+      # If trusted publishing fails, you can use token instead:
+      # Remove the permissions section above and uncomment below:
+      # with:
+      #   user: __token__
+      #   password: ${{ secrets.PYPI_API_TOKEN }} 

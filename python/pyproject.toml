@@ -4,7 +4,6 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vcfx"
-dynamic = ["version"]
 description = "Python bindings for the VCFX toolkit - comprehensive VCF manipulation and analysis"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -35,6 +34,3 @@ Repository = "https://github.com/ieeta-pt/VCFX.git"
 
 [tool.setuptools.package-data]
 "vcfx" = ["py.typed"]
-
-[tool.setuptools.dynamic]
-version = {attr = "vcfx.__version__"}

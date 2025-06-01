@@ -2,6 +2,8 @@ from __future__ import annotations
 
 """Python bindings for the VCFX toolkit."""
 
+import os
+
 try:
     from ._vcfx import *  # type: ignore  # noqa: F401,F403
 except ModuleNotFoundError:  # pragma: no cover - fallback for pure Python envs
@@ -30,6 +32,11 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for pure Python envs
 
     def get_version() -> str:
         """Return the toolkit version when bindings are unavailable."""
+        # First try environment variable (set during build)
+        env_version = os.environ.get("VCFX_VERSION")
+        if env_version:
+            return env_version
+            
         try:
             return version(__package__ or "vcfx")
         except PackageNotFoundError:

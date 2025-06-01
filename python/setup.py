@@ -1,8 +1,25 @@
 # mypy: ignore-errors
 import pathlib
 import subprocess
+import os
 from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext
+
+
+def get_version():
+    """Get version from VERSION file or environment variable."""
+    # Try environment variable first
+    env_version = os.environ.get("VCFX_VERSION")
+    if env_version:
+        return env_version
+    
+    # Try VERSION file
+    version_file = pathlib.Path(__file__).parent / "VERSION"
+    if version_file.exists():
+        return version_file.read_text().strip()
+    
+    # Fallback
+    return "0.0.0"
 
 
 class CMakeExtension(Extension):
@@ -42,6 +59,7 @@ class CMakeBuild(build_ext):
 
 
 setup(
+    version=get_version(),
     packages=['vcfx', 'vcfx.tools'],
     package_dir={'vcfx': '.'},
     package_data={'vcfx': ['py.typed']},
