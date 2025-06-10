@@ -171,3 +171,5 @@ If the container can't find VCFX commands, ensure they were properly built in th
 # List available VCFX tools in the container
 docker run --rm ghcr.io/jorgemfs/vcfx:latest 'ls -1 /usr/local/bin/VCFX_*'
 ``` 
+
+For more help with Docker usage, open an issue on GitHub or reach out via project discussions.

@@ -135,3 +135,4 @@ Error: no #CHROM line found in file.
 ## Limitations
 - Does not validate VCF version compatibility
 - No validation of the content of meta-information lines beyond the '##' prefix
+
