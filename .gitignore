@@ -64,3 +64,4 @@ tmp/
 .mypy_cache/
 .ruff_cache/
 python/VERSION
+__pycache__/
