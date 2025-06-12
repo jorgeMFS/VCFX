@@ -97,6 +97,11 @@ If you use VCFX in your research please cite:
 }
 ```
 
+## Code of Conduct
+
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md) for guidance on how to
+participate in our community.
+
 ## License
 
 VCFX is distributed under the [MIT License](LICENSE).
