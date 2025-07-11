@@ -4,7 +4,10 @@ Thank you for your interest in contributing to VCFX! This document provides guid
 
 ## Code of Conduct
 
-Please be respectful and considerate of others when contributing to this project. We aim to foster an inclusive and welcoming community.
+All contributors are expected to follow our
+[Code of Conduct](../CODE_OF_CONDUCT.md). Please be respectful and considerate
+of others when contributing to this project. We aim to foster an inclusive and
+welcoming community.
 
 ## How to Contribute
 
