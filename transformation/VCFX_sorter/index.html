@@ -1841,6 +1841,34 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#memory-mapped-io-v12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memory-Mapped I/O (v1.2)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Memory-Mapped I/O (v1.2)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#benchmark-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmark Results
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#external-merge-sort-for-large-files" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1930,10 +1958,21 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#basic-lexicographic-sorting" class="md-nav__link">
+  <a href="#basic-lexicographic-sorting-file-argument-fastest" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Basic Lexicographic Sorting
+        Basic Lexicographic Sorting (File Argument - Fastest)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#basic-lexicographic-sorting-stdin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Lexicographic Sorting (Stdin)
       
     </span>
   </a>
@@ -3521,6 +3560,34 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#memory-mapped-io-v12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memory-Mapped I/O (v1.2)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Memory-Mapped I/O (v1.2)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#benchmark-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmark Results
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#external-merge-sort-for-large-files" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3610,10 +3677,21 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#basic-lexicographic-sorting" class="md-nav__link">
+  <a href="#basic-lexicographic-sorting-file-argument-fastest" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Basic Lexicographic Sorting
+        Basic Lexicographic Sorting (File Argument - Fastest)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#basic-lexicographic-sorting-stdin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Lexicographic Sorting (Stdin)
       
     </span>
   </a>
@@ -3876,8 +3954,10 @@
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <p><code>VCFX_sorter</code> is a utility tool for sorting VCF files by chromosome and position. It provides two sorting methods: standard lexicographic sorting and natural chromosome sorting, which handles chromosome numbering in a more intuitive way.</p>
 <p><strong>New in v1.1</strong>: The tool now supports <strong>external merge sort</strong> for handling files larger than available RAM, enabling sorting of 50GB+ VCF files with minimal memory usage.</p>
+<p><strong>New in v1.2</strong>: Added <strong>memory-mapped I/O</strong> for file arguments, providing ~40x faster processing for large files compared to stdin.</p>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code>VCFX_sorter<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>&lt;<span class="w"> </span>input.vcf<span class="w"> </span>&gt;<span class="w"> </span>output.vcf
+<div class="highlight"><pre><span></span><code>VCFX_sorter<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">[</span>files...<span class="o">]</span><span class="w"> </span>&gt;<span class="w"> </span>output.vcf
+VCFX_sorter<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>&lt;<span class="w"> </span>input.vcf<span class="w"> </span>&gt;<span class="w"> </span>output.vcf
 </code></pre></div>
 <h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h2>
 <table>
@@ -3928,6 +4008,19 @@
 - Making binary searches possible on VCF data
 - <strong>Sorting very large VCF files (50GB+) that exceed available RAM</strong></p>
 <h2 id="performance-improvements">Performance Improvements<a class="headerlink" href="#performance-improvements" title="Permanent link">&para;</a></h2>
+<h3 id="memory-mapped-io-v12">Memory-Mapped I/O (v1.2)<a class="headerlink" href="#memory-mapped-io-v12" title="Permanent link">&para;</a></h3>
+<p>When file arguments are provided instead of stdin, the tool uses memory-mapped I/O (<code>mmap</code>) with several optimizations:</p>
+<ol>
+<li><strong>Zero-copy Parsing</strong>: Parses chromosome and position directly from mmap'd memory without string allocation</li>
+<li><strong>Pre-computed Chromosome IDs</strong>: Converts chromosome strings to numeric IDs once during parsing, eliminating O(n log n) string comparisons during sort</li>
+<li><strong>CompactSortKey Structure</strong>: Uses a 20-byte sort key storing only offsets instead of full VCF lines (vs ~9KB per variant with full lines)</li>
+<li><strong>1MB Output Buffer</strong>: Batched output reduces syscall overhead</li>
+</ol>
+<h4 id="benchmark-results">Benchmark Results<a class="headerlink" href="#benchmark-results" title="Permanent link">&para;</a></h4>
+<p>On a test file with 427K variants and 2,504 samples (1.4GB):
+- <strong>stdin processing</strong>: &gt;30 minutes (timeout)
+- <strong>mmap file argument</strong>: ~46 seconds
+- <strong>Improvement</strong>: ~40x faster with file arguments</p>
 <h3 id="external-merge-sort-for-large-files">External Merge Sort for Large Files<a class="headerlink" href="#external-merge-sort-for-large-files" title="Permanent link">&para;</a></h3>
 <p>The tool now implements <strong>external merge sort</strong> for handling files larger than available RAM:</p>
 <ol>
@@ -3987,13 +4080,17 @@
    - Finally by position</p>
 <p>This results in more intuitive ordering where chr1 &lt; chr2 &lt; chr10, instead of chr1 &lt; chr10 &lt; chr2.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
-<h3 id="basic-lexicographic-sorting">Basic Lexicographic Sorting<a class="headerlink" href="#basic-lexicographic-sorting" title="Permanent link">&para;</a></h3>
+<h3 id="basic-lexicographic-sorting-file-argument-fastest">Basic Lexicographic Sorting (File Argument - Fastest)<a class="headerlink" href="#basic-lexicographic-sorting-file-argument-fastest" title="Permanent link">&para;</a></h3>
 <p>Sort a VCF file using standard lexicographic chromosome ordering:
+<div class="highlight"><pre><span></span><code>VCFX_sorter<span class="w"> </span>unsorted.vcf<span class="w"> </span>&gt;<span class="w"> </span>sorted.vcf
+</code></pre></div></p>
+<h3 id="basic-lexicographic-sorting-stdin">Basic Lexicographic Sorting (Stdin)<a class="headerlink" href="#basic-lexicographic-sorting-stdin" title="Permanent link">&para;</a></h3>
+<p>Sort a VCF file from standard input:
 <div class="highlight"><pre><span></span><code>VCFX_sorter<span class="w"> </span>&lt;<span class="w"> </span>unsorted.vcf<span class="w"> </span>&gt;<span class="w"> </span>sorted.vcf
 </code></pre></div></p>
 <h3 id="natural-chromosome-sorting_1">Natural Chromosome Sorting<a class="headerlink" href="#natural-chromosome-sorting_1" title="Permanent link">&para;</a></h3>
 <p>Sort a VCF file using natural chromosome ordering:
-<div class="highlight"><pre><span></span><code>VCFX_sorter<span class="w"> </span>--natural-chr<span class="w"> </span>&lt;<span class="w"> </span>unsorted.vcf<span class="w"> </span>&gt;<span class="w"> </span>sorted.vcf
+<div class="highlight"><pre><span></span><code>VCFX_sorter<span class="w"> </span>--natural-chr<span class="w"> </span>unsorted.vcf<span class="w"> </span>&gt;<span class="w"> </span>sorted.vcf
 </code></pre></div></p>
 <h3 id="large-file-sorting-external-merge-sort">Large File Sorting (External Merge Sort)<a class="headerlink" href="#large-file-sorting-external-merge-sort" title="Permanent link">&para;</a></h3>
 <p>Sort a large VCF file using external merge sort with a 500MB memory limit:
