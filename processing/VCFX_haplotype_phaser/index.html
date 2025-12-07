@@ -2896,10 +2896,21 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#basic-usage" class="md-nav__link">
+  <a href="#basic-usage-fast-file-input" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Basic Usage
+        Basic Usage (Fast File Input)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#basic-usage-stdin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Usage (Stdin)
       
     </span>
   </a>
@@ -2972,6 +2983,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#quiet-mode-for-batch-processing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quiet Mode for Batch Processing
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3008,6 +3030,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Performance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#file-input-mode-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File Input Mode (Recommended)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-characteristics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Characteristics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3034,7 +3084,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#performance-characteristics" class="md-nav__link">
+  <a href="#performance-characteristics_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Performance Characteristics
@@ -3465,10 +3515,21 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#basic-usage" class="md-nav__link">
+  <a href="#basic-usage-fast-file-input" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Basic Usage
+        Basic Usage (Fast File Input)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#basic-usage-stdin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Usage (Stdin)
       
     </span>
   </a>
@@ -3541,6 +3602,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#quiet-mode-for-batch-processing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quiet Mode for Batch Processing
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3577,6 +3649,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Performance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#file-input-mode-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File Input Mode (Recommended)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-characteristics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Characteristics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3603,7 +3703,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#performance-characteristics" class="md-nav__link">
+  <a href="#performance-characteristics_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Performance Characteristics
@@ -3685,9 +3785,10 @@
 <h1 id="vcfx_haplotype_phaser">VCFX_haplotype_phaser<a class="headerlink" href="#vcfx_haplotype_phaser" title="Permanent link">&para;</a></h1>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <p>VCFX_haplotype_phaser analyzes genotype data to identify variants in linkage disequilibrium (LD) and groups them into haplotype blocks based on an LD threshold. This tool is useful for identifying sets of genetic variants that tend to be inherited together.</p>
-<p><strong>New in v1.1</strong>: The tool now supports <strong>streaming mode</strong> for bounded memory usage, enabling processing of arbitrarily large files by using a sliding window approach.</p>
+<p><strong>New in v1.2</strong>: The tool now supports <strong>memory-mapped file I/O</strong> for 20-50x faster processing, along with streaming mode for bounded memory usage.</p>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code>VCFX_haplotype_phaser<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>&lt;<span class="w"> </span>input.vcf<span class="w"> </span>&gt;<span class="w"> </span>blocks.txt
+<div class="highlight"><pre><span></span><code>VCFX_haplotype_phaser<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">[</span>input.vcf<span class="o">]</span>
+VCFX_haplotype_phaser<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>&lt;<span class="w"> </span>input.vcf<span class="w"> </span>&gt;<span class="w"> </span>blocks.txt
 </code></pre></div>
 <h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h2>
 <table>
@@ -3699,6 +3800,10 @@
 </thead>
 <tbody>
 <tr>
+<td><code>-i</code>, <code>--input FILE</code></td>
+<td>Input VCF file (uses fast memory-mapped I/O)</td>
+</tr>
+<tr>
 <td><code>-l</code>, <code>--ld-threshold &lt;VALUE&gt;</code></td>
 <td>r² threshold for LD-based grouping (0.0-1.0, default: 0.8)</td>
 </tr>
@@ -3709,6 +3814,10 @@
 <tr>
 <td><code>-w</code>, <code>--window &lt;N&gt;</code></td>
 <td>Window size for streaming mode (default: 1000 variants)</td>
+</tr>
+<tr>
+<td><code>-q</code>, <code>--quiet</code></td>
+<td>Suppress warning messages (useful for batch processing)</td>
 </tr>
 <tr>
 <td><code>-h</code>, <code>--help</code></td>
@@ -3763,12 +3872,16 @@ Block 3: 5:(chr2:1000), 6:(chr2:1050)
 - List of grouped variants with their 0-indexed position in the VCF file
 - Chromosome and position of each variant in parentheses</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
-<h3 id="basic-usage">Basic Usage<a class="headerlink" href="#basic-usage" title="Permanent link">&para;</a></h3>
+<h3 id="basic-usage-fast-file-input">Basic Usage (Fast File Input)<a class="headerlink" href="#basic-usage-fast-file-input" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>./VCFX_haplotype_phaser<span class="w"> </span>-i<span class="w"> </span>input.vcf<span class="w"> </span>&gt;<span class="w"> </span>haplotype_blocks.txt
+./VCFX_haplotype_phaser<span class="w"> </span>input.vcf<span class="w"> </span>&gt;<span class="w"> </span>haplotype_blocks.txt
+</code></pre></div>
+<h3 id="basic-usage-stdin">Basic Usage (Stdin)<a class="headerlink" href="#basic-usage-stdin" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code>./VCFX_haplotype_phaser<span class="w"> </span>&lt;<span class="w"> </span>input.vcf<span class="w"> </span>&gt;<span class="w"> </span>haplotype_blocks.txt
 </code></pre></div>
 <h3 id="custom-ld-threshold">Custom LD Threshold<a class="headerlink" href="#custom-ld-threshold" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Use a higher LD threshold for more stringent block definition</span>
-./VCFX_haplotype_phaser<span class="w"> </span>--ld-threshold<span class="w"> </span><span class="m">0</span>.95<span class="w"> </span>&lt;<span class="w"> </span>input.vcf<span class="w"> </span>&gt;<span class="w"> </span>strict_blocks.txt
+./VCFX_haplotype_phaser<span class="w"> </span>--ld-threshold<span class="w"> </span><span class="m">0</span>.95<span class="w"> </span>-i<span class="w"> </span>input.vcf<span class="w"> </span>&gt;<span class="w"> </span>strict_blocks.txt
 </code></pre></div>
 <h3 id="extract-top-blocks">Extract Top Blocks<a class="headerlink" href="#extract-top-blocks" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Extract just the first 10 blocks</span>
@@ -3779,16 +3892,23 @@ Block 3: 5:(chr2:1000), 6:(chr2:1050)
 ./VCFX_haplotype_phaser<span class="w"> </span>&lt;<span class="w"> </span>input.vcf<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;Block&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
 </code></pre></div>
 <h3 id="streaming-mode-for-large-files">Streaming Mode for Large Files<a class="headerlink" href="#streaming-mode-for-large-files" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Process large VCF with bounded memory</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># Process large VCF with bounded memory (stdin)</span>
 ./VCFX_haplotype_phaser<span class="w"> </span>--streaming<span class="w"> </span>&lt;<span class="w"> </span>large.vcf<span class="w"> </span>&gt;<span class="w"> </span>blocks.txt
+
+<span class="c1"># Process large VCF with bounded memory (fast file input)</span>
+./VCFX_haplotype_phaser<span class="w"> </span>--streaming<span class="w"> </span>-i<span class="w"> </span>large.vcf<span class="w"> </span>&gt;<span class="w"> </span>blocks.txt
 </code></pre></div>
 <h3 id="streaming-with-custom-window-size">Streaming with Custom Window Size<a class="headerlink" href="#streaming-with-custom-window-size" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Use smaller window for lower memory usage</span>
-./VCFX_haplotype_phaser<span class="w"> </span>--streaming<span class="w"> </span>--window<span class="w"> </span><span class="m">500</span><span class="w"> </span>--ld-threshold<span class="w"> </span><span class="m">0</span>.8<span class="w"> </span>&lt;<span class="w"> </span>large.vcf<span class="w"> </span>&gt;<span class="w"> </span>blocks.txt
+./VCFX_haplotype_phaser<span class="w"> </span>--streaming<span class="w"> </span>--window<span class="w"> </span><span class="m">500</span><span class="w"> </span>--ld-threshold<span class="w"> </span><span class="m">0</span>.8<span class="w"> </span>-i<span class="w"> </span>large.vcf<span class="w"> </span>&gt;<span class="w"> </span>blocks.txt
 </code></pre></div>
 <h3 id="streaming-with-high-ld-threshold">Streaming with High LD Threshold<a class="headerlink" href="#streaming-with-high-ld-threshold" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Stricter LD threshold in streaming mode</span>
-./VCFX_haplotype_phaser<span class="w"> </span>--streaming<span class="w"> </span>--ld-threshold<span class="w"> </span><span class="m">0</span>.95<span class="w"> </span>&lt;<span class="w"> </span>input.vcf<span class="w"> </span>&gt;<span class="w"> </span>strict_blocks.txt
+./VCFX_haplotype_phaser<span class="w"> </span>--streaming<span class="w"> </span>--ld-threshold<span class="w"> </span><span class="m">0</span>.95<span class="w"> </span>-i<span class="w"> </span>input.vcf<span class="w"> </span>&gt;<span class="w"> </span>strict_blocks.txt
+</code></pre></div>
+<h3 id="quiet-mode-for-batch-processing">Quiet Mode for Batch Processing<a class="headerlink" href="#quiet-mode-for-batch-processing" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Suppress warning messages (useful in pipelines)</span>
+./VCFX_haplotype_phaser<span class="w"> </span>-q<span class="w"> </span>-i<span class="w"> </span>input.vcf<span class="w"> </span>&gt;<span class="w"> </span>blocks.txt<span class="w"> </span><span class="m">2</span>&gt;/dev/null
 </code></pre></div>
 <h2 id="ld-calculation">LD Calculation<a class="headerlink" href="#ld-calculation" title="Permanent link">&para;</a></h2>
 <p>The tool calculates LD between variants using the r² statistic:</p>
@@ -3812,14 +3932,51 @@ Block 3: 5:(chr2:1000), 6:(chr2:1050)
 <li><strong>Empty VCF</strong>: Reports an error and exits cleanly</li>
 </ol>
 <h2 id="performance">Performance<a class="headerlink" href="#performance" title="Permanent link">&para;</a></h2>
-<p>VCFX_haplotype_phaser is designed for efficiency:</p>
-<ol>
-<li>Single-pass processing of variants with minimal memory usage</li>
-<li>Optimized LD calculation that handles missing data appropriately</li>
-<li>Scales efficiently with the number of samples and variants</li>
-<li>Processes large VCF files with thousands of variants in reasonable time</li>
-<li>Minimal computational overhead by using simplified LD calculations</li>
-</ol>
+<p>VCFX_haplotype_phaser is designed for efficiency with multiple performance optimizations:</p>
+<h3 id="file-input-mode-recommended">File Input Mode (Recommended)<a class="headerlink" href="#file-input-mode-recommended" title="Permanent link">&para;</a></h3>
+<p>When using <code>-i/--input</code> or providing a file as a positional argument, the tool uses:</p>
+<ul>
+<li><strong>Memory-mapped file I/O</strong> for 20-50x faster processing vs stdin</li>
+<li><strong>SIMD-optimized line scanning</strong> (AVX2/SSE2 with memchr fallback)</li>
+<li><strong>Zero-copy string parsing</strong> with std::string_view</li>
+<li><strong>1MB output buffering</strong> for reduced syscalls</li>
+<li><strong>FORMAT field caching</strong> to avoid redundant parsing</li>
+<li><strong>SIMD-optimized LD calculation</strong> for vectorized correlation computation</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="c1"># Fast mode (recommended for files)</span>
+VCFX_haplotype_phaser<span class="w"> </span>-i<span class="w"> </span>input.vcf<span class="w"> </span>&gt;<span class="w"> </span>blocks.txt
+VCFX_haplotype_phaser<span class="w"> </span>input.vcf<span class="w"> </span>&gt;<span class="w"> </span>blocks.txt
+
+<span class="c1"># Slower mode (stdin)</span>
+VCFX_haplotype_phaser<span class="w"> </span>&lt;<span class="w"> </span>input.vcf<span class="w"> </span>&gt;<span class="w"> </span>blocks.txt
+</code></pre></div>
+<h3 id="performance-characteristics">Performance Characteristics<a class="headerlink" href="#performance-characteristics" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Processing Speed</th>
+<th>Best For</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>File input (<code>-i</code>)</td>
+<td>20-50x faster</td>
+<td>Large files, benchmarks</td>
+</tr>
+<tr>
+<td>Stdin</td>
+<td>Baseline</td>
+<td>Pipelines, streaming sources</td>
+</tr>
+<tr>
+<td>File + streaming</td>
+<td>25-50x faster</td>
+<td>Very large files with memory limits</td>
+</tr>
+</tbody>
+</table>
 <h2 id="performance-improvements">Performance Improvements<a class="headerlink" href="#performance-improvements" title="Permanent link">&para;</a></h2>
 <h3 id="streaming-mode-with-sliding-window">Streaming Mode with Sliding Window<a class="headerlink" href="#streaming-mode-with-sliding-window" title="Permanent link">&para;</a></h3>
 <p>When using <code>--streaming</code>, the tool implements a bounded-memory approach:</p>
@@ -3829,7 +3986,7 @@ Block 3: 5:(chr2:1000), 6:(chr2:1050)
 <li><strong>Memory bounded</strong>: O(window × samples) regardless of file size</li>
 <li><strong>Same block boundaries</strong>: Produces identical blocks as default mode for typical data</li>
 </ol>
-<h3 id="performance-characteristics">Performance Characteristics<a class="headerlink" href="#performance-characteristics" title="Permanent link">&para;</a></h3>
+<h3 id="performance-characteristics_1">Performance Characteristics<a class="headerlink" href="#performance-characteristics_1" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
