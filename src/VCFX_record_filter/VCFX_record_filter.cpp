@@ -140,10 +140,24 @@ static bool parseSingleCriterion(std::string_view token, FilterCriterion& crit) 
         crit.target = TargetField::INFO_KEY;
     }
 
-    // Try to parse as numeric using fast charconv
+    // Try to parse as numeric using strtod (from_chars for double unavailable on macOS)
     double d;
-    auto result = std::from_chars(valPart.data(), valPart.data() + valPart.size(), d);
-    if (result.ec == std::errc{} && result.ptr == valPart.data() + valPart.size()) {
+    char buf[64];
+    bool isNumeric = false;
+    if (valPart.size() < sizeof(buf)) {
+        std::memcpy(buf, valPart.data(), valPart.size());
+        buf[valPart.size()] = '\0';
+        char* endptr;
+        d = std::strtod(buf, &endptr);
+        isNumeric = (endptr == buf + valPart.size());
+    } else {
+        std::string tmp(valPart);
+        char* endptr;
+        d = std::strtod(tmp.c_str(), &endptr);
+        isNumeric = (endptr == tmp.c_str() + tmp.size());
+    }
+
+    if (isNumeric) {
         crit.fieldType = FieldType::NUMERIC;
         crit.numericValue = d;
         crit.stringValue.clear();
@@ -253,12 +267,35 @@ bool VCFXRecordFilter::extractInfoValue(std::string_view info, std::string_view 
 }
 
 // ============================================================================
-// Fast numeric parsing using std::from_chars (no exceptions, no allocations)
+// Fast numeric parsing - uses strtod with careful bounds checking
+// (std::from_chars for double is not available on macOS libc++)
 // ============================================================================
 bool VCFXRecordFilter::parseDouble(std::string_view sv, double& out) {
     if (sv.empty()) return false;
-    auto result = std::from_chars(sv.data(), sv.data() + sv.size(), out);
-    return result.ec == std::errc{} && result.ptr == sv.data() + sv.size();
+
+    // Fast path: check if the string_view is null-terminated or followed by
+    // a non-numeric character (common case for VCF parsing)
+    const char* start = sv.data();
+    const char* end = start + sv.size();
+
+    // Need a null-terminated string for strtod
+    // Use a small stack buffer for typical numeric values
+    char buf[64];
+    if (sv.size() < sizeof(buf)) {
+        std::memcpy(buf, start, sv.size());
+        buf[sv.size()] = '\0';
+        start = buf;
+    } else {
+        // Unlikely: very long numeric string
+        std::string tmp(sv);
+        char* endptr;
+        out = std::strtod(tmp.c_str(), &endptr);
+        return endptr == tmp.c_str() + tmp.size();
+    }
+
+    char* endptr;
+    out = std::strtod(start, &endptr);
+    return endptr == start + sv.size();
 }
 
 bool VCFXRecordFilter::parseInt(std::string_view sv, int64_t& out) {
