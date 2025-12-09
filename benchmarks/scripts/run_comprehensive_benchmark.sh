@@ -1,6 +1,13 @@
 #!/bin/bash
 # Comprehensive VCFX Performance Benchmark
-# Tests all tools on chr21 1000 Genomes Phase 3 data (4GB, 427K variants, 2504 samples)
+# Tests all tools on 1000 Genomes Phase 3 data
+#
+# Usage: ./run_comprehensive_benchmark.sh [--tiny|--small|--full]
+#
+# Options:
+#   --tiny     Run on tiny dataset (~100 variants, ~5KB) - quick test
+#   --small    Run on small dataset (5K variants, ~50MB) - medium test
+#   --full     Run on full dataset (427K variants, 4.3GB) - comprehensive (default)
 
 set -e
 
@@ -9,7 +16,35 @@ ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 BUILD_DIR="$ROOT_DIR/build/src"
 DATA_DIR="$ROOT_DIR/benchmarks/data"
 RESULTS_DIR="$ROOT_DIR/benchmarks/results"
-DATA_FILE="$DATA_DIR/chr21.1kg.phase3.v5a.vcf"
+
+# Dataset configurations
+TINY_FILE="$DATA_DIR/chr20_tiny.vcf"
+SMALL_FILE="$DATA_DIR/chr21_small.vcf"
+FULL_FILE="$DATA_DIR/chr21.1kg.phase3.v5a.vcf"
+
+# Parse arguments - default to full
+DATASET_SIZE="full"
+case "${1:-full}" in
+    --tiny)
+        DATASET_SIZE="tiny"
+        DATA_FILE="$TINY_FILE"
+        DEFAULT_TIMEOUT=30
+        LONG_TIMEOUT=60
+        ;;
+    --small)
+        DATASET_SIZE="small"
+        DATA_FILE="$SMALL_FILE"
+        DEFAULT_TIMEOUT=60
+        LONG_TIMEOUT=300
+        ;;
+    --full|*)
+        DATASET_SIZE="full"
+        DATA_FILE="$FULL_FILE"
+        DEFAULT_TIMEOUT=300
+        LONG_TIMEOUT=3600
+        ;;
+esac
+
 REF_FASTA="$DATA_DIR/chr21.fa"
 POP_FREQ_FILE="$DATA_DIR/pop_frequencies.tsv"
 
@@ -61,27 +96,35 @@ if [ ! -f "$POP_FREQ_FILE" ]; then
 fi
 echo ""
 
-# Results file
-RESULTS_CSV="$RESULTS_DIR/comprehensive_benchmark_$(date +%Y%m%d_%H%M%S).csv"
+# Results file - include dataset size in filename
+RESULTS_CSV="$RESULTS_DIR/comprehensive_benchmark_${DATASET_SIZE}_$(date +%Y%m%d_%H%M%S).csv"
 echo "tool,category,time_seconds,status,description" > "$RESULTS_CSV"
 
 echo "=============================================="
 echo "   VCFX Comprehensive Performance Benchmark"
 echo "=============================================="
 echo ""
+echo "Dataset: $DATASET_SIZE"
 echo "Test file: $DATA_FILE"
-echo "Size: $(ls -lh "$DATA_FILE" | awk '{print $5}')"
+if [ -f "$DATA_FILE" ]; then
+    echo "Size: $(ls -lh "$DATA_FILE" | awk '{print $5}')"
+else
+    echo "WARNING: Test file not found!"
+    echo "Run 'make datasets' in benchmarks/ to download test data."
+    exit 1
+fi
+echo "Default timeout: ${DEFAULT_TIMEOUT}s, Long timeout: ${LONG_TIMEOUT}s"
 echo "Date: $(date)"
 echo "Results: $RESULTS_CSV"
 echo ""
 
-# Function to benchmark a tool (default 5 min timeout)
+# Function to benchmark a tool
 benchmark() {
     local name="$1"
     local category="$2"
     local cmd="$3"
     local desc="$4"
-    local timeout_secs="${5:-300}"  # Default 5 minutes
+    local timeout_secs="${5:-$DEFAULT_TIMEOUT}"
 
     echo -n "Testing $name... "
 
@@ -104,15 +147,13 @@ cat "$DATA_FILE" > /dev/null
 echo ""
 
 echo "=== Category 1: Basic I/O & Validation ==="
+# variant_counter: mmap via positional arg
 benchmark "variant_counter" "basic_io" \
-    "$BUILD_DIR/VCFX_variant_counter/VCFX_variant_counter < $DATA_FILE" \
-    "Count variants"
+    "$BUILD_DIR/VCFX_variant_counter/VCFX_variant_counter $DATA_FILE" \
+    "Count variants (mmap)"
 
-benchmark "validator_stdin" "basic_io" \
-    "$BUILD_DIR/VCFX_validator/VCFX_validator < $DATA_FILE" \
-    "Validate VCF (stdin)"
-
-benchmark "validator_mmap" "basic_io" \
+# validator: mmap via -i flag
+benchmark "validator" "basic_io" \
     "$BUILD_DIR/VCFX_validator/VCFX_validator -i $DATA_FILE" \
     "Validate VCF (mmap)"
 
@@ -126,13 +167,15 @@ benchmark "reformatter" "basic_io" \
 
 echo ""
 echo "=== Category 2: Filtering Tools ==="
+# phred_filter: mmap via positional arg
 benchmark "phred_filter" "filtering" \
-    "$BUILD_DIR/VCFX_phred_filter/VCFX_phred_filter -p 30 < $DATA_FILE" \
-    "Filter QUAL>=30"
+    "$BUILD_DIR/VCFX_phred_filter/VCFX_phred_filter -p 30 $DATA_FILE" \
+    "Filter QUAL>=30 (mmap)"
 
+# record_filter: mmap via positional file argument
 benchmark "record_filter" "filtering" \
-    "$BUILD_DIR/VCFX_record_filter/VCFX_record_filter --filter 'FILTER==PASS' < $DATA_FILE" \
-    "Filter PASS only"
+    "$BUILD_DIR/VCFX_record_filter/VCFX_record_filter --filter 'FILTER==PASS' $DATA_FILE" \
+    "Filter PASS only (mmap)"
 
 benchmark "nonref_filter" "filtering" \
     "$BUILD_DIR/VCFX_nonref_filter/VCFX_nonref_filter < $DATA_FILE" \
@@ -160,58 +203,67 @@ benchmark "impact_filter" "filtering" \
 
 echo ""
 echo "=== Category 3: Analysis & Calculation Tools ==="
+# allele_freq_calc: mmap via -i flag
 benchmark "allele_freq_calc" "analysis" \
-    "$BUILD_DIR/VCFX_allele_freq_calc/VCFX_allele_freq_calc < $DATA_FILE" \
-    "Allele frequencies"
+    "$BUILD_DIR/VCFX_allele_freq_calc/VCFX_allele_freq_calc -i $DATA_FILE" \
+    "Allele frequencies (mmap)"
 
+# variant_classifier: mmap via -i flag
 benchmark "variant_classifier" "analysis" \
-    "$BUILD_DIR/VCFX_variant_classifier/VCFX_variant_classifier < $DATA_FILE" \
-    "Classify variants"
+    "$BUILD_DIR/VCFX_variant_classifier/VCFX_variant_classifier -i $DATA_FILE" \
+    "Classify variants (mmap)"
 
-# NOTE: These O(variants × samples) tools need longer timeout (60 min = 3600s)
+# NOTE: These O(variants × samples) tools - use mmap where available
+# hwe_tester: mmap via -i flag
 benchmark "hwe_tester" "analysis" \
-    "$BUILD_DIR/VCFX_hwe_tester/VCFX_hwe_tester < $DATA_FILE" \
-    "HWE test" 3600
+    "$BUILD_DIR/VCFX_hwe_tester/VCFX_hwe_tester -i $DATA_FILE" \
+    "HWE test (mmap)" $LONG_TIMEOUT
 
+# allele_counter: mmap via -i flag
 benchmark "allele_counter" "analysis" \
-    "$BUILD_DIR/VCFX_allele_counter/VCFX_allele_counter < $DATA_FILE" \
-    "Count alleles" 3600
+    "$BUILD_DIR/VCFX_allele_counter/VCFX_allele_counter -i $DATA_FILE" \
+    "Count alleles (mmap)" $LONG_TIMEOUT
 
+# allele_balance_calc: mmap via -i flag
 benchmark "allele_balance_calc" "analysis" \
-    "$BUILD_DIR/VCFX_allele_balance_calc/VCFX_allele_balance_calc < $DATA_FILE" \
-    "Allele balance calc" 3600
+    "$BUILD_DIR/VCFX_allele_balance_calc/VCFX_allele_balance_calc -i $DATA_FILE" \
+    "Allele balance calc (mmap)" $LONG_TIMEOUT
 
+# inbreeding_calculator: mmap via -i flag
 benchmark "inbreeding_calculator" "analysis" \
-    "$BUILD_DIR/VCFX_inbreeding_calculator/VCFX_inbreeding_calculator < $DATA_FILE" \
-    "Inbreeding coef" 3600
+    "$BUILD_DIR/VCFX_inbreeding_calculator/VCFX_inbreeding_calculator -i $DATA_FILE" \
+    "Inbreeding coef (mmap)" $LONG_TIMEOUT
 
+# dosage_calculator: mmap via -i flag
 benchmark "dosage_calculator" "analysis" \
-    "$BUILD_DIR/VCFX_dosage_calculator/VCFX_dosage_calculator < $DATA_FILE" \
-    "Dosage calc" 3600
+    "$BUILD_DIR/VCFX_dosage_calculator/VCFX_dosage_calculator -i $DATA_FILE" \
+    "Dosage calc (mmap)" $LONG_TIMEOUT
 
+# distance_calculator: mmap via -i flag
 benchmark "distance_calculator" "analysis" \
-    "$BUILD_DIR/VCFX_distance_calculator/VCFX_distance_calculator < $DATA_FILE" \
-    "Genetic distance"
+    "$BUILD_DIR/VCFX_distance_calculator/VCFX_distance_calculator -i $DATA_FILE" \
+    "Genetic distance (mmap)"
 
 echo ""
 echo "=== Category 4: Quality Control Tools ==="
+# missing_detector: mmap via -i flag
 benchmark "missing_detector" "qc" \
-    "$BUILD_DIR/VCFX_missing_detector/VCFX_missing_detector < $DATA_FILE" \
-    "Detect missing"
+    "$BUILD_DIR/VCFX_missing_detector/VCFX_missing_detector -i $DATA_FILE" \
+    "Detect missing (mmap)"
 
 # Phase checker may take time on large files
 benchmark "phase_checker" "qc" \
     "$BUILD_DIR/VCFX_phase_checker/VCFX_phase_checker < $DATA_FILE" \
-    "Check phasing" 600
+    "Check phasing" $LONG_TIMEOUT
 
 benchmark "outlier_detector" "qc" \
     "$BUILD_DIR/VCFX_outlier_detector/VCFX_outlier_detector < $DATA_FILE" \
     "Detect outliers"
 
-# Cross-sample concordance with specific samples
+# cross_sample_concordance: mmap via -i flag
 benchmark "cross_sample_concordance" "qc" \
-    "$BUILD_DIR/VCFX_cross_sample_concordance/VCFX_cross_sample_concordance --samples HG00096,HG00097 < $DATA_FILE" \
-    "Cross-sample concordance"
+    "$BUILD_DIR/VCFX_cross_sample_concordance/VCFX_cross_sample_concordance -i $DATA_FILE" \
+    "Cross-sample concordance (mmap)"
 
 # Alignment checker needs reference FASTA
 benchmark "alignment_checker" "qc" \
@@ -220,32 +272,34 @@ benchmark "alignment_checker" "qc" \
 
 echo ""
 echo "=== Category 5: Transformation Tools ==="
+# multiallelic_splitter: mmap via -i flag
 benchmark "multiallelic_splitter" "transformation" \
-    "$BUILD_DIR/VCFX_multiallelic_splitter/VCFX_multiallelic_splitter < $DATA_FILE" \
-    "Split multiallelic"
+    "$BUILD_DIR/VCFX_multiallelic_splitter/VCFX_multiallelic_splitter -i $DATA_FILE" \
+    "Split multiallelic (mmap)"
 
-# Indel normalizer may need extra time
+# indel_normalizer: mmap via -i flag
 benchmark "indel_normalizer" "transformation" \
-    "$BUILD_DIR/VCFX_indel_normalizer/VCFX_indel_normalizer < $DATA_FILE" \
-    "Normalize indels" 900
+    "$BUILD_DIR/VCFX_indel_normalizer/VCFX_indel_normalizer -i $DATA_FILE" \
+    "Normalize indels (mmap)" $LONG_TIMEOUT
 
+# duplicate_remover: mmap via -i flag
 benchmark "duplicate_remover" "transformation" \
-    "$BUILD_DIR/VCFX_duplicate_remover/VCFX_duplicate_remover < $DATA_FILE" \
-    "Remove duplicates"
+    "$BUILD_DIR/VCFX_duplicate_remover/VCFX_duplicate_remover -i $DATA_FILE" \
+    "Remove duplicates (mmap)"
 
-# Sorter needs longer timeout for large files
+# sorter: mmap via -i flag
 benchmark "sorter" "transformation" \
-    "$BUILD_DIR/VCFX_sorter/VCFX_sorter < $DATA_FILE" \
-    "Sort variants" 1800
+    "$BUILD_DIR/VCFX_sorter/VCFX_sorter -i $DATA_FILE" \
+    "Sort variants (mmap)" $LONG_TIMEOUT
 
 benchmark "quality_adjuster" "transformation" \
     "$BUILD_DIR/VCFX_quality_adjuster/VCFX_quality_adjuster < $DATA_FILE" \
     "Adjust quality"
 
-# Missing data handler with fill option
+# missing_data_handler: mmap via -i flag
 benchmark "missing_data_handler" "transformation" \
-    "$BUILD_DIR/VCFX_missing_data_handler/VCFX_missing_data_handler --fill-missing < $DATA_FILE" \
-    "Handle missing"
+    "$BUILD_DIR/VCFX_missing_data_handler/VCFX_missing_data_handler --fill-missing -i $DATA_FILE" \
+    "Handle missing (mmap)"
 
 benchmark "sv_handler" "transformation" \
     "$BUILD_DIR/VCFX_sv_handler/VCFX_sv_handler < $DATA_FILE" \
@@ -269,9 +323,10 @@ benchmark "position_subsetter" "extraction" \
     "$BUILD_DIR/VCFX_position_subsetter/VCFX_position_subsetter --region 21:1-10000000 < $DATA_FILE" \
     "Subset by region"
 
+# af_subsetter: mmap via -i flag
 benchmark "af_subsetter" "extraction" \
-    "$BUILD_DIR/VCFX_af_subsetter/VCFX_af_subsetter --af-filter 0.01-0.99 < $DATA_FILE" \
-    "Subset by AF"
+    "$BUILD_DIR/VCFX_af_subsetter/VCFX_af_subsetter --af-filter 0.01-0.99 -i $DATA_FILE" \
+    "Subset by AF (mmap)"
 
 benchmark "subsampler" "extraction" \
     "$BUILD_DIR/VCFX_subsampler/VCFX_subsampler --fraction 0.1 < $DATA_FILE" \
@@ -292,9 +347,10 @@ benchmark "info_aggregator" "annotation" \
     "$BUILD_DIR/VCFX_info_aggregator/VCFX_info_aggregator --aggregate-info 'AC,AN,AF' < $DATA_FILE" \
     "Aggregate INFO"
 
+# metadata_summarizer: mmap via -i flag
 benchmark "metadata_summarizer" "annotation" \
-    "$BUILD_DIR/VCFX_metadata_summarizer/VCFX_metadata_summarizer < $DATA_FILE" \
-    "Summarize metadata"
+    "$BUILD_DIR/VCFX_metadata_summarizer/VCFX_metadata_summarizer -i $DATA_FILE" \
+    "Summarize metadata (mmap)"
 
 benchmark "annotation_extractor" "annotation" \
     "$BUILD_DIR/VCFX_annotation_extractor/VCFX_annotation_extractor --annotation-extract 'AF' < $DATA_FILE" \
@@ -302,13 +358,15 @@ benchmark "annotation_extractor" "annotation" \
 
 echo ""
 echo "=== Category 8: Haplotype Tools ==="
+# haplotype_phaser: mmap via -i flag
 benchmark "haplotype_phaser" "haplotype" \
-    "$BUILD_DIR/VCFX_haplotype_phaser/VCFX_haplotype_phaser --streaming < $DATA_FILE" \
-    "Phase haplotypes (streaming)"
+    "$BUILD_DIR/VCFX_haplotype_phaser/VCFX_haplotype_phaser -i $DATA_FILE" \
+    "Phase haplotypes (mmap)"
 
+# haplotype_extractor: mmap via -i flag
 benchmark "haplotype_extractor" "haplotype" \
-    "$BUILD_DIR/VCFX_haplotype_extractor/VCFX_haplotype_extractor --streaming < $DATA_FILE" \
-    "Extract haplotypes (streaming)"
+    "$BUILD_DIR/VCFX_haplotype_extractor/VCFX_haplotype_extractor -i $DATA_FILE" \
+    "Extract haplotypes (mmap)"
 
 echo ""
 echo "=== Category 9: Ancestry Tools ==="
@@ -346,13 +404,10 @@ benchmark "population_filter" "population" \
 
 echo ""
 echo "=== Category 10: File Management Tools ==="
+# indexer: uses file argument directly (mmap)
 benchmark "indexer" "file_management" \
     "$BUILD_DIR/VCFX_indexer/VCFX_indexer $DATA_FILE" \
     "Create index (mmap)"
-
-benchmark "indexer_stdin" "file_management" \
-    "$BUILD_DIR/VCFX_indexer/VCFX_indexer < $DATA_FILE" \
-    "Create index (stdin)"
 
 # Compressor needs --compress flag
 benchmark "compressor" "file_management" \
@@ -385,25 +440,25 @@ benchmark "format_converter_bed" "conversion" \
     "$BUILD_DIR/VCFX_format_converter/VCFX_format_converter --to-bed < $DATA_FILE" \
     "Convert to BED"
 
-# FASTA converter is O(variants × samples) - needs longer timeout
+# fasta_converter: mmap via -i flag - O(variants × samples)
 benchmark "fasta_converter" "conversion" \
-    "$BUILD_DIR/VCFX_fasta_converter/VCFX_fasta_converter < $DATA_FILE" \
-    "Convert to FASTA" 3600
+    "$BUILD_DIR/VCFX_fasta_converter/VCFX_fasta_converter -i $DATA_FILE" \
+    "Convert to FASTA (mmap)" $LONG_TIMEOUT
 
 echo ""
 echo "=== Category 12: Comparison & Diff Tools ==="
-# Diff tool needs two VCF files with --file1 and --file2 flags
+# diff_tool: uses --file1 and --file2 flags (mmap internally)
 benchmark "diff_tool" "comparison" \
     "$BUILD_DIR/VCFX_diff_tool/VCFX_diff_tool --file1 $DATA_FILE --file2 $DATA_FILE --assume-sorted" \
-    "Diff VCF files"
+    "Diff VCF files (mmap)"
 
-# Concordance checker - reads from stdin, compares two samples within the VCF
+# concordance_checker: mmap via -i flag
 # Extract first two sample names from VCF header
 SAMPLE1=$(head -1000 "$DATA_FILE" | grep "^#CHROM" | cut -f10)
 SAMPLE2=$(head -1000 "$DATA_FILE" | grep "^#CHROM" | cut -f11)
 benchmark "concordance_checker" "comparison" \
-    "$BUILD_DIR/VCFX_concordance_checker/VCFX_concordance_checker --samples \"$SAMPLE1 $SAMPLE2\" < $DATA_FILE" \
-    "Check concordance"
+    "$BUILD_DIR/VCFX_concordance_checker/VCFX_concordance_checker -i $DATA_FILE --samples \"$SAMPLE1,$SAMPLE2\"" \
+    "Check concordance (mmap)"
 
 # Reference comparator needs reference FASTA
 benchmark "ref_comparator" "comparison" \
@@ -412,10 +467,10 @@ benchmark "ref_comparator" "comparison" \
 
 echo ""
 echo "=== Category 13: Advanced Analysis ==="
-# LD calculator - computationally intensive
+# ld_calculator: mmap via -i flag - computationally intensive
 benchmark "ld_calculator" "advanced_analysis" \
-    "$BUILD_DIR/VCFX_ld_calculator/VCFX_ld_calculator --window 1000 < $DATA_FILE" \
-    "Calculate LD" 3600
+    "$BUILD_DIR/VCFX_ld_calculator/VCFX_ld_calculator -i $DATA_FILE --window 1000" \
+    "Calculate LD (mmap)" $LONG_TIMEOUT
 
 # Custom annotator
 benchmark "custom_annotator" "advanced_analysis" \

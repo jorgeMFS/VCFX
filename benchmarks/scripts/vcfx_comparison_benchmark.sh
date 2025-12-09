@@ -252,15 +252,15 @@ get_file_stats() {
 }
 
 # =============================================================================
-# Main Benchmark Suite
+# Main Benchmark Suite (Tiny - tests both stdin and mmap paths)
 # =============================================================================
-run_suite() {
+run_suite_tiny() {
     local dataset_name="$1"
     local data_file="$2"
     local timeout_sec="$3"
 
     echo ""
-    echo "=== Benchmarking: $dataset_name ==="
+    echo "=== Benchmarking: $dataset_name (testing both stdin and mmap paths) ==="
     echo "File: $data_file"
 
     if [ ! -f "$data_file" ]; then
@@ -279,10 +279,12 @@ run_suite() {
     echo ""
 
     # -------------------------------------------------------------------------
-    # 1. Variant Counting
+    # 1. Variant Counting (has mmap support via positional arg)
     # -------------------------------------------------------------------------
     echo "--- Variant Counting ---"
-    run_benchmark "count" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+    run_benchmark "count" "vcfx_mmap" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+        "$BUILD_DIR/VCFX_variant_counter/VCFX_variant_counter $data_file" "$timeout_sec"
+    run_benchmark "count" "vcfx_stdin" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
         "$BUILD_DIR/VCFX_variant_counter/VCFX_variant_counter < $data_file" "$timeout_sec"
 
     if $HAS_BCFTOOLS; then
@@ -291,7 +293,7 @@ run_suite() {
     fi
 
     # -------------------------------------------------------------------------
-    # 2. Field Extraction
+    # 2. Field Extraction (no mmap support - stdin only)
     # -------------------------------------------------------------------------
     echo "--- Field Extraction ---"
     run_benchmark "field_extract" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
@@ -303,10 +305,12 @@ run_suite() {
     fi
 
     # -------------------------------------------------------------------------
-    # 3. Quality Filtering
+    # 3. Quality Filtering (has mmap support via positional arg)
     # -------------------------------------------------------------------------
     echo "--- Quality Filtering (QUAL>=30) ---"
-    run_benchmark "quality_filter" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+    run_benchmark "quality_filter" "vcfx_mmap" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+        "$BUILD_DIR/VCFX_phred_filter/VCFX_phred_filter -p 30 $data_file" "$timeout_sec"
+    run_benchmark "quality_filter" "vcfx_stdin" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
         "$BUILD_DIR/VCFX_phred_filter/VCFX_phred_filter -p 30 < $data_file" "$timeout_sec"
 
     if $HAS_BCFTOOLS; then
@@ -320,10 +324,12 @@ run_suite() {
     fi
 
     # -------------------------------------------------------------------------
-    # 4. Allele Frequency Calculation
+    # 4. Allele Frequency Calculation (has mmap support via -i flag)
     # -------------------------------------------------------------------------
     echo "--- Allele Frequency Calculation ---"
-    run_benchmark "allele_freq" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+    run_benchmark "allele_freq" "vcfx_mmap" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+        "$BUILD_DIR/VCFX_allele_freq_calc/VCFX_allele_freq_calc -i $data_file" "$timeout_sec"
+    run_benchmark "allele_freq" "vcfx_stdin" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
         "$BUILD_DIR/VCFX_allele_freq_calc/VCFX_allele_freq_calc < $data_file" "$timeout_sec"
 
     if $HAS_VCFTOOLS; then
@@ -332,15 +338,11 @@ run_suite() {
     fi
 
     # -------------------------------------------------------------------------
-    # 5. Validation
+    # 5. Validation (has mmap support via -i flag)
     # -------------------------------------------------------------------------
     echo "--- VCF Validation ---"
-
-    # VCFX with mmap (fast path)
     run_benchmark "validate" "vcfx_mmap" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
         "$BUILD_DIR/VCFX_validator/VCFX_validator -i $data_file --no-dup-check" "$timeout_sec"
-
-    # VCFX with stdin (slow path)
     run_benchmark "validate" "vcfx_stdin" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
         "$BUILD_DIR/VCFX_validator/VCFX_validator --no-dup-check < $data_file" "$timeout_sec"
 
@@ -350,10 +352,12 @@ run_suite() {
     fi
 
     # -------------------------------------------------------------------------
-    # 6. Missing Data Detection
+    # 6. Missing Data Detection (has mmap support via -i flag)
     # -------------------------------------------------------------------------
     echo "--- Missing Data Detection ---"
-    run_benchmark "missing" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+    run_benchmark "missing" "vcfx_mmap" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+        "$BUILD_DIR/VCFX_missing_detector/VCFX_missing_detector -i $data_file" "$timeout_sec"
+    run_benchmark "missing" "vcfx_stdin" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
         "$BUILD_DIR/VCFX_missing_detector/VCFX_missing_detector < $data_file" "$timeout_sec"
 
     if $HAS_VCFTOOLS; then
@@ -362,7 +366,7 @@ run_suite() {
     fi
 
     # -------------------------------------------------------------------------
-    # 7. Region Subsetting (first 10M bases)
+    # 7. Region Subsetting (no mmap support - stdin only)
     # -------------------------------------------------------------------------
     echo "--- Region Subsetting (first 10Mb) ---"
     run_benchmark "region_subset" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
@@ -374,7 +378,133 @@ run_suite() {
     fi
 
     # -------------------------------------------------------------------------
-    # 8. Indexing
+    # 8. Indexing (uses file argument directly)
+    # -------------------------------------------------------------------------
+    echo "--- Indexing ---"
+    run_benchmark "index" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+        "$BUILD_DIR/VCFX_indexer/VCFX_indexer $data_file" "$timeout_sec"
+
+    echo ""
+}
+
+# =============================================================================
+# Main Benchmark Suite (Small/Full - uses fast mmap modes only for VCFX)
+# =============================================================================
+run_suite() {
+    local dataset_name="$1"
+    local data_file="$2"
+    local timeout_sec="$3"
+
+    echo ""
+    echo "=== Benchmarking: $dataset_name (optimized mmap mode) ==="
+    echo "File: $data_file"
+
+    if [ ! -f "$data_file" ]; then
+        echo "WARNING: File not found, skipping..."
+        return
+    fi
+
+    # Get file stats
+    IFS=',' read -r file_size_mb variants samples <<< "$(get_file_stats "$data_file")"
+    echo "Size: ${file_size_mb}MB, Variants: $variants, Samples: $samples"
+    echo ""
+
+    # Warm up file cache
+    echo "Warming up file cache..."
+    cat "$data_file" > /dev/null 2>&1
+    echo ""
+
+    # -------------------------------------------------------------------------
+    # 1. Variant Counting (mmap via positional arg)
+    # -------------------------------------------------------------------------
+    echo "--- Variant Counting ---"
+    run_benchmark "count" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+        "$BUILD_DIR/VCFX_variant_counter/VCFX_variant_counter $data_file" "$timeout_sec"
+
+    if $HAS_BCFTOOLS; then
+        run_benchmark "count" "bcftools" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+            "bcftools view -H $data_file | wc -l" "$timeout_sec"
+    fi
+
+    # -------------------------------------------------------------------------
+    # 2. Field Extraction (no mmap - stdin only)
+    # -------------------------------------------------------------------------
+    echo "--- Field Extraction ---"
+    run_benchmark "field_extract" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+        "$BUILD_DIR/VCFX_field_extractor/VCFX_field_extractor --fields CHROM,POS,REF,ALT < $data_file" "$timeout_sec"
+
+    if $HAS_BCFTOOLS; then
+        run_benchmark "field_extract" "bcftools" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+            "bcftools query -f '%CHROM\t%POS\t%REF\t%ALT\n' $data_file" "$timeout_sec"
+    fi
+
+    # -------------------------------------------------------------------------
+    # 3. Quality Filtering (mmap via positional arg)
+    # -------------------------------------------------------------------------
+    echo "--- Quality Filtering (QUAL>=30) ---"
+    run_benchmark "quality_filter" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+        "$BUILD_DIR/VCFX_phred_filter/VCFX_phred_filter -p 30 $data_file" "$timeout_sec"
+
+    if $HAS_BCFTOOLS; then
+        run_benchmark "quality_filter" "bcftools" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+            "bcftools view -i 'QUAL>=30' $data_file" "$timeout_sec"
+    fi
+
+    if $HAS_VCFTOOLS; then
+        run_benchmark "quality_filter" "vcftools" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+            "vcftools --vcf $data_file --minQ 30 --recode --stdout 2>/dev/null" "$timeout_sec"
+    fi
+
+    # -------------------------------------------------------------------------
+    # 4. Allele Frequency Calculation (mmap via -i flag)
+    # -------------------------------------------------------------------------
+    echo "--- Allele Frequency Calculation ---"
+    run_benchmark "allele_freq" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+        "$BUILD_DIR/VCFX_allele_freq_calc/VCFX_allele_freq_calc -i $data_file" "$timeout_sec"
+
+    if $HAS_VCFTOOLS; then
+        run_benchmark "allele_freq" "vcftools" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+            "vcftools --vcf $data_file --freq --stdout 2>/dev/null" "$timeout_sec"
+    fi
+
+    # -------------------------------------------------------------------------
+    # 5. Validation (mmap via -i flag)
+    # -------------------------------------------------------------------------
+    echo "--- VCF Validation ---"
+    run_benchmark "validate" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+        "$BUILD_DIR/VCFX_validator/VCFX_validator -i $data_file --no-dup-check" "$timeout_sec"
+
+    if $HAS_BCFTOOLS; then
+        run_benchmark "validate" "bcftools" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+            "bcftools view $data_file" "$timeout_sec"
+    fi
+
+    # -------------------------------------------------------------------------
+    # 6. Missing Data Detection (mmap via -i flag)
+    # -------------------------------------------------------------------------
+    echo "--- Missing Data Detection ---"
+    run_benchmark "missing" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+        "$BUILD_DIR/VCFX_missing_detector/VCFX_missing_detector -i $data_file" "$timeout_sec"
+
+    if $HAS_VCFTOOLS; then
+        run_benchmark "missing" "vcftools" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+            "vcftools --vcf $data_file --missing-indv --stdout 2>/dev/null" "$timeout_sec"
+    fi
+
+    # -------------------------------------------------------------------------
+    # 7. Region Subsetting (no mmap - stdin only)
+    # -------------------------------------------------------------------------
+    echo "--- Region Subsetting (first 10Mb) ---"
+    run_benchmark "region_subset" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+        "$BUILD_DIR/VCFX_position_subsetter/VCFX_position_subsetter --region 21:1-10000000 < $data_file" "$timeout_sec"
+
+    if $HAS_BCFTOOLS; then
+        run_benchmark "region_subset" "bcftools" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+            "bcftools view -r 21:1-10000000 $data_file" "$timeout_sec"
+    fi
+
+    # -------------------------------------------------------------------------
+    # 8. Indexing (uses file argument directly)
     # -------------------------------------------------------------------------
     echo "--- Indexing ---"
     run_benchmark "index" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
@@ -403,10 +533,12 @@ main() {
     echo "operation,tool,dataset,file_size_mb,variants,samples,run_num,real_time_s,user_time_s,sys_time_s,max_memory_mb,cpu_percent,status,command" > "$CSV_FILE"
 
     # Run benchmarks
+    # Tiny dataset: test both stdin and mmap paths for comparison
     if $RUN_TINY && [ -f "$TINY_FILE" ]; then
-        run_suite "tiny" "$TINY_FILE" "$TIMEOUT_SMALL"
+        run_suite_tiny "tiny" "$TINY_FILE" "$TIMEOUT_SMALL"
     fi
 
+    # Small/Full datasets: use optimized mmap mode only for speed
     if $RUN_SMALL && [ -f "$SMALL_FILE" ]; then
         run_suite "small" "$SMALL_FILE" "$TIMEOUT_SMALL"
     fi

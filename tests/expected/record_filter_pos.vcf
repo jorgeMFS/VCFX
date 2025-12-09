@@ -1,0 +1,9 @@
+##fileformat=VCFv4.2
+##source=VCFX
+##FILTER=<ID=PASS,Description="All filters passed">
+##FILTER=<ID=LowQual,Description="Low quality variant">
+##contig=<ID=chr1,length=248956422>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE1	SAMPLE2
+chr1	30000	rs789	G	A	50	LowQual	AF=0.05;DP=15	GT:DP	0/1:15	0/0:14
+chr1	40000	rs101	T	C	90	PASS	AF=0.35;DP=45	GT:DP	0/1:45	1/1:42
+chr1	50000	rs102	G	T	30	LowQual	AF=0.02;DP=10	GT:DP	0/0:10	0/1:8
