@@ -1,4 +1,5 @@
-#include "vcfx_core.h"
+#include "vcfx_core.h" 
+#include "vcfx_io.h"
 #include <algorithm>
 #include <cstdlib>
 #include <getopt.h>
@@ -144,6 +145,10 @@ static void processVCF(std::istream &in, const AnnotationOptions &opts) {
     }
     std::cout << "\n";
 
+    // Declare fields vector outside loop for reuse
+    std::vector<std::string> fields;
+    fields.reserve(16);
+
     while (std::getline(in, line)) {
         if (line.empty()) {
             continue;
@@ -170,7 +175,7 @@ static void processVCF(std::istream &in, const AnnotationOptions &opts) {
         // Split the line by tabs
         // Minimal VCF => 8 fields: CHROM POS ID REF ALT QUAL FILTER INFO
         // plus optional FORMAT + samples
-        auto fields = split(line, '\t');
+        vcfx::split_tabs(line, fields);
         if (fields.size() < 8) {
             std::cerr << "Warning: Invalid VCF line (fewer than 8 fields): " << line << "\n";
             continue;
@@ -272,6 +277,7 @@ static void processVCF(std::istream &in, const AnnotationOptions &opts) {
 static void show_help() { printHelp(); }
 
 int main(int argc, char *argv[]) {
+    vcfx::init_io();  // Performance: disable sync_with_stdio
     if (vcfx::handle_common_flags(argc, argv, "VCFX_annotation_extractor", show_help))
         return 0;
     AnnotationOptions opts;

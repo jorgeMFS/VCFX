@@ -1,5 +1,6 @@
 #include "VCFX_position_subsetter.h"
-#include "vcfx_core.h"
+#include "vcfx_core.h" 
+#include "vcfx_io.h"
 #include <cstdlib>
 #include <getopt.h>
 #include <iostream>
@@ -95,6 +96,8 @@ bool VCFXPositionSubsetter::subsetVCFByPosition(std::istream &in, std::ostream &
                                                 int regionStart, int regionEnd) {
     bool headerFound = false;
     std::string line;
+    std::vector<std::string> fields;
+    fields.reserve(16);
     while (true) {
         if (!std::getline(in, line))
             break;
@@ -112,13 +115,7 @@ bool VCFXPositionSubsetter::subsetVCFByPosition(std::istream &in, std::ostream &
             std::cerr << "Warning: data line encountered before #CHROM => skipping.\n";
             continue;
         }
-        std::vector<std::string> fields;
-        {
-            std::stringstream ss(line);
-            std::string f;
-            while (std::getline(ss, f, '\t'))
-                fields.push_back(f);
-        }
+        vcfx::split_tabs(line, fields);
         if (fields.size() < 2) {
             std::cerr << "Warning: line has <2 columns => skipping.\n";
             continue;
@@ -148,6 +145,7 @@ static void show_help() {
 }
 
 int main(int argc, char *argv[]) {
+    vcfx::init_io();  // Performance: disable sync_with_stdio
     if (vcfx::handle_common_flags(argc, argv, "VCFX_position_subsetter", show_help))
         return 0;
     VCFXPositionSubsetter subsetter;

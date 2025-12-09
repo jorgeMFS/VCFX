@@ -1,5 +1,6 @@
 #include "VCFX_subsampler.h"
-#include "vcfx_core.h"
+#include "vcfx_core.h" 
+#include "vcfx_io.h"
 #include <cstdlib>
 #include <ctime>
 #include <getopt.h>
@@ -100,6 +101,10 @@ void VCFXSubsampler::subsampleLines(std::istream &in, std::ostream &out, int sam
     int count = 0; // how many data lines read in total
     std::default_random_engine rng(seed);
 
+    // Declare fields vector outside loop for reuse
+    std::vector<std::string> fields;
+    fields.reserve(16);
+
     // Read the file line by line
     while (true) {
         if (!std::getline(in, line))
@@ -123,17 +128,10 @@ void VCFXSubsampler::subsampleLines(std::istream &in, std::ostream &out, int sam
             readingHeader = false; // from now on, everything is data
 
             // Check column count for data lines
-            {
-                std::stringstream ss(line);
-                std::vector<std::string> fields;
-                std::string tmp;
-                while (std::getline(ss, tmp, '\t')) {
-                    fields.push_back(tmp);
-                }
-                if (fields.size() < 8) {
-                    std::cerr << "Warning: skipping line with <8 columns.\n";
-                    continue;
-                }
+            vcfx::split_tabs(line, fields);
+            if (fields.size() < 8) {
+                std::cerr << "Warning: skipping line with <8 columns.\n";
+                continue;
             }
 
             // Reservoir sampling logic
@@ -166,6 +164,7 @@ static void show_help() {
 }
 
 int main(int argc, char *argv[]) {
+    vcfx::init_io();  // Performance: disable sync_with_stdio
     if (vcfx::handle_common_flags(argc, argv, "VCFX_subsampler", show_help))
         return 0;
     VCFXSubsampler app;

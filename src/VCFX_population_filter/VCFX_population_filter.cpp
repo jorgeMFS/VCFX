@@ -1,5 +1,6 @@
 #include "VCFX_population_filter.h"
-#include "vcfx_core.h"
+#include "vcfx_core.h" 
+#include "vcfx_io.h"
 #include <cstdlib>
 #include <fstream>
 #include <getopt.h>
@@ -112,6 +113,10 @@ void VCFXPopulationFilter::filterPopulation(std::istream &in, std::ostream &out,
     std::string line;
     std::vector<std::string> finalHeader;
     std::vector<int> sampleIndices;
+    std::vector<std::string> fields;
+    fields.reserve(16);
+    std::vector<std::string> columns;
+    columns.reserve(16);
 
     while (true) {
         if (!std::getline(in, line))
@@ -123,14 +128,7 @@ void VCFXPopulationFilter::filterPopulation(std::istream &in, std::ostream &out,
         if (line[0] == '#') {
             if (line.rfind("#CHROM", 0) == 0) {
                 foundChromLine = true;
-                std::stringstream ss(line);
-                std::vector<std::string> fields;
-                {
-                    std::string col;
-                    while (std::getline(ss, col, '\t')) {
-                        fields.push_back(col);
-                    }
-                }
+                vcfx::split_tabs(line, fields);
                 // fields[0..8] => fixed, fields[9..] => samples
                 sampleIndices.clear();
                 for (size_t i = 9; i < fields.size(); i++) {
@@ -160,14 +158,7 @@ void VCFXPopulationFilter::filterPopulation(std::istream &in, std::ostream &out,
             std::cerr << "Warning: data line before #CHROM => skipping.\n";
             continue;
         }
-        std::vector<std::string> columns;
-        {
-            std::stringstream ss(line);
-            std::string x;
-            while (std::getline(ss, x, '\t')) {
-                columns.push_back(x);
-            }
-        }
+        vcfx::split_tabs(line, columns);
         if (columns.size() < 9) {
             std::cerr << "Warning: line with fewer than 9 columns => skipping.\n";
             continue;
@@ -200,6 +191,7 @@ static void show_help() {
 }
 
 int main(int argc, char *argv[]) {
+    vcfx::init_io();  // Performance: disable sync_with_stdio
     if (vcfx::handle_common_flags(argc, argv, "VCFX_population_filter", show_help))
         return 0;
     VCFXPopulationFilter pf;

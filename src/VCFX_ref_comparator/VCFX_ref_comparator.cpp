@@ -1,5 +1,6 @@
 #include "VCFX_ref_comparator.h"
-#include "vcfx_core.h"
+#include "vcfx_core.h" 
+#include "vcfx_io.h"
 #include <algorithm>
 #include <cctype>
 #include <fstream>
@@ -115,6 +116,8 @@ void VCFXRefComparator::compareVCF(std::istream &vcfIn, std::ostream &vcfOut) {
     bool foundChromHeader = false;
     infoHeaderInserted = false;
     std::string line;
+    std::vector<std::string> fields;
+    fields.reserve(16);
     while (true) {
         if (!std::getline(vcfIn, line))
             break;
@@ -143,14 +146,7 @@ void VCFXRefComparator::compareVCF(std::istream &vcfIn, std::ostream &vcfOut) {
             continue;
         }
         // parse fields
-        std::stringstream ss(line);
-        std::vector<std::string> fields;
-        {
-            std::string col;
-            while (std::getline(ss, col, '\t')) {
-                fields.push_back(col);
-            }
-        }
+        vcfx::split_tabs(line, fields);
         if (fields.size() < 8) {
             std::cerr << "Warning: VCF line has <8 columns => skipping.\n";
             continue;
@@ -295,6 +291,7 @@ static void show_help() {
 }
 
 int main(int argc, char *argv[]) {
+    vcfx::init_io();  // Performance: disable sync_with_stdio
     if (vcfx::handle_common_flags(argc, argv, "VCFX_ref_comparator", show_help))
         return 0;
     VCFXRefComparator refComp;

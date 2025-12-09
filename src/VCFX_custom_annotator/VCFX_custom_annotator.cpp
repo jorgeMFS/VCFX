@@ -1,4 +1,5 @@
 #include "vcfx_core.h"
+#include "vcfx_io.h"
 #include <algorithm>
 #include <cstdlib>
 #include <fstream>
@@ -30,15 +31,18 @@ class VCFXCustomAnnotator {
 };
 
 // ---------------------------------------------------------------------------
-// Utility: split a string by a delimiter
+// Utility: split a string by a delimiter (optimized with find-based approach)
 // ---------------------------------------------------------------------------
 static std::vector<std::string> split(const std::string &str, char delimiter) {
     std::vector<std::string> tokens;
-    std::stringstream ss(str);
-    std::string tmp;
-    while (std::getline(ss, tmp, delimiter)) {
-        tokens.push_back(tmp);
+    tokens.reserve(8);
+    size_t start = 0;
+    size_t end;
+    while ((end = str.find(delimiter, start)) != std::string::npos) {
+        tokens.emplace_back(str, start, end - start);
+        start = end + 1;
     }
+    tokens.emplace_back(str, start);
     return tokens;
 }
 
@@ -134,6 +138,9 @@ void VCFXCustomAnnotator::addAnnotations(std::istream &in, std::ostream &out,
                                          const std::unordered_map<std::string, std::string> &annotations) {
     bool infoHeaderInserted = false;
     std::string line;
+    // Declare fields vector outside loop for reuse
+    std::vector<std::string> fields;
+    fields.reserve(16);
 
     while (std::getline(in, line)) {
         if (line.empty()) {
@@ -154,19 +161,20 @@ void VCFXCustomAnnotator::addAnnotations(std::istream &in, std::ostream &out,
 
         // parse the 8 standard fields + possibly more
         // e.g. CHROM POS ID REF ALT QUAL FILTER INFO ...
-        std::stringstream ss(line);
-        std::string chrom, pos, id, ref, alt, qual, filter, info;
-        if (!(ss >> chrom >> pos >> id >> ref >> alt >> qual >> filter >> info)) {
+        vcfx::split_tabs(line, fields);
+        if (fields.size() < 8) {
             std::cerr << "Warning: Skipping invalid VCF line: " << line << "\n";
             continue;
         }
 
-        // read the remainder of the line as one string (could include FORMAT, sample columns, etc.)
-        std::string rest;
-        if (std::getline(ss, rest)) {
-            // ' rest ' includes the leading space if any
-            // We can just keep it as is
-        }
+        const std::string &chrom = fields[0];
+        const std::string &pos = fields[1];
+        const std::string &id = fields[2];
+        const std::string &ref = fields[3];
+        const std::string &alt = fields[4];
+        const std::string &qual = fields[5];
+        const std::string &filter = fields[6];
+        std::string info = fields[7];
 
         // If ALT is multi-allelic, e.g. "A,C,G", we do a separate lookup for each allele
         auto altAlleles = split(alt, ',');
@@ -214,13 +222,12 @@ void VCFXCustomAnnotator::addAnnotations(std::istream &in, std::ostream &out,
 
         // Reconstruct the VCF line
         // We print CHROM POS ID REF ALT QUAL FILTER INFO then the rest
-        // e.g. leftover might be " FORMAT SAMPLE1 SAMPLE2..."
         out << chrom << "\t" << pos << "\t" << id << "\t" << ref << "\t" << alt << "\t" << qual << "\t" << filter
             << "\t" << info;
 
-        // If there's anything left in 'rest', print it
-        if (!rest.empty()) {
-            out << rest; // includes leading space
+        // If there are more fields (FORMAT, sample columns), add them
+        for (size_t i = 8; i < fields.size(); ++i) {
+            out << "\t" << fields[i];
         }
         out << "\n";
     }
@@ -280,6 +287,7 @@ static void show_help() {
 }
 
 int main(int argc, char *argv[]) {
+    vcfx::init_io();  // Performance: disable sync_with_stdio
     if (vcfx::handle_common_flags(argc, argv, "VCFX_custom_annotator", show_help))
         return 0;
     VCFXCustomAnnotator annotator;

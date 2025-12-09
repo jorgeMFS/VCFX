@@ -1,5 +1,6 @@
 #include "VCFX_quality_adjuster.h"
-#include "vcfx_core.h"
+#include "vcfx_core.h" 
+#include "vcfx_io.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
@@ -106,6 +107,8 @@ bool VCFXQualityAdjuster::parseTransformationFunction(const std::string &funcStr
 void VCFXQualityAdjuster::adjustQualityScores(std::istream &in, std::ostream &out,
                                               std::function<double(double)> transFunc, bool clamp) {
     std::string line;
+    std::vector<std::string> fields;
+    fields.reserve(16);
     while (true) {
         if (!std::getline(in, line))
             break;
@@ -118,14 +121,7 @@ void VCFXQualityAdjuster::adjustQualityScores(std::istream &in, std::ostream &ou
             continue;
         }
         // parse fields
-        std::vector<std::string> fields;
-        {
-            std::stringstream ss(line);
-            std::string f;
-            while (std::getline(ss, f, '\t')) {
-                fields.push_back(f);
-            }
-        }
+        vcfx::split_tabs(line, fields);
         if (fields.size() < 8) {
             std::cerr << "Warning: line with <8 fields => skipping.\n";
             continue;
@@ -180,6 +176,7 @@ static void show_help() {
 }
 
 int main(int argc, char *argv[]) {
+    vcfx::init_io();  // Performance: disable sync_with_stdio
     if (vcfx::handle_common_flags(argc, argv, "VCFX_quality_adjuster", show_help))
         return 0;
     VCFXQualityAdjuster app;

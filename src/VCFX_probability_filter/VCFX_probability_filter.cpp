@@ -1,5 +1,6 @@
 #include "VCFX_probability_filter.h"
-#include "vcfx_core.h"
+#include "vcfx_core.h" 
+#include "vcfx_io.h"
 #include <algorithm>
 #include <getopt.h>
 #include <regex>
@@ -75,6 +76,8 @@ void VCFXProbabilityFilter::filterByProbability(std::istream &in, std::ostream &
     std::vector<std::string> headerFields;
     size_t formatIndex = std::string::npos;
     size_t fieldIndex = std::string::npos;
+    std::vector<std::string> fieldsVec;
+    fieldsVec.reserve(16);
 
     while (std::getline(in, line)) {
         if (line.empty())
@@ -99,13 +102,7 @@ void VCFXProbabilityFilter::filterByProbability(std::istream &in, std::ostream &
         }
 
         // Parse VCF data lines
-        std::stringstream ss(line);
-        std::string fieldEntry;
-        std::vector<std::string> fieldsVec;
-
-        while (std::getline(ss, fieldEntry, '\t')) {
-            fieldsVec.push_back(fieldEntry);
-        }
+        vcfx::split_tabs(line, fieldsVec);
 
         if (fieldsVec.size() < 9) {
             std::cerr << "Warning: Invalid VCF line with fewer than 9 fields: " << line << "\n";
@@ -218,6 +215,7 @@ static void show_help() {
 }
 
 int main(int argc, char *argv[]) {
+    vcfx::init_io();  // Performance: disable sync_with_stdio
     if (vcfx::handle_common_flags(argc, argv, "VCFX_probability_filter", show_help))
         return 0;
     VCFXProbabilityFilter probabilityFilter;

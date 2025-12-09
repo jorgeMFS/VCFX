@@ -17,11 +17,11 @@ echo "=== Testing VCFX_diff_tool ==="
 
 # Test 1: Basic functionality with identical files
 echo "Test 1: Basic functionality with identical files"
-cat > file1.vcf << EOF
-#CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO
-1       100     rs1     A       G       100     PASS    .
-1       200     rs2     C       T       100     PASS    .
-2       300     rs3     G       A       100     PASS    .
+cat > file1.vcf << 'EOF'
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	100	rs1	A	G	100	PASS	.
+1	200	rs2	C	T	100	PASS	.
+2	300	rs3	G	A	100	PASS	.
 EOF
 
 cp file1.vcf file2.vcf
@@ -37,13 +37,13 @@ echo "✓ Test 1 passed"
 
 # Test 2: Files with different variants
 echo "Test 2: Files with different variants"
-cat > file2.vcf << EOF
-#CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO
-1       100     rs1     A       G       100     PASS    .
-1       200     rs2     C       T       100     PASS    .
-2       300     rs3     G       A       100     PASS    .
-2       400     rs4     T       C       100     PASS    .
-3       500     rs5     A       G       100     PASS    .
+cat > file2.vcf << 'EOF'
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	100	rs1	A	G	100	PASS	.
+1	200	rs2	C	T	100	PASS	.
+2	300	rs3	G	A	100	PASS	.
+2	400	rs4	T	C	100	PASS	.
+3	500	rs5	A	G	100	PASS	.
 EOF
 
 output=$("$DIFF_TOOL" --file1 file1.vcf --file2 file2.vcf)
@@ -69,14 +69,14 @@ echo "✓ Test 2 passed"
 
 # Test 3: Multi-allelic variant handling
 echo "Test 3: Multi-allelic variant handling"
-cat > file1.vcf << EOF
-#CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO
-1       100     rs1     A       G,T     100     PASS    .
+cat > file1.vcf << 'EOF'
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	100	rs1	A	G,T	100	PASS	.
 EOF
 
-cat > file2.vcf << EOF
-#CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO
-1       100     rs1     A       T,G     100     PASS    .
+cat > file2.vcf << 'EOF'
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	100	rs1	A	T,G	100	PASS	.
 EOF
 
 output=$("$DIFF_TOOL" --file1 file1.vcf --file2 file2.vcf)
@@ -90,19 +90,19 @@ echo "✓ Test 3 passed"
 
 # Test 4: Header handling
 echo "Test 4: Header handling"
-cat > file1.vcf << EOF
+cat > file1.vcf << 'EOF'
 ##fileformat=VCFv4.2
 ##contig=<ID=1,length=1000>
-#CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO
-1       100     rs1     A       G       100     PASS    .
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	100	rs1	A	G	100	PASS	.
 EOF
 
-cat > file2.vcf << EOF
+cat > file2.vcf << 'EOF'
 ##fileformat=VCFv4.2
 ##contig=<ID=1,length=1000>
 ##contig=<ID=2,length=2000>
-#CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO
-1       100     rs1     A       G       100     PASS    .
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	100	rs1	A	G	100	PASS	.
 EOF
 
 output=$("$DIFF_TOOL" --file1 file1.vcf --file2 file2.vcf)
@@ -116,17 +116,17 @@ echo "✓ Test 4 passed"
 
 # Test 5: Invalid VCF line handling
 echo "Test 5: Invalid VCF line handling"
-cat > file1.vcf << EOF
-#CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO
-1       100     rs1     A       G       100     PASS    .
+cat > file1.vcf << 'EOF'
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	100	rs1	A	G	100	PASS	.
 invalid_line
-1       200     rs2     C       T       100     PASS    .
+1	200	rs2	C	T	100	PASS	.
 EOF
 
-cat > file2.vcf << EOF
-#CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO
-1       100     rs1     A       G       100     PASS    .
-1       200     rs2     C       T       100     PASS    .
+cat > file2.vcf << 'EOF'
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	100	rs1	A	G	100	PASS	.
+1	200	rs2	C	T	100	PASS	.
 EOF
 
 output=$("$DIFF_TOOL" --file1 file1.vcf --file2 file2.vcf)
@@ -218,5 +218,86 @@ if ! echo "$output" | grep -q "Variants unique to large2.vcf:"; then
     exit 1
 fi
 echo "✓ Test 9 passed"
+
+# Test 10: Streaming mode with --assume-sorted
+echo "Test 10: Streaming mode with --assume-sorted"
+cat > sorted1.vcf << EOF
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	100	rs1	A	G	100	PASS	.
+1	200	rs2	C	T	100	PASS	.
+1	300	rs3	G	A	100	PASS	.
+EOF
+
+cat > sorted2.vcf << EOF
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	100	rs1	A	G	100	PASS	.
+1	200	rs2	C	T	100	PASS	.
+1	400	rs4	T	C	100	PASS	.
+EOF
+
+output=$("$DIFF_TOOL" --file1 sorted1.vcf --file2 sorted2.vcf --assume-sorted)
+if ! echo "$output" | grep -q "1:300:G:A"; then
+    echo "❌ Test 10 failed: Expected to find 1:300:G:A unique to sorted1"
+    echo "Output:"
+    echo "$output"
+    exit 1
+fi
+if ! echo "$output" | grep -q "1:400:T:C"; then
+    echo "❌ Test 10 failed: Expected to find 1:400:T:C unique to sorted2"
+    echo "Output:"
+    echo "$output"
+    exit 1
+fi
+echo "✓ Test 10 passed"
+
+# Test 11: Streaming mode produces same results as default mode
+echo "Test 11: Streaming mode produces same results as default mode"
+"$DIFF_TOOL" --file1 sorted1.vcf --file2 sorted2.vcf > default_output.txt
+"$DIFF_TOOL" --file1 sorted1.vcf --file2 sorted2.vcf --assume-sorted > streaming_output.txt
+# Sort both outputs for comparison (streaming preserves order, default doesn't)
+sort default_output.txt > default_sorted.txt
+sort streaming_output.txt > streaming_sorted.txt
+if ! diff default_sorted.txt streaming_sorted.txt > /dev/null; then
+    echo "❌ Test 11 failed: Streaming and default mode produce different results"
+    echo "Default:"
+    cat default_output.txt
+    echo "Streaming:"
+    cat streaming_output.txt
+    exit 1
+fi
+echo "✓ Test 11 passed"
+
+# Test 12: Help shows new options
+echo "Test 12: Help shows new --assume-sorted and --natural-chr options"
+output=$("$DIFF_TOOL" --help)
+if ! echo "$output" | grep -q "\-\-assume-sorted"; then
+    echo "❌ Test 12 failed: Expected help to show --assume-sorted option"
+    exit 1
+fi
+if ! echo "$output" | grep -q "\-\-natural-chr"; then
+    echo "❌ Test 12 failed: Expected help to show --natural-chr option"
+    exit 1
+fi
+echo "✓ Test 12 passed"
+
+# Test 13: Empty files handling in streaming mode
+echo "Test 13: Empty files handling in streaming mode"
+cat > empty1.vcf << EOF
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+EOF
+
+cat > nonempty.vcf << EOF
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	100	rs1	A	G	100	PASS	.
+EOF
+
+output=$("$DIFF_TOOL" --file1 empty1.vcf --file2 nonempty.vcf --assume-sorted)
+if ! echo "$output" | grep -q "1:100:A:G"; then
+    echo "❌ Test 13 failed: Expected to find variant unique to nonempty file"
+    echo "Output:"
+    echo "$output"
+    exit 1
+fi
+echo "✓ Test 13 passed"
 
 echo "All tests for VCFX_diff_tool passed!" 

@@ -1,5 +1,6 @@
 #include "VCFX_reformatter.h"
-#include "vcfx_core.h"
+#include "vcfx_core.h" 
+#include "vcfx_io.h"
 #include <algorithm>
 #include <cctype>
 #include <getopt.h>
@@ -143,6 +144,8 @@ void VCFXReformatter::reformatVCF(std::istream &in, std::ostream &out,
 
     bool foundChrom = false;
     std::string line;
+    std::vector<std::string> fields;
+    fields.reserve(16);
     while (true) {
         if (!std::getline(in, line))
             break;
@@ -160,14 +163,7 @@ void VCFXReformatter::reformatVCF(std::istream &in, std::ostream &out,
             std::cerr << "Warning: data line before #CHROM => skipping.\n";
             continue;
         }
-        std::vector<std::string> fields;
-        {
-            std::stringstream ss(line);
-            std::string col;
-            while (std::getline(ss, col, '\t')) {
-                fields.push_back(col);
-            }
-        }
+        vcfx::split_tabs(line, fields);
         if (fields.size() < 8) {
             std::cerr << "Warning: line with <8 columns => skipping.\n";
             continue;
@@ -488,6 +484,7 @@ static void show_help() {
 }
 
 int main(int argc, char *argv[]) {
+    vcfx::init_io();  // Performance: disable sync_with_stdio
     if (vcfx::handle_common_flags(argc, argv, "VCFX_reformatter", show_help))
         return 0;
     VCFXReformatter reformatter;

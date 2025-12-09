@@ -1,8 +1,8 @@
 #include "VCFX_format_converter.h"
 #include "vcfx_core.h"
+#include "vcfx_io.h"
 #include <algorithm>
 #include <cctype>
-#include <sstream>
 
 // -----------------------------------------------------------------------
 // printHelp
@@ -46,20 +46,16 @@ bool parseArguments(int argc, char *argv[], OutputFormat &format) {
 // -----------------------------------------------------------------------
 void convertVCFtoBED(std::istream &in, std::ostream &out) {
     std::string line;
+    std::vector<std::string> fields;
+    fields.reserve(16);
+
     while (std::getline(in, line)) {
         if (line.empty() || line[0] == '#') {
             // Skip header or empty
             continue;
         }
 
-        std::stringstream ss(line);
-        std::vector<std::string> fields;
-        {
-            std::string f;
-            while (std::getline(ss, f, '\t')) {
-                fields.push_back(f);
-            }
-        }
+        vcfx::split_tabs(line, fields);
 
         if (fields.size() < 5) {
             // Not enough columns to parse properly
@@ -131,6 +127,10 @@ void convertVCFtoCSV(std::istream &in, std::ostream &out) {
     std::string line;
     bool wroteHeader = false;
     std::vector<std::string> headerCols; // from #CHROM line if we want to produce a CSV header
+    std::vector<std::string> hdrTokens;
+    hdrTokens.reserve(16);
+    std::vector<std::string> fields;
+    fields.reserve(16);
 
     while (std::getline(in, line)) {
         if (line.empty()) {
@@ -141,14 +141,9 @@ void convertVCFtoCSV(std::istream &in, std::ostream &out) {
             // If you'd like a CSV header row, you can do something like:
             if (!wroteHeader && line.rfind("#CHROM", 0) == 0) {
                 // parse the columns
-                std::stringstream ss(line.substr(1)); // drop '#'
-                std::vector<std::string> hdrTokens;
-                {
-                    std::string t;
-                    while (std::getline(ss, t, '\t')) {
-                        hdrTokens.push_back(t);
-                    }
-                }
+                std::string lineNoChr = line.substr(1); // drop '#'
+                vcfx::split_tabs(lineNoChr, hdrTokens);
+
                 // output as CSV header
                 for (size_t i = 0; i < hdrTokens.size(); i++) {
                     out << csvEscape(hdrTokens[i]);
@@ -163,14 +158,7 @@ void convertVCFtoCSV(std::istream &in, std::ostream &out) {
         }
 
         // This is a data line
-        std::stringstream ss(line);
-        std::vector<std::string> fields;
-        {
-            std::string f;
-            while (std::getline(ss, f, '\t')) {
-                fields.push_back(f);
-            }
-        }
+        vcfx::split_tabs(line, fields);
 
         // Join them as CSV, escaping if needed
         for (size_t i = 0; i < fields.size(); i++) {
@@ -188,6 +176,7 @@ void convertVCFtoCSV(std::istream &in, std::ostream &out) {
 static void show_help() { printHelp(); }
 
 int main(int argc, char *argv[]) {
+    vcfx::init_io();  // Performance: disable sync_with_stdio
     if (vcfx::handle_common_flags(argc, argv, "VCFX_format_converter", show_help))
         return 0;
     OutputFormat format;

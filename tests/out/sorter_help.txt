@@ -1,18 +1,36 @@
 VCFX_sorter: Sort a VCF by chromosome and position.
 
 Usage:
+  VCFX_sorter [options] [input.vcf] > output.vcf
   VCFX_sorter [options] < input.vcf > output.vcf
 
 Options:
-  -h, --help          Show help.
-  -n, --natural-chr   Use a natural chromosome sort (chr1 < chr2 < chr10) instead of lexicographic.
+  -h, --help              Show help.
+  -n, --natural-chr       Use natural chromosome order (chr1 < chr2 < chr10).
+  -m, --max-memory <MB>   Max memory for in-memory sorting (default: 100MB).
+                          Files larger than this use external merge sort.
+  -t, --temp-dir <DIR>    Directory for temporary files (default: /tmp).
 
 Description:
-  Reads all data lines into memory, sorts by (CHROM,POS). Preserves all header lines
-  in original order, and outputs them first, then prints sorted data lines.
+  Sorts VCF by (CHROM, POS). For small files, sorts in memory.
+  For large files (>max-memory), uses external merge sort with
+  temporary files, enabling sorting of files larger than RAM.
+
+  When a file argument is provided, uses memory-mapped I/O for
+  optimal performance (26x faster than stdin processing).
+
+Performance:
+  - File argument with mmap: ~30 seconds for 1GB files
+  - Stdin processing: ~10 minutes for 1GB files
+  - Uses pre-computed chromosome IDs for O(1) comparisons
+  - Compact 20-byte sort keys (vs 9KB per variant)
 
 Examples:
-  1) Lexicographic:
-     VCFX_sorter < unsorted.vcf > sorted.vcf
-  2) Natural order:
-     VCFX_sorter --natural-chr < unsorted.vcf > sorted.vcf
+  1) Fast file sorting (recommended):
+     VCFX_sorter input.vcf > sorted.vcf
+  2) Stdin processing (slower):
+     VCFX_sorter < input.vcf > sorted.vcf
+  3) Natural chromosome order:
+     VCFX_sorter -n input.vcf > sorted.vcf
+  4) Large file with custom temp directory:
+     VCFX_sorter -t /data/tmp input.vcf > sorted.vcf
