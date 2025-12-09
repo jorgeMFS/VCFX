@@ -81,16 +81,10 @@ int VCFXVariantClassifier::run(int argc, char *argv[]) {
     bool showHelp = false;
     const char* inputFile = nullptr;
 
-    // Check if stdin has data available when no arguments
-    if (argc == 1) {
-        struct pollfd fds;
-        fds.fd = 0;
-        fds.events = POLLIN;
-        int ret = poll(&fds, 1, 0);
-        if (ret <= 0 || !(fds.revents & POLLIN)) {
-            displayHelp();
-            return 0;
-        }
+    // Show help if run interactively with no arguments (stdin is a terminal)
+    if (argc == 1 && isatty(STDIN_FILENO)) {
+        displayHelp();
+        return 0;
     }
 
     static struct option long_opts[] = {
