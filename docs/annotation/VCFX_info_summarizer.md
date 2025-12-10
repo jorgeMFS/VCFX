@@ -7,6 +7,10 @@ VCFX_info_summarizer analyzes numeric fields in the INFO column of a VCF file an
 ## Usage
 
 ```bash
+# Using file input (recommended for large files - 10-20x faster)
+VCFX_info_summarizer --info "FIELD1,FIELD2,..." -I input.vcf > summary_stats.tsv
+
+# Using stdin
 VCFX_info_summarizer --info "FIELD1,FIELD2,..." < input.vcf > summary_stats.tsv
 ```
 
@@ -15,6 +19,8 @@ VCFX_info_summarizer --info "FIELD1,FIELD2,..." < input.vcf > summary_stats.tsv
 | Option | Description |
 |--------|-------------|
 | `-i`, `--info <FIELDS>` | Required. Comma-separated list of INFO fields to analyze (e.g., "DP,AF,MQ") |
+| `-I`, `--input FILE` | Input VCF file. Uses memory-mapped I/O for 10-20x faster processing |
+| `-q`, `--quiet` | Suppress warning messages |
 | `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
 | `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
@@ -102,10 +108,14 @@ The tool implements several strategies for handling edge cases:
 
 VCFX_info_summarizer is designed for efficiency with large VCF files:
 
-1. Single-pass processing with O(n) time complexity where n is the number of variants
-2. O(m) memory usage where m is the number of numeric values for the specified fields
-3. Efficient string parsing using streams
-4. Fast statistical calculations with minimal sorting operations
+1. **Memory-mapped I/O**: When using `-I/--input`, files are memory-mapped for 10-20x faster processing
+2. **SIMD acceleration**: Uses AVX2/SSE2/NEON instructions for fast newline scanning
+3. **Zero-copy parsing**: Uses string_view for minimal memory allocation
+4. **1MB output buffering**: Reduces system call overhead
+5. Single-pass processing with O(n) time complexity where n is the number of variants
+6. O(m) memory usage where m is the number of numeric values for the specified fields
+7. Efficient string parsing using streams
+8. Fast statistical calculations with minimal sorting operations
 
 ## Limitations
 

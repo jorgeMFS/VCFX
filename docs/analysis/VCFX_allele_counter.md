@@ -14,6 +14,10 @@ VCFX_allele_counter [OPTIONS] [FILE]
 | `-i`, `--input FILE` | Input VCF file (uses memory-mapping for best performance) |
 | `-t`, `--threads N` | Number of threads for parallel processing (default: auto-detect CPU cores) |
 | `-s`, `--samples "Sample1 Sample2..."` | Optional. Specify sample names to calculate allele counts for (space-separated). If omitted, all samples are processed. |
+| `-l`, `--limit-samples N` | Limit output to first N samples (useful for large cohorts) |
+| `-a`, `--aggregate` | Output per-variant aggregate statistics instead of per-sample counts |
+| `-z`, `--gzip` | Compress output with gzip |
+| `-b`, `--binary` | Output in compact binary format (VCAC header) |
 | `-q`, `--quiet` | Suppress informational messages |
 | `-h`, `--help` | Display help message and exit |
 | `-v`, `--version` | Show program version and exit |
@@ -35,8 +39,10 @@ This tool is particularly useful for:
 - Preparing data for population genetics analyses
 - Validating genotype calls across samples
 
-## Output Format
-The tool produces a tab-separated values (TSV) file with the following columns:
+## Output Formats
+
+### Default Mode (Per-Sample Output)
+The default output is a tab-separated values (TSV) file with the following columns:
 
 | Column | Description |
 |--------|-------------|
@@ -48,6 +54,29 @@ The tool produces a tab-separated values (TSV) file with the following columns:
 | Sample | Sample name |
 | Ref_Count | Number of reference alleles (0) in the sample's genotype |
 | Alt_Count | Number of alternate alleles (non-0) in the sample's genotype |
+
+### Aggregate Mode (`-a/--aggregate`)
+Outputs per-variant summaries instead of per-sample counts, reducing output by ~2500x for large cohorts:
+
+| Column | Description |
+|--------|-------------|
+| CHROM | Chromosome of the variant |
+| POS | Position of the variant |
+| ID | Variant identifier |
+| REF | Reference allele |
+| ALT | Alternate allele(s) |
+| Total_Ref | Sum of reference allele counts across all samples |
+| Total_Alt | Sum of alternate allele counts across all samples |
+| Sample_Count | Number of samples with valid genotypes |
+
+### Binary Mode (`-b/--binary`)
+Compact binary format for machine consumption (~25x smaller than text):
+- 16-byte header: magic "VCAC", version (uint32), sample count (uint32), variant count (uint64)
+- Per variant: CHROM, POS, ID, REF, ALT as null-terminated strings
+- Per sample: 2 bytes (ref_count, alt_count as int8)
+
+### Gzip Output (`-z/--gzip`)
+Any output format can be compressed with gzip for ~10x size reduction.
 
 ## Examples
 
@@ -69,6 +98,33 @@ VCFX_allele_counter < input.vcf > allele_counts_all.tsv
 Count alleles for specific samples:
 ```bash
 VCFX_allele_counter --samples "SAMPLE1 SAMPLE2" -i input.vcf > allele_counts_subset.tsv
+```
+
+### Aggregate Mode (Recommended for Large Cohorts)
+Get per-variant summaries instead of per-sample output:
+```bash
+VCFX_allele_counter --aggregate -i input.vcf > allele_summary.tsv
+VCFX_allele_counter -a -i input.vcf > allele_summary.tsv  # Short form
+```
+
+### Limit Samples
+Process only the first N samples:
+```bash
+VCFX_allele_counter --limit-samples 100 -i input.vcf > first_100_samples.tsv
+VCFX_allele_counter -l 50 -a -i input.vcf > aggregate_50_samples.tsv
+```
+
+### Compressed Output
+Gzip compress the output:
+```bash
+VCFX_allele_counter --gzip -i input.vcf > allele_counts.tsv.gz
+VCFX_allele_counter -z -a -i input.vcf > aggregate.tsv.gz
+```
+
+### Binary Output
+Compact binary format for downstream processing:
+```bash
+VCFX_allele_counter --binary -i input.vcf > allele_counts.bin
 ```
 
 ### Using with Other Tools
@@ -147,11 +203,12 @@ This tool generates one output line per variant × sample combination. For large
 | 1 GB | 100 | 500K | 50 million |
 | 4 GB | 2504 | 427K | 1.07 billion |
 
-For very large datasets, consider:
-- Using `--samples` to limit output to specific samples of interest
-- Processing in batches by chromosome or region
-- Piping output directly to downstream tools
-- Writing output to fast SSD storage
+For very large datasets, use one of these output reduction strategies:
+- **`--aggregate`**: Reduce output by ~2500x (O(V×S) → O(V)) - one line per variant
+- **`--limit-samples N`**: Process only first N samples
+- **`--binary`**: ~25x smaller output (2 bytes vs ~50 bytes per sample)
+- **`--gzip`**: ~10x compression on any output format
+- **`--samples`**: Select specific samples of interest
 
 ### Throughput
 
@@ -165,5 +222,4 @@ On typical hardware with multi-threading:
 - No options for filtering by allele count thresholds
 - Cannot account for genotype quality or read depth
 - Limited to processing standard VCF genotype fields
-- Does not produce summary statistics or aggregate counts
 - No direct integration with population genetics metrics

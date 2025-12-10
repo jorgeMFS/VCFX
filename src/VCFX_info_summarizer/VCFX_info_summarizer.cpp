@@ -5,24 +5,45 @@
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
+#include <cstring>
+#include <getopt.h>
 #include <iomanip>
 #include <map>
 #include <sstream>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
+
+#ifdef __unix__
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
+
+#ifdef __SSE2__
+#include <emmintrin.h>
+#endif
+#ifdef __AVX2__
+#include <immintrin.h>
+#endif
 
 // Function to display help message
 void printHelp() {
     std::cout << "VCFX_info_summarizer\n"
               << "Usage: VCFX_info_summarizer [OPTIONS]\n\n"
               << "Options:\n"
-              << "  --info, -i \"FIELD1,FIELD2\"   Specify the INFO fields to summarize (e.g., \"DP,AF\").\n"
-              << "  --help, -h                    Display this help message and exit.\n\n"
+              << "  -i, --info \"FIELD1,FIELD2\"   Specify the INFO fields to summarize (e.g., \"DP,AF\").\n"
+              << "  -I, --input FILE             Input VCF file (default: stdin).\n"
+              << "  -q, --quiet                  Suppress warnings.\n"
+              << "  -h, --help                   Display this help message and exit.\n\n"
               << "Description:\n"
               << "  Summarizes numeric fields in the INFO column of a VCF file by calculating\n"
               << "  statistics such as mean, median, and mode.\n\n"
               << "Examples:\n"
-              << "  ./VCFX_info_summarizer --info \"DP,AF\" < input.vcf > summary_stats.tsv\n";
+              << "  VCFX_info_summarizer --info \"DP,AF\" < input.vcf > summary_stats.tsv\n"
+              << "  VCFX_info_summarizer -i \"DP,AF\" -I input.vcf > summary_stats.tsv\n";
 }
 
 // Function to parse command-line arguments
@@ -221,21 +242,325 @@ bool summarizeInfoFields(std::istream &in, std::ostream &out, const std::vector<
     return true;
 }
 
+// ============================================================================
+// MMAP-based high-performance implementation
+// ============================================================================
+
+#ifdef __unix__
+
+namespace {
+
+// RAII wrapper for memory-mapped files
+struct MappedFile {
+    const char* data = nullptr;
+    size_t size = 0;
+    int fd = -1;
+
+    MappedFile() = default;
+    ~MappedFile() {
+        if (data && data != MAP_FAILED) {
+            munmap(const_cast<char*>(data), size);
+        }
+        if (fd >= 0) {
+            close(fd);
+        }
+    }
+    MappedFile(const MappedFile&) = delete;
+    MappedFile& operator=(const MappedFile&) = delete;
+
+    bool open(const char* filepath) {
+        fd = ::open(filepath, O_RDONLY);
+        if (fd < 0) return false;
+
+        struct stat st;
+        if (fstat(fd, &st) < 0) return false;
+        size = static_cast<size_t>(st.st_size);
+        if (size == 0) return true;
+
+        data = static_cast<const char*>(mmap(nullptr, size, PROT_READ, MAP_PRIVATE, fd, 0));
+        if (data == MAP_FAILED) {
+            data = nullptr;
+            return false;
+        }
+
+        // Hint for sequential access
+        madvise(const_cast<char*>(data), size, MADV_SEQUENTIAL | MADV_WILLNEED);
+        return true;
+    }
+};
+
+// SIMD-accelerated newline search
+inline const char* findNewline(const char* start, const char* end) {
+#ifdef __AVX2__
+    const __m256i newline = _mm256_set1_epi8('\n');
+    while (start + 32 <= end) {
+        __m256i chunk = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(start));
+        __m256i cmp = _mm256_cmpeq_epi8(chunk, newline);
+        int mask = _mm256_movemask_epi8(cmp);
+        if (mask != 0) {
+            return start + __builtin_ctz(mask);
+        }
+        start += 32;
+    }
+#endif
+#ifdef __SSE2__
+    const __m128i newline = _mm_set1_epi8('\n');
+    while (start + 16 <= end) {
+        __m128i chunk = _mm_loadu_si128(reinterpret_cast<const __m128i*>(start));
+        __m128i cmp = _mm_cmpeq_epi8(chunk, newline);
+        int mask = _mm_movemask_epi8(cmp);
+        if (mask != 0) {
+            return start + __builtin_ctz(mask);
+        }
+        start += 16;
+    }
+#endif
+    // Fallback
+    const char* p = static_cast<const char*>(memchr(start, '\n', end - start));
+    return p ? p : end;
+}
+
+// Find next tab or end
+inline const char* findTab(const char* start, const char* end) {
+    const char* p = static_cast<const char*>(memchr(start, '\t', end - start));
+    return p ? p : end;
+}
+
+// Find a specific INFO key and return its value
+inline std::string_view findInfoValue(std::string_view info, std::string_view key) {
+    size_t pos = 0;
+    while (pos < info.size()) {
+        size_t semi = info.find(';', pos);
+        if (semi == std::string_view::npos) semi = info.size();
+
+        std::string_view entry = info.substr(pos, semi - pos);
+        size_t eq = entry.find('=');
+        std::string_view entryKey = (eq != std::string_view::npos) ? entry.substr(0, eq) : entry;
+
+        if (entryKey == key) {
+            if (eq != std::string_view::npos) {
+                return entry.substr(eq + 1);
+            } else {
+                // Flag field
+                return std::string_view("1", 1);
+            }
+        }
+
+        pos = semi + 1;
+    }
+    return std::string_view();  // Not found
+}
+
+// Fast double parsing from string_view
+inline bool parseDouble(std::string_view sv, double& result) {
+    if (sv.empty()) return false;
+
+    // Quick validation and parsing
+    const char* start = sv.data();
+    const char* end = start + sv.size();
+    char* parseEnd = nullptr;
+
+    result = std::strtod(start, &parseEnd);
+
+    // Check if we parsed the entire string (or close to it)
+    if (parseEnd <= start) return false;
+
+    // Check for NaN/Inf
+    if (std::isnan(result) || std::isinf(result)) return false;
+
+    return true;
+}
+
+} // anonymous namespace
+
+bool summarizeInfoFieldsMmap(const char* filepath, std::ostream& out,
+                              const std::vector<std::string>& info_fields, bool quiet) {
+    MappedFile file;
+    if (!file.open(filepath)) {
+        if (!quiet) {
+            std::cerr << "Error: Cannot open file: " << filepath << "\n";
+        }
+        return false;
+    }
+
+    if (file.size == 0) {
+        // Empty file - still output header
+        out << "INFO_Field\tMean\tMedian\tMode\n";
+        for (const auto& field : info_fields) {
+            out << field << "\tNA\tNA\tNA\n";
+        }
+        return true;
+    }
+
+    const char* data = file.data;
+    const char* end = data + file.size;
+    const char* pos = data;
+
+    // Map to store vectors of values for each requested INFO field
+    std::map<std::string, std::vector<double>> info_data;
+    for (const auto& field : info_fields) {
+        info_data[field].reserve(10000);  // Pre-allocate for large files
+    }
+
+    bool header_found = false;
+
+    while (pos < end) {
+        const char* lineEnd = findNewline(pos, end);
+        std::string_view line(pos, lineEnd - pos);
+        pos = (lineEnd < end) ? lineEnd + 1 : end;
+
+        if (line.empty()) continue;
+
+        if (line[0] == '#') {
+            if (line.size() >= 6 && line.substr(0, 6) == "#CHROM") {
+                header_found = true;
+            }
+            continue;
+        }
+
+        if (!header_found) {
+            if (!quiet) {
+                std::cerr << "Error: VCF header (#CHROM) not found before records.\n";
+            }
+            return false;
+        }
+
+        // Skip to INFO field (column 7)
+        const char* p = line.data();
+        const char* lend = p + line.size();
+
+        // Skip first 7 columns (CHROM, POS, ID, REF, ALT, QUAL, FILTER)
+        for (int col = 0; col < 7; ++col) {
+            const char* tab = findTab(p, lend);
+            if (tab >= lend) {
+                p = lend;
+                break;
+            }
+            p = tab + 1;
+        }
+
+        if (p >= lend) continue;
+
+        // INFO field
+        const char* tab = findTab(p, lend);
+        std::string_view info(p, tab - p);
+
+        // For each requested field
+        for (const auto& field : info_fields) {
+            std::string_view value = findInfoValue(info, field);
+            if (value.data() == nullptr) continue;
+
+            // Parse comma-separated values
+            size_t vpos = 0;
+            while (vpos < value.size()) {
+                size_t comma = value.find(',', vpos);
+                if (comma == std::string_view::npos) comma = value.size();
+
+                std::string_view val = value.substr(vpos, comma - vpos);
+                double d;
+                if (parseDouble(val, d)) {
+                    info_data[field].push_back(d);
+                }
+
+                vpos = comma + 1;
+            }
+        }
+    }
+
+    // Print summary table
+    out << "INFO_Field\tMean\tMedian\tMode\n";
+    for (const auto& field : info_fields) {
+        const auto& fieldData = info_data.at(field);
+        if (fieldData.empty()) {
+            out << field << "\tNA\tNA\tNA\n";
+            continue;
+        }
+        double mean = calculateMean(fieldData);
+        double median = calculateMedian(fieldData);
+        double mode = calculateMode(fieldData);
+        out << field << "\t" << std::fixed << std::setprecision(4)
+            << mean << "\t" << median << "\t" << mode << "\n";
+    }
+
+    return true;
+}
+
+#else
+// Non-Unix fallback
+bool summarizeInfoFieldsMmap(const char* filepath, std::ostream& out,
+                              const std::vector<std::string>& info_fields, bool quiet) {
+    (void)quiet;
+    std::ifstream in(filepath);
+    if (!in) {
+        std::cerr << "Error: Cannot open file: " << filepath << "\n";
+        return false;
+    }
+    return summarizeInfoFields(in, out, info_fields);
+}
+#endif
+
 static void show_help() { printHelp(); }
 
 int main(int argc, char *argv[]) {
     vcfx::init_io();  // Performance: disable sync_with_stdio
     if (vcfx::handle_common_flags(argc, argv, "VCFX_info_summarizer", show_help))
         return 0;
-    std::vector<std::string> info_fields;
 
-    // parse arguments
-    if (!parseArguments(argc, argv, info_fields)) {
-        // prints error: "Error: INFO fields not specified"
+    std::vector<std::string> info_fields;
+    const char* inputFile = nullptr;
+    bool quiet = false;
+
+    static struct option long_options[] = {
+        {"info", required_argument, nullptr, 'i'},
+        {"input", required_argument, nullptr, 'I'},
+        {"quiet", no_argument, nullptr, 'q'},
+        {"help", no_argument, nullptr, 'h'},
+        {nullptr, 0, nullptr, 0}
+    };
+
+    int opt;
+    optind = 1;
+    while ((opt = getopt_long(argc, argv, "i:I:qh", long_options, nullptr)) != -1) {
+        switch (opt) {
+            case 'i': {
+                std::string fields_str = optarg;
+                std::stringstream ss(fields_str);
+                std::string field;
+                while (std::getline(ss, field, ',')) {
+                    field.erase(0, field.find_first_not_of(" \t\n\r\f\v"));
+                    field.erase(field.find_last_not_of(" \t\n\r\f\v") + 1);
+                    if (!field.empty()) {
+                        info_fields.push_back(field);
+                    }
+                }
+                break;
+            }
+            case 'I':
+                inputFile = optarg;
+                break;
+            case 'q':
+                quiet = true;
+                break;
+            case 'h':
+                printHelp();
+                return 0;
+            default:
+                break;
+        }
+    }
+
+    if (info_fields.empty()) {
+        std::cerr << "Error: INFO fields not specified.\n"
+                  << "Use --help for usage information.\n";
         return 1;
     }
 
-    // Summarize INFO fields
-    bool success = summarizeInfoFields(std::cin, std::cout, info_fields);
+    bool success;
+    if (inputFile) {
+        success = summarizeInfoFieldsMmap(inputFile, std::cout, info_fields, quiet);
+    } else {
+        success = summarizeInfoFields(std::cin, std::cout, info_fields);
+    }
+
     return success ? 0 : 1;
 }

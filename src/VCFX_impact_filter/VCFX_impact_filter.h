@@ -15,8 +15,11 @@ class VCFXImpactFilter {
     // Displays help
     void displayHelp();
 
-    // Filters VCF input based on the specified impact level
+    // Filters VCF input based on the specified impact level (stdin fallback)
     void filterByImpact(std::istream &in, std::ostream &out, const std::string &targetImpact);
+
+    // Memory-mapped file processing (fast path)
+    bool filterByImpactMmap(const char* filepath, std::ostream& out, int targetLevel);
 };
 
 #endif // VCFX_IMPACT_FILTER_H

@@ -13,4 +13,7 @@ void printHelp();
 // user-specified fields (including standard fields, INFO subfields, and sample subfields).
 void extractFields(std::istream &in, std::ostream &out, const std::vector<std::string> &fields);
 
+// Memory-mapped file processing (fast path)
+bool extractFieldsMmap(const char* filepath, std::ostream& out, const std::vector<std::string>& fields);
+
 #endif // VCFX_FIELD_EXTRACTOR_H

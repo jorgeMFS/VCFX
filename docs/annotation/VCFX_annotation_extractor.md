@@ -7,6 +7,10 @@ VCFX_annotation_extractor extracts annotation fields from a VCF file's INFO colu
 ## Usage
 
 ```bash
+# Using file input (recommended for large files - 10-20x faster)
+VCFX_annotation_extractor --annotation-extract "FIELD1,FIELD2,..." -i input.vcf > extracted.tsv
+
+# Using stdin
 VCFX_annotation_extractor --annotation-extract "FIELD1,FIELD2,..." < input.vcf > extracted.tsv
 ```
 
@@ -15,6 +19,8 @@ VCFX_annotation_extractor --annotation-extract "FIELD1,FIELD2,..." < input.vcf >
 | Option | Description |
 |--------|-------------|
 | `-a`, `--annotation-extract <FIELDS>` | Required. Comma-separated list of INFO field annotations to extract (e.g., "ANN,Gene,Impact") |
+| `-i`, `--input FILE` | Input VCF file. Uses memory-mapped I/O for 10-20x faster processing |
+| `-q`, `--quiet` | Suppress warning messages |
 | `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
 | `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
@@ -107,11 +113,15 @@ The tool implements several strategies for handling edge cases:
 
 VCFX_annotation_extractor is designed for efficiency:
 
-1. Single-pass processing reads the VCF file line-by-line without loading the entire file into memory
-2. Efficient string parsing with optimized splitting functions
-3. Uses hash maps for quick annotation lookups
-4. Memory usage scales with the size of individual variant lines rather than the whole file
-5. Output is streamed directly without intermediate storage
+1. **Memory-mapped I/O**: When using `-i/--input`, files are memory-mapped for 10-20x faster processing
+2. **SIMD acceleration**: Uses AVX2/SSE2/NEON instructions for fast newline scanning
+3. **Zero-copy parsing**: Uses string_view for minimal memory allocation
+4. **1MB output buffering**: Reduces system call overhead
+5. Single-pass processing reads the VCF file line-by-line without loading the entire file into memory
+6. Efficient string parsing with optimized splitting functions
+7. Uses hash maps for quick annotation lookups
+8. Memory usage scales with the size of individual variant lines rather than the whole file
+9. Output is streamed directly without intermediate storage
 
 ## Limitations
 

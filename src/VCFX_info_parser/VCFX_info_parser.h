@@ -18,4 +18,8 @@ std::vector<std::string> split(const std::string &s, char delimiter);
 // Parses the VCF, extracting the selected INFO fields and printing to 'out'
 bool parseInfoFields(std::istream &in, std::ostream &out, const std::vector<std::string> &info_fields);
 
+// Memory-mapped file processing (fast path)
+bool parseInfoFieldsMmap(const char* filepath, std::ostream& out,
+                         const std::vector<std::string>& info_fields, bool quiet = false);
+
 #endif // VCFX_INFO_PARSER_H

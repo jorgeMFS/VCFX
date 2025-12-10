@@ -31,4 +31,8 @@ double calculateMode(const std::vector<double> &data);
 // Function to parse the INFO field and collect specified fields
 bool summarizeInfoFields(std::istream &in, std::ostream &out, const std::vector<std::string> &info_fields);
 
+// Memory-mapped file processing (fast path)
+bool summarizeInfoFieldsMmap(const char* filepath, std::ostream& out,
+                              const std::vector<std::string>& info_fields, bool quiet = false);
+
 #endif // VCFX_INFO_SUMMARIZER_H

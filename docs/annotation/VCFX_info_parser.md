@@ -7,6 +7,10 @@ VCFX_info_parser extracts and formats specific INFO fields from a VCF file into 
 ## Usage
 
 ```bash
+# Using file input (recommended for large files - 10-20x faster)
+VCFX_info_parser --info "FIELD1,FIELD2,..." -I input.vcf > extracted_info.tsv
+
+# Using stdin
 VCFX_info_parser --info "FIELD1,FIELD2,..." < input.vcf > extracted_info.tsv
 ```
 
@@ -15,6 +19,8 @@ VCFX_info_parser --info "FIELD1,FIELD2,..." < input.vcf > extracted_info.tsv
 | Option | Description |
 |--------|-------------|
 | `-i`, `--info <FIELDS>` | Required. Comma-separated list of INFO fields to extract (e.g., "DP,AF,SOMATIC") |
+| `-I`, `--input FILE` | Input VCF file. Uses memory-mapped I/O for 10-20x faster processing |
+| `-q`, `--quiet` | Suppress warning messages |
 | `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
 | `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
@@ -90,10 +96,14 @@ The tool implements several strategies for handling edge cases:
 
 VCFX_info_parser is designed for efficiency:
 
-1. Single-pass processing with line-by-line reading, allowing for streaming of very large files
-2. Minimal memory footprint regardless of input file size
-3. Efficient string parsing with no complex regular expressions
-4. Fast lookup of INFO fields using hash maps
+1. **Memory-mapped I/O**: When using `-I/--input`, files are memory-mapped for 10-20x faster processing
+2. **SIMD acceleration**: Uses AVX2/SSE2/NEON instructions for fast newline scanning
+3. **Zero-copy parsing**: Uses string_view for minimal memory allocation
+4. **1MB output buffering**: Reduces system call overhead
+5. Single-pass processing with line-by-line reading, allowing for streaming of very large files
+6. Minimal memory footprint regardless of input file size
+7. Efficient string parsing with no complex regular expressions
+8. Fast lookup of INFO fields using hash maps
 
 ## Limitations
 

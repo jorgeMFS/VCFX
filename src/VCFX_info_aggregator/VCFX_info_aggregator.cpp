@@ -2,14 +2,30 @@
 #include "vcfx_core.h"
 #include "vcfx_io.h"
 #include <algorithm>
-#include <cmath> // for std::isfinite
+#include <cmath>
 #include <cstdlib>
+#include <cstring>
 #include <getopt.h>
 #include <iomanip>
 #include <iostream>
 #include <map>
 #include <sstream>
+#include <string_view>
 #include <vector>
+
+#ifdef __unix__
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
+
+#ifdef __SSE2__
+#include <emmintrin.h>
+#endif
+#ifdef __AVX2__
+#include <immintrin.h>
+#endif
 
 // ----------------------------------------------------------------------
 // Displays help
@@ -17,7 +33,8 @@
 void VCFXInfoAggregator::displayHelp() {
     std::cout << "VCFX_info_aggregator: Aggregate numeric INFO field values from a VCF.\n\n"
               << "Usage:\n"
-              << "  VCFX_info_aggregator --aggregate-info \"DP,AF,...\" < input.vcf > output.vcf\n\n"
+              << "  VCFX_info_aggregator --aggregate-info \"DP,AF,...\" < input.vcf > output.vcf\n"
+              << "  VCFX_info_aggregator -a \"DP,AF,...\" -i input.vcf > output.vcf\n\n"
               << "Description:\n"
               << "  Reads a VCF from stdin, prints it unmodified, and at the end, appends a\n"
               << "  summary section of the form:\n"
@@ -27,10 +44,13 @@ void VCFXInfoAggregator::displayHelp() {
               << "  The VCF portion remains fully valid. The final lines start with '#' so most\n"
               << "  VCF parsers will ignore them.\n\n"
               << "Options:\n"
-              << "  -h, --help                Print this help message.\n"
-              << "  -a, --aggregate-info <fields>  Comma-separated list of INFO fields to aggregate.\n\n"
+              << "  -h, --help                     Print this help message.\n"
+              << "  -a, --aggregate-info <fields>  Comma-separated list of INFO fields to aggregate.\n"
+              << "  -i, --input FILE               Input VCF file (default: stdin).\n"
+              << "  -q, --quiet                    Suppress warnings.\n\n"
               << "Example:\n"
-              << "  VCFX_info_aggregator --aggregate-info \"DP,AF\" < input.vcf > aggregated.vcf\n";
+              << "  VCFX_info_aggregator --aggregate-info \"DP,AF\" < input.vcf > aggregated.vcf\n"
+              << "  VCFX_info_aggregator -a \"DP,AF\" -i input.vcf > aggregated.vcf\n";
 }
 
 // ----------------------------------------------------------------------
@@ -40,17 +60,31 @@ int VCFXInfoAggregator::run(int argc, char *argv[]) {
     int opt;
     bool showHelp = false;
     std::string infoFieldsStr;
+    const char* inputFile = nullptr;
+    bool quiet = false;
 
     static struct option longOptions[] = {
-        {"help", no_argument, 0, 'h'}, {"aggregate-info", required_argument, 0, 'a'}, {0, 0, 0, 0}};
+        {"help", no_argument, 0, 'h'},
+        {"aggregate-info", required_argument, 0, 'a'},
+        {"input", required_argument, 0, 'i'},
+        {"quiet", no_argument, 0, 'q'},
+        {0, 0, 0, 0}
+    };
 
-    while ((opt = getopt_long(argc, argv, "ha:", longOptions, nullptr)) != -1) {
+    optind = 1;
+    while ((opt = getopt_long(argc, argv, "ha:i:q", longOptions, nullptr)) != -1) {
         switch (opt) {
         case 'h':
             showHelp = true;
             break;
         case 'a':
             infoFieldsStr = optarg;
+            break;
+        case 'i':
+            inputFile = optarg;
+            break;
+        case 'q':
+            quiet = true;
             break;
         default:
             showHelp = true;
@@ -88,16 +122,16 @@ int VCFXInfoAggregator::run(int argc, char *argv[]) {
         return 1;
     }
 
-    aggregateInfo(std::cin, std::cout, infoFields);
-    return 0;
+    if (inputFile) {
+        return aggregateInfoMmap(inputFile, std::cout, infoFields, quiet) ? 0 : 1;
+    } else {
+        aggregateInfo(std::cin, std::cout, infoFields);
+        return 0;
+    }
 }
 
 // ----------------------------------------------------------------------
-// aggregator function
-//   1) read lines
-//   2) if line is header or data, print unmodified to out
-//   3) parse data lines => parse 'INFO' col => parse each requested field => if numeric => accumulate
-//   4) after reading entire file, print summary
+// aggregator function (stdin fallback)
 // ----------------------------------------------------------------------
 void VCFXInfoAggregator::aggregateInfo(std::istream &in, std::ostream &out,
                                        const std::vector<std::string> &infoFields) {
@@ -212,6 +246,292 @@ void VCFXInfoAggregator::aggregateInfo(std::istream &in, std::ostream &out,
         out << field << ": Sum=" << sum << ", Average=" << mean << "\n";
     }
 }
+
+// ============================================================================
+// MMAP-based high-performance implementation
+// ============================================================================
+
+#ifdef __unix__
+
+namespace {
+
+// RAII wrapper for memory-mapped files
+struct MappedFile {
+    const char* data = nullptr;
+    size_t size = 0;
+    int fd = -1;
+
+    MappedFile() = default;
+    ~MappedFile() {
+        if (data && data != MAP_FAILED) {
+            munmap(const_cast<char*>(data), size);
+        }
+        if (fd >= 0) {
+            close(fd);
+        }
+    }
+    MappedFile(const MappedFile&) = delete;
+    MappedFile& operator=(const MappedFile&) = delete;
+
+    bool open(const char* filepath) {
+        fd = ::open(filepath, O_RDONLY);
+        if (fd < 0) return false;
+
+        struct stat st;
+        if (fstat(fd, &st) < 0) return false;
+        size = static_cast<size_t>(st.st_size);
+        if (size == 0) return true;
+
+        data = static_cast<const char*>(mmap(nullptr, size, PROT_READ, MAP_PRIVATE, fd, 0));
+        if (data == MAP_FAILED) {
+            data = nullptr;
+            return false;
+        }
+
+        // Hint for sequential access
+        madvise(const_cast<char*>(data), size, MADV_SEQUENTIAL | MADV_WILLNEED);
+        return true;
+    }
+};
+
+// Output buffer for efficient writes
+class OutputBuffer {
+public:
+    explicit OutputBuffer(std::ostream& os, size_t bufSize = 1024 * 1024)
+        : out_(os), buffer_(bufSize), pos_(0) {}
+
+    ~OutputBuffer() { flush(); }
+
+    void append(std::string_view sv) {
+        if (pos_ + sv.size() > buffer_.size()) {
+            flush();
+        }
+        if (sv.size() > buffer_.size()) {
+            out_.write(sv.data(), sv.size());
+        } else {
+            memcpy(buffer_.data() + pos_, sv.data(), sv.size());
+            pos_ += sv.size();
+        }
+    }
+
+    void append(char c) {
+        if (pos_ >= buffer_.size()) {
+            flush();
+        }
+        buffer_[pos_++] = c;
+    }
+
+    void flush() {
+        if (pos_ > 0) {
+            out_.write(buffer_.data(), pos_);
+            pos_ = 0;
+        }
+    }
+
+private:
+    std::ostream& out_;
+    std::vector<char> buffer_;
+    size_t pos_;
+};
+
+// SIMD-accelerated newline search
+inline const char* findNewline(const char* start, const char* end) {
+#ifdef __AVX2__
+    const __m256i newline = _mm256_set1_epi8('\n');
+    while (start + 32 <= end) {
+        __m256i chunk = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(start));
+        __m256i cmp = _mm256_cmpeq_epi8(chunk, newline);
+        int mask = _mm256_movemask_epi8(cmp);
+        if (mask != 0) {
+            return start + __builtin_ctz(mask);
+        }
+        start += 32;
+    }
+#endif
+#ifdef __SSE2__
+    const __m128i newline = _mm_set1_epi8('\n');
+    while (start + 16 <= end) {
+        __m128i chunk = _mm_loadu_si128(reinterpret_cast<const __m128i*>(start));
+        __m128i cmp = _mm_cmpeq_epi8(chunk, newline);
+        int mask = _mm_movemask_epi8(cmp);
+        if (mask != 0) {
+            return start + __builtin_ctz(mask);
+        }
+        start += 16;
+    }
+#endif
+    // Fallback
+    const char* p = static_cast<const char*>(memchr(start, '\n', end - start));
+    return p ? p : end;
+}
+
+// Find next tab or end
+inline const char* findTab(const char* start, const char* end) {
+    const char* p = static_cast<const char*>(memchr(start, '\t', end - start));
+    return p ? p : end;
+}
+
+// Find a specific INFO key and return its value
+inline std::string_view findInfoValue(std::string_view info, std::string_view key) {
+    size_t pos = 0;
+    while (pos < info.size()) {
+        size_t semi = info.find(';', pos);
+        if (semi == std::string_view::npos) semi = info.size();
+
+        std::string_view entry = info.substr(pos, semi - pos);
+        size_t eq = entry.find('=');
+        if (eq != std::string_view::npos) {
+            std::string_view entryKey = entry.substr(0, eq);
+            if (entryKey == key) {
+                return entry.substr(eq + 1);
+            }
+        }
+
+        pos = semi + 1;
+    }
+    return std::string_view();  // Not found
+}
+
+// Fast double parsing from string_view
+inline bool parseDouble(std::string_view sv, double& result) {
+    if (sv.empty()) return false;
+
+    const char* start = sv.data();
+    char* parseEnd = nullptr;
+
+    result = std::strtod(start, &parseEnd);
+
+    if (parseEnd <= start) return false;
+    if (!std::isfinite(result)) return false;
+
+    return true;
+}
+
+} // anonymous namespace
+
+bool VCFXInfoAggregator::aggregateInfoMmap(const char* filepath, std::ostream& out,
+                                            const std::vector<std::string>& infoFields, bool quiet) {
+    MappedFile file;
+    if (!file.open(filepath)) {
+        if (!quiet) {
+            std::cerr << "Error: Cannot open file: " << filepath << "\n";
+        }
+        return false;
+    }
+
+    if (file.size == 0) {
+        out << "#AGGREGATION_SUMMARY\n";
+        for (const auto& field : infoFields) {
+            out << field << ": Sum=0, Average=0\n";
+        }
+        return true;
+    }
+
+    const char* data = file.data;
+    const char* end = data + file.size;
+    const char* pos = data;
+
+    // We'll store each field's collected numeric values
+    std::map<std::string, std::vector<double>> collected;
+    for (const auto& fld : infoFields) {
+        collected[fld].reserve(10000);
+    }
+
+    OutputBuffer buf(out);
+    bool foundChromHeader = false;
+
+    while (pos < end) {
+        const char* lineEnd = findNewline(pos, end);
+        std::string_view line(pos, lineEnd - pos);
+
+        // Output line unchanged
+        buf.append(line);
+        buf.append('\n');
+
+        pos = (lineEnd < end) ? lineEnd + 1 : end;
+
+        if (line.empty()) continue;
+
+        if (line[0] == '#') {
+            if (!foundChromHeader && line.size() >= 6 && line.substr(0, 6) == "#CHROM") {
+                foundChromHeader = true;
+            }
+            continue;
+        }
+
+        if (!foundChromHeader) {
+            if (!quiet) {
+                std::cerr << "Error: encountered data line before #CHROM header.\n";
+            }
+            return false;
+        }
+
+        // Skip to INFO field (column 7)
+        const char* p = line.data();
+        const char* lend = p + line.size();
+
+        for (int col = 0; col < 7; ++col) {
+            const char* tab = findTab(p, lend);
+            if (tab >= lend) {
+                p = lend;
+                break;
+            }
+            p = tab + 1;
+        }
+
+        if (p >= lend) continue;
+
+        const char* tab = findTab(p, lend);
+        std::string_view info(p, tab - p);
+
+        // For each requested field
+        for (const auto& field : infoFields) {
+            std::string_view value = findInfoValue(info, field);
+            if (value.data() == nullptr) continue;
+
+            double d;
+            if (parseDouble(value, d)) {
+                collected[field].push_back(d);
+            }
+        }
+    }
+
+    // Flush the passthrough output
+    buf.flush();
+
+    // Now print aggregator summary
+    out << "#AGGREGATION_SUMMARY\n";
+    for (const auto& kv : collected) {
+        const std::string& field = kv.first;
+        const auto& vals = kv.second;
+        double sum = 0.0;
+        for (auto v : vals) {
+            sum += v;
+        }
+        double mean = 0.0;
+        if (!vals.empty()) {
+            mean = sum / static_cast<double>(vals.size());
+        }
+        out << field << ": Sum=" << sum << ", Average=" << mean << "\n";
+    }
+
+    return true;
+}
+
+#else
+// Non-Unix fallback
+bool VCFXInfoAggregator::aggregateInfoMmap(const char* filepath, std::ostream& out,
+                                            const std::vector<std::string>& infoFields, bool quiet) {
+    (void)quiet;
+    std::ifstream in(filepath);
+    if (!in) {
+        std::cerr << "Error: Cannot open file: " << filepath << "\n";
+        return false;
+    }
+    aggregateInfo(in, out, infoFields);
+    return true;
+}
+#endif
 
 static void show_help() {
     VCFXInfoAggregator obj;

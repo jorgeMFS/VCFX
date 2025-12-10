@@ -14,8 +14,13 @@ class VCFXGLFilter {
     // Displays the help message
     void displayHelp();
 
-    // Filters VCF input based on genotype-likelihood expression
+    // Filters VCF input based on genotype-likelihood expression (stdin fallback)
     void filterByGL(std::istream &in, std::ostream &out, const std::string &filterCondition, bool anyMode);
+
+    // Memory-mapped file processing (fast path)
+    bool filterByGLMmap(const char* filepath, std::ostream& out,
+                         const std::string& field, int opTypeInt,
+                         double threshold, bool anyMode);
 };
 
 #endif // VCFX_GL_FILTER_H

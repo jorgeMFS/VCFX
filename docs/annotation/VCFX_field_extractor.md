@@ -5,13 +5,19 @@
 
 ## Usage
 ```bash
-VCFX_field_extractor --fields "FIELD1,FIELD2,..." [OPTIONS] < input.vcf > output.tsv
+# Using file input (recommended for large files - 10-20x faster)
+VCFX_field_extractor --fields "FIELD1,FIELD2,..." -i input.vcf > output.tsv
+
+# Using stdin
+VCFX_field_extractor --fields "FIELD1,FIELD2,..." < input.vcf > output.tsv
 ```
 
 ## Options
 | Option | Description |
 |--------|-------------|
 | `-f`, `--fields` | Required. Comma-separated list of fields to extract (no spaces between fields) |
+| `-i`, `--input FILE` | Input VCF file. Uses memory-mapped I/O for 10-20x faster processing |
+| `-q`, `--quiet` | Suppress warning messages |
 | `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
 | `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 

@@ -293,10 +293,12 @@ run_suite_tiny() {
     fi
 
     # -------------------------------------------------------------------------
-    # 2. Field Extraction (no mmap support - stdin only)
+    # 2. Field Extraction (mmap via -i flag)
     # -------------------------------------------------------------------------
     echo "--- Field Extraction ---"
-    run_benchmark "field_extract" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+    run_benchmark "field_extract" "vcfx_mmap" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+        "$BUILD_DIR/VCFX_field_extractor/VCFX_field_extractor --fields CHROM,POS,REF,ALT -i $data_file" "$timeout_sec"
+    run_benchmark "field_extract" "vcfx_stdin" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
         "$BUILD_DIR/VCFX_field_extractor/VCFX_field_extractor --fields CHROM,POS,REF,ALT < $data_file" "$timeout_sec"
 
     if $HAS_BCFTOOLS; then
@@ -366,10 +368,12 @@ run_suite_tiny() {
     fi
 
     # -------------------------------------------------------------------------
-    # 7. Region Subsetting (no mmap support - stdin only)
+    # 7. Region Subsetting (mmap via -i flag)
     # -------------------------------------------------------------------------
     echo "--- Region Subsetting (first 10Mb) ---"
-    run_benchmark "region_subset" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+    run_benchmark "region_subset" "vcfx_mmap" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+        "$BUILD_DIR/VCFX_position_subsetter/VCFX_position_subsetter --region 21:1-10000000 -i $data_file" "$timeout_sec"
+    run_benchmark "region_subset" "vcfx_stdin" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
         "$BUILD_DIR/VCFX_position_subsetter/VCFX_position_subsetter --region 21:1-10000000 < $data_file" "$timeout_sec"
 
     if $HAS_BCFTOOLS; then
@@ -383,6 +387,20 @@ run_suite_tiny() {
     echo "--- Indexing ---"
     run_benchmark "index" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
         "$BUILD_DIR/VCFX_indexer/VCFX_indexer $data_file" "$timeout_sec"
+
+    # -------------------------------------------------------------------------
+    # 9. Allele Counting (aggregate mode)
+    # -------------------------------------------------------------------------
+    echo "--- Allele Counting (aggregate mode) ---"
+    run_benchmark "allele_count" "vcfx_mmap" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+        "$BUILD_DIR/VCFX_allele_counter/VCFX_allele_counter -a -q -i $data_file" "$timeout_sec"
+    run_benchmark "allele_count" "vcfx_stdin" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+        "$BUILD_DIR/VCFX_allele_counter/VCFX_allele_counter -a -q < $data_file" "$timeout_sec"
+
+    if $HAS_VCFTOOLS; then
+        run_benchmark "allele_count" "vcftools" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+            "vcftools --vcf $data_file --counts --stdout 2>/dev/null" "$timeout_sec"
+    fi
 
     echo ""
 }
@@ -427,11 +445,11 @@ run_suite() {
     fi
 
     # -------------------------------------------------------------------------
-    # 2. Field Extraction (no mmap - stdin only)
+    # 2. Field Extraction (mmap via -i flag)
     # -------------------------------------------------------------------------
     echo "--- Field Extraction ---"
     run_benchmark "field_extract" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
-        "$BUILD_DIR/VCFX_field_extractor/VCFX_field_extractor --fields CHROM,POS,REF,ALT < $data_file" "$timeout_sec"
+        "$BUILD_DIR/VCFX_field_extractor/VCFX_field_extractor --fields CHROM,POS,REF,ALT -i $data_file" "$timeout_sec"
 
     if $HAS_BCFTOOLS; then
         run_benchmark "field_extract" "bcftools" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
@@ -492,11 +510,11 @@ run_suite() {
     fi
 
     # -------------------------------------------------------------------------
-    # 7. Region Subsetting (no mmap - stdin only)
+    # 7. Region Subsetting (mmap via -i flag)
     # -------------------------------------------------------------------------
     echo "--- Region Subsetting (first 10Mb) ---"
     run_benchmark "region_subset" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
-        "$BUILD_DIR/VCFX_position_subsetter/VCFX_position_subsetter --region 21:1-10000000 < $data_file" "$timeout_sec"
+        "$BUILD_DIR/VCFX_position_subsetter/VCFX_position_subsetter --region 21:1-10000000 -i $data_file" "$timeout_sec"
 
     if $HAS_BCFTOOLS; then
         run_benchmark "region_subset" "bcftools" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
@@ -509,6 +527,18 @@ run_suite() {
     echo "--- Indexing ---"
     run_benchmark "index" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
         "$BUILD_DIR/VCFX_indexer/VCFX_indexer $data_file" "$timeout_sec"
+
+    # -------------------------------------------------------------------------
+    # 9. Allele Counting (aggregate mode for practical benchmarking)
+    # -------------------------------------------------------------------------
+    echo "--- Allele Counting (aggregate mode) ---"
+    run_benchmark "allele_count" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+        "$BUILD_DIR/VCFX_allele_counter/VCFX_allele_counter -a -q -i $data_file" "$timeout_sec"
+
+    if $HAS_VCFTOOLS; then
+        run_benchmark "allele_count" "vcftools" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+            "vcftools --vcf $data_file --counts --stdout 2>/dev/null" "$timeout_sec"
+    fi
 
     echo ""
 }

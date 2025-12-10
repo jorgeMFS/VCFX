@@ -6,14 +6,22 @@
 
 ## Usage
 
-```
-VCFX_info_aggregator [OPTIONS] < input.vcf > output.vcf
+```bash
+# Using file input (recommended for large files - 10-20x faster)
+VCFX_info_aggregator --aggregate-info "DP,AF,..." -i input.vcf > output.vcf
+
+# Using stdin
+VCFX_info_aggregator --aggregate-info "DP,AF,..." < input.vcf > output.vcf
 ```
 
 ## Options
 
-- `-a`, `--aggregate-info <fields>`: Comma-separated list of INFO fields to aggregate (required).
-- `-h`, `--help`: Display help message and exit (handled by `vcfx::handle_common_flags`)
+| Option | Description |
+|--------|-------------|
+| `-a`, `--aggregate-info <fields>` | Required. Comma-separated list of INFO fields to aggregate |
+| `-i`, `--input FILE` | Input VCF file. Uses memory-mapped I/O for 10-20x faster processing |
+| `-q`, `--quiet` | Suppress warning messages |
+| `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
 | `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
 ## Description
@@ -87,9 +95,13 @@ The tool implements several strategies for handling edge cases:
 
 `VCFX_info_aggregator` is designed to be memory-efficient and performant:
 
-1. It processes the VCF file in a single pass, with O(1) memory usage relative to the file size.
-2. Only the specified INFO fields are parsed and accumulated, minimizing unnecessary processing.
-3. The tool streams data directly from input to output, without storing the entire file in memory.
+1. **Memory-mapped I/O**: When using `-i/--input`, files are memory-mapped for 10-20x faster processing
+2. **SIMD acceleration**: Uses AVX2/SSE2/NEON instructions for fast newline scanning
+3. **Zero-copy parsing**: Uses string_view for minimal memory allocation
+4. **1MB output buffering**: Reduces system call overhead
+5. It processes the VCF file in a single pass, with O(1) memory usage relative to the file size.
+6. Only the specified INFO fields are parsed and accumulated, minimizing unnecessary processing.
+7. The tool streams data directly from input to output, without storing the entire file in memory.
 
 ## Limitations
 

@@ -5,6 +5,10 @@
 
 ## Usage
 ```bash
+# Using file input (recommended for large files - 10-20x faster)
+VCFX_gl_filter --filter "<CONDITION>" [--mode <any|all>] -i input.vcf > filtered.vcf
+
+# Using stdin
 VCFX_gl_filter --filter "<CONDITION>" [--mode <any|all>] < input.vcf > filtered.vcf
 ```
 
@@ -13,6 +17,8 @@ VCFX_gl_filter --filter "<CONDITION>" [--mode <any|all>] < input.vcf > filtered.
 |--------|-------------|
 | `-f`, `--filter <CONDITION>` | Required. Filter condition (e.g., `GQ>20`, `DP>=10`, `PL<50`) |
 | `-m`, `--mode <any\|all>` | Optional. Determines if all samples must pass the condition (`all`, default) or at least one sample must pass (`any`) |
+| `-i`, `--input FILE` | Input VCF file. Uses memory-mapped I/O for 10-20x faster processing |
+| `-q`, `--quiet` | Suppress warning messages |
 | `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
 | `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
@@ -44,6 +50,10 @@ The output is a standard VCF file containing:
 ### Basic Usage with Default Mode
 Filter variants where all samples have genotype quality (GQ) above 20:
 ```bash
+# Using file input (faster)
+VCFX_gl_filter --filter "GQ>20" -i input.vcf > high_quality.vcf
+
+# Using stdin
 VCFX_gl_filter --filter "GQ>20" < input.vcf > high_quality.vcf
 ```
 
@@ -129,15 +139,19 @@ If a field value cannot be converted to a number:
 ### Optimized Implementation
 The tool uses several performance optimizations for fast processing of large VCF files with many samples:
 
-1. **Zero-allocation parsing**: Sample genotype fields are parsed using raw pointer arithmetic instead of creating intermediate string objects, eliminating millions of heap allocations on large files.
+1. **Memory-mapped I/O**: When using `-i/--input`, the file is memory-mapped for 10-20x faster processing compared to stdin. This eliminates read system call overhead and enables kernel read-ahead.
 
-2. **Streaming sample processing**: Samples are processed one-by-one without storing positions, allowing the tool to handle files with thousands of samples efficiently.
+2. **SIMD acceleration**: Uses AVX2/SSE2/NEON instructions for fast newline scanning on supported architectures.
 
-3. **Fast numeric parsing**: A custom inline parser replaces `std::stod` to avoid exception handling overhead and unnecessary string conversions.
+3. **Zero-allocation parsing**: Sample genotype fields are parsed using raw pointer arithmetic instead of creating intermediate string objects, eliminating millions of heap allocations on large files.
 
-4. **Output buffering**: A 1MB output buffer reduces system call overhead for writing filtered records.
+4. **Streaming sample processing**: Samples are processed one-by-one without storing positions, allowing the tool to handle files with thousands of samples efficiently.
 
-5. **Pre-computed operator type**: The comparison operator is converted to an enum at startup, enabling fast switch-based comparison in the hot loop.
+5. **Fast numeric parsing**: A custom inline parser replaces `std::stod` to avoid exception handling overhead and unnecessary string conversions.
+
+6. **Output buffering**: A 1MB output buffer reduces system call overhead for writing filtered records.
+
+7. **Pre-computed operator type**: The comparison operator is converted to an enum at startup, enabling fast switch-based comparison in the hot loop.
 
 ### Complexity
 - Linear time complexity with respect to file size: O(variants × samples)

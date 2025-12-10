@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <unordered_map>
 #include <vector>
+#include <zlib.h>
 
 #if defined(__x86_64__) || defined(_M_X64)
 #include <immintrin.h>
@@ -298,6 +299,15 @@ static inline const char *findColon(const char *p, const char *end) {
 }
 
 // ---------------------------------------------------------------------
+// Output format enum
+// ---------------------------------------------------------------------
+enum class OutputFormat {
+    TEXT,      // Default: per-sample text output
+    AGGREGATE, // Per-variant aggregate statistics
+    BINARY     // Binary format for machine consumption
+};
+
+// ---------------------------------------------------------------------
 // Arguments structure
 // ---------------------------------------------------------------------
 struct AlleleCounterArgs {
@@ -305,7 +315,36 @@ struct AlleleCounterArgs {
     const char *inputFile = nullptr;
     bool quiet = false;
     int numThreads = 0; // 0 = auto-detect
+    int limitSamples = 0; // 0 = no limit
+    bool gzipOutput = false;
+    OutputFormat outputFormat = OutputFormat::TEXT;
 };
+
+// ---------------------------------------------------------------------
+// Binary output header (for --binary mode)
+// ---------------------------------------------------------------------
+#pragma pack(push, 1)
+struct BinaryHeader {
+    char magic[4] = {'V', 'C', 'A', 'C'}; // VCFX Allele Count
+    uint32_t version = 1;
+    uint32_t numSamples = 0;
+    uint64_t numVariants = 0;
+};
+
+struct BinaryVariantRecord {
+    uint32_t chromLen;
+    uint32_t pos;
+    uint32_t refLen;
+    uint32_t altLen;
+    // Followed by: chrom string, ref string, alt string
+    // Then: numSamples * BinarySampleCount records
+};
+
+struct BinarySampleCount {
+    int8_t refCount;
+    int8_t altCount;
+};
+#pragma pack(pop)
 
 // ---------------------------------------------------------------------
 // Parse arguments
@@ -336,6 +375,14 @@ static bool parseArguments(int argc, char *argv[], AlleleCounterArgs &args) {
             if (i + 1 < argc) args.inputFile = argv[++i];
         } else if (arg == "--threads" || arg == "-t") {
             if (i + 1 < argc) args.numThreads = std::atoi(argv[++i]);
+        } else if (arg == "--limit-samples" || arg == "-l") {
+            if (i + 1 < argc) args.limitSamples = std::atoi(argv[++i]);
+        } else if (arg == "--gzip" || arg == "-z") {
+            args.gzipOutput = true;
+        } else if (arg == "--aggregate" || arg == "-a") {
+            args.outputFormat = OutputFormat::AGGREGATE;
+        } else if (arg == "--binary" || arg == "-b") {
+            args.outputFormat = OutputFormat::BINARY;
         } else if (arg == "--quiet" || arg == "-q") {
             args.quiet = true;
         } else if (arg == "--help" || arg == "-h") {
@@ -355,19 +402,125 @@ static void printHelp() {
         << "VCFX_allele_counter - Count reference and alternate alleles per sample\n\n"
         << "Usage: VCFX_allele_counter [OPTIONS] [FILE]\n\n"
         << "Options:\n"
-        << "  -i, --input FILE    Input VCF file (uses mmap for best performance)\n"
-        << "  -t, --threads N     Number of threads (default: auto-detect CPU cores)\n"
-        << "  -s, --samples STR   Space-separated list of sample names to include\n"
-        << "  -q, --quiet         Suppress informational messages\n"
-        << "  -h, --help          Display this help message\n"
-        << "  -v, --version       Display version information\n\n"
+        << "  -i, --input FILE      Input VCF file (uses mmap for best performance)\n"
+        << "  -t, --threads N       Number of threads (default: auto-detect CPU cores)\n"
+        << "  -s, --samples STR     Space-separated list of sample names to include\n"
+        << "  -l, --limit-samples N Limit to first N samples (useful for large cohorts)\n"
+        << "  -a, --aggregate       Output per-variant aggregates instead of per-sample\n"
+        << "  -z, --gzip            Compress output with gzip (~10x smaller)\n"
+        << "  -b, --binary          Output binary format (compact, for machine consumption)\n"
+        << "  -q, --quiet           Suppress informational messages\n"
+        << "  -h, --help            Display this help message\n"
+        << "  -v, --version         Display version information\n\n"
         << "Examples:\n"
-        << "  VCFX_allele_counter -i input.vcf > counts.tsv           # Auto threads\n"
-        << "  VCFX_allele_counter -t 8 -i input.vcf > counts.tsv      # 8 threads\n"
-        << "  VCFX_allele_counter < input.vcf > counts.tsv            # Stdin (single-thread)\n\n"
-        << "Output format:\n"
-        << "  CHROM  POS  ID  REF  ALT  Sample  Ref_Count  Alt_Count\n";
+        << "  VCFX_allele_counter -i input.vcf > counts.tsv              # Default per-sample\n"
+        << "  VCFX_allele_counter -a -i input.vcf > aggregate.tsv        # Per-variant aggregates\n"
+        << "  VCFX_allele_counter -z -i input.vcf > counts.tsv.gz        # Gzip compressed\n"
+        << "  VCFX_allele_counter -l 100 -i input.vcf > counts.tsv       # First 100 samples\n"
+        << "  VCFX_allele_counter -b -i input.vcf > counts.bin           # Binary format\n"
+        << "  VCFX_allele_counter -t 8 -i input.vcf > counts.tsv         # 8 threads\n\n"
+        << "Output formats:\n"
+        << "  Default:    CHROM  POS  ID  REF  ALT  Sample  Ref_Count  Alt_Count\n"
+        << "  Aggregate:  CHROM  POS  ID  REF  ALT  Total_Ref  Total_Alt  Sample_Count\n"
+        << "  Binary:     Compact binary with header (use -b flag)\n";
 }
+
+// ---------------------------------------------------------------------
+// Gzip output wrapper
+// ---------------------------------------------------------------------
+class GzipWriter {
+public:
+    gzFile gz = nullptr;
+    int rawFd = -1;
+    bool useGzip = false;
+    std::vector<char> buffer;
+    size_t bufPos = 0;
+    static constexpr size_t BUFFER_SIZE = 4 * 1024 * 1024; // 4MB
+
+    GzipWriter(int fd, bool compress) : rawFd(fd), useGzip(compress) {
+        buffer.resize(BUFFER_SIZE);
+        if (compress) {
+            // Create a duplicate fd for gzip to manage
+            int dupFd = dup(fd);
+            if (dupFd >= 0) {
+                gz = gzdopen(dupFd, "wb6"); // compression level 6
+                if (!gz) {
+                    ::close(dupFd);
+                    useGzip = false; // Fall back to uncompressed
+                }
+            } else {
+                useGzip = false;
+            }
+        }
+    }
+
+    ~GzipWriter() {
+        flush();
+        if (gz) {
+            gzclose(gz);
+            gz = nullptr;
+        }
+    }
+
+    void write(const char *data, size_t len) {
+        if (bufPos + len > BUFFER_SIZE) {
+            flush();
+        }
+        if (len > BUFFER_SIZE) {
+            // Large write - bypass buffer
+            if (useGzip && gz) {
+                gzwrite(gz, data, static_cast<unsigned>(len));
+            } else {
+                ::write(rawFd, data, len);
+            }
+        } else {
+            memcpy(buffer.data() + bufPos, data, len);
+            bufPos += len;
+        }
+    }
+
+    void writeChar(char c) {
+        if (bufPos >= BUFFER_SIZE) flush();
+        buffer[bufPos++] = c;
+    }
+
+    void writeInt(int val) {
+        if (bufPos + 12 > BUFFER_SIZE) flush();
+        if (val == 0) {
+            buffer[bufPos++] = '0';
+            return;
+        }
+        char tmp[12];
+        int len = 0;
+        while (val > 0) {
+            tmp[len++] = '0' + (val % 10);
+            val /= 10;
+        }
+        while (len > 0) {
+            buffer[bufPos++] = tmp[--len];
+        }
+    }
+
+    void flush() {
+        if (bufPos > 0) {
+            if (useGzip && gz) {
+                gzwrite(gz, buffer.data(), static_cast<unsigned>(bufPos));
+            } else {
+                ::write(rawFd, buffer.data(), bufPos);
+            }
+            bufPos = 0;
+        }
+    }
+};
+
+// ---------------------------------------------------------------------
+// Aggregate counts structure (for --aggregate mode)
+// ---------------------------------------------------------------------
+struct AggregateCount {
+    int64_t totalRef = 0;
+    int64_t totalAlt = 0;
+    int32_t sampleCount = 0;
+};
 
 // ---------------------------------------------------------------------
 // Find all sample start positions in a line (called once per line)
@@ -1107,6 +1260,214 @@ static bool countAllelesStream(std::istream &in, const AlleleCounterArgs &args) 
 }
 
 // ---------------------------------------------------------------------
+// Unified processing with all output modes (mmap, single-threaded)
+// Supports: TEXT, AGGREGATE, BINARY modes with optional gzip
+// ---------------------------------------------------------------------
+static bool countAllelesUnified(const char *filename, const AlleleCounterArgs &args) {
+    MappedFile file;
+    if (!file.open(filename)) {
+        std::cerr << "Error: Cannot open file: " << filename << "\n";
+        return false;
+    }
+
+    if (file.size == 0) {
+        std::cerr << "Error: Empty file\n";
+        return false;
+    }
+
+    const char *p = file.data;
+    const char *end = file.data + file.size;
+
+    std::vector<std::string_view> sampleNames;
+    bool foundHeader = false;
+
+    // Parse header
+    while (p < end) {
+        const char *lineEnd = findNewline(p, end);
+        if (*p == '#') {
+            if (lineEnd - p >= 6 && memcmp(p, "#CHROM", 6) == 0) {
+                const char *hp = p;
+                for (int i = 0; i < 9 && hp < lineEnd; ++i) {
+                    hp = findTab(hp, lineEnd);
+                    if (hp < lineEnd) ++hp;
+                }
+                while (hp < lineEnd) {
+                    const char *nameStart = hp;
+                    hp = findTab(hp, lineEnd);
+                    sampleNames.emplace_back(nameStart, hp - nameStart);
+                    if (hp < lineEnd) ++hp;
+                }
+                foundHeader = true;
+            }
+            p = lineEnd;
+            if (p < end) ++p;
+            continue;
+        }
+        break;
+    }
+
+    if (!foundHeader || sampleNames.empty()) {
+        std::cerr << "Error: No samples found in VCF\n";
+        return false;
+    }
+
+    // Determine sample indices
+    std::vector<size_t> sampleIndices;
+    if (!args.samples.empty()) {
+        std::unordered_map<std::string_view, size_t> sampleMap;
+        for (size_t i = 0; i < sampleNames.size(); ++i) {
+            sampleMap[sampleNames[i]] = i;
+        }
+        for (const auto &s : args.samples) {
+            auto it = sampleMap.find(s);
+            if (it == sampleMap.end()) {
+                std::cerr << "Error: Sample '" << s << "' not found\n";
+                return false;
+            }
+            sampleIndices.push_back(it->second);
+        }
+    } else {
+        for (size_t i = 0; i < sampleNames.size(); ++i) {
+            sampleIndices.push_back(i);
+        }
+    }
+
+    // Apply limit-samples
+    if (args.limitSamples > 0 && sampleIndices.size() > static_cast<size_t>(args.limitSamples)) {
+        sampleIndices.resize(args.limitSamples);
+        if (!args.quiet) {
+            std::cerr << "Info: Limiting to first " << args.limitSamples << " samples\n";
+        }
+    }
+
+    // Build sample suffixes for TEXT mode
+    std::vector<std::string> sampleSuffix;
+    for (size_t idx : sampleIndices) {
+        std::string s(sampleNames[idx]);
+        s.push_back('\t');
+        sampleSuffix.push_back(std::move(s));
+    }
+
+    // Initialize output writer
+    GzipWriter writer(STDOUT_FILENO, args.gzipOutput);
+
+    // Write header based on output mode
+    if (args.outputFormat == OutputFormat::TEXT) {
+        const char *header = "CHROM\tPOS\tID\tREF\tALT\tSample\tRef_Count\tAlt_Count\n";
+        writer.write(header, strlen(header));
+    } else if (args.outputFormat == OutputFormat::AGGREGATE) {
+        const char *header = "CHROM\tPOS\tID\tREF\tALT\tTotal_Ref\tTotal_Alt\tSample_Count\n";
+        writer.write(header, strlen(header));
+    } else if (args.outputFormat == OutputFormat::BINARY) {
+        BinaryHeader hdr;
+        hdr.numSamples = static_cast<uint32_t>(sampleIndices.size());
+        hdr.numVariants = 0; // Will update later if needed
+        writer.write(reinterpret_cast<const char*>(&hdr), sizeof(hdr));
+    }
+
+    char prefixBuf[4096];
+    const size_t numSamples = sampleIndices.size();
+
+    while (p < end) {
+        const char *lineEnd = findNewline(p, end);
+        if (p >= lineEnd || *p == '#') {
+            p = lineEnd;
+            if (p < end) ++p;
+            continue;
+        }
+
+        // Extract variant fields
+        std::string_view chrom = extractField(p, lineEnd);
+        if (p < lineEnd) ++p;
+        std::string_view pos = extractField(p, lineEnd);
+        if (p < lineEnd) ++p;
+        std::string_view id = extractField(p, lineEnd);
+        if (p < lineEnd) ++p;
+        std::string_view ref = extractField(p, lineEnd);
+        if (p < lineEnd) ++p;
+        std::string_view alt = extractField(p, lineEnd);
+        if (p < lineEnd) ++p;
+
+        // Build variant prefix for TEXT/AGGREGATE modes
+        char *pp = prefixBuf;
+        memcpy(pp, chrom.data(), chrom.size()); pp += chrom.size();
+        *pp++ = '\t';
+        memcpy(pp, pos.data(), pos.size()); pp += pos.size();
+        *pp++ = '\t';
+        memcpy(pp, id.data(), id.size()); pp += id.size();
+        *pp++ = '\t';
+        memcpy(pp, ref.data(), ref.size()); pp += ref.size();
+        *pp++ = '\t';
+        memcpy(pp, alt.data(), alt.size()); pp += alt.size();
+        *pp++ = '\t';
+        size_t prefixLen = pp - prefixBuf;
+
+        // Skip QUAL, FILTER, INFO, FORMAT
+        skipFields(p, lineEnd, 4);
+
+        // Process samples
+        int64_t totalRef = 0, totalAlt = 0;
+        int32_t sampleCount = 0;
+
+        size_t sampleIdx = 0;
+        const char *sampleStart = p;
+        size_t suffixIdx = 0;
+
+        for (size_t idx : sampleIndices) {
+            while (sampleIdx < idx && sampleStart < lineEnd) {
+                sampleStart = findTab(sampleStart, lineEnd);
+                if (sampleStart < lineEnd) ++sampleStart;
+                ++sampleIdx;
+            }
+
+            if (sampleStart >= lineEnd) break;
+
+            const char *gtStart = sampleStart;
+            const char *gtEnd = findColon(gtStart, lineEnd);
+            const char *tabPos = findTab(gtStart, lineEnd);
+            if (tabPos < gtEnd) gtEnd = tabPos;
+
+            int refCount = 0, altCount = 0;
+            parseGenotypeRaw(gtStart, gtEnd, refCount, altCount);
+
+            if (args.outputFormat == OutputFormat::TEXT) {
+                writer.write(prefixBuf, prefixLen);
+                writer.write(sampleSuffix[suffixIdx].data(), sampleSuffix[suffixIdx].size());
+                writer.writeInt(refCount);
+                writer.writeChar('\t');
+                writer.writeInt(altCount);
+                writer.writeChar('\n');
+            } else if (args.outputFormat == OutputFormat::AGGREGATE) {
+                totalRef += refCount;
+                totalAlt += altCount;
+                ++sampleCount;
+            } else if (args.outputFormat == OutputFormat::BINARY) {
+                BinarySampleCount bc;
+                bc.refCount = static_cast<int8_t>(refCount);
+                bc.altCount = static_cast<int8_t>(altCount);
+                writer.write(reinterpret_cast<const char*>(&bc), sizeof(bc));
+            }
+            ++suffixIdx;
+        }
+
+        // Output aggregate line
+        if (args.outputFormat == OutputFormat::AGGREGATE) {
+            writer.write(prefixBuf, prefixLen);
+            // Write totalRef
+            char numBuf[24];
+            int len = snprintf(numBuf, sizeof(numBuf), "%lld\t%lld\t%d\n",
+                              (long long)totalRef, (long long)totalAlt, sampleCount);
+            writer.write(numBuf, len);
+        }
+
+        p = lineEnd;
+        if (p < end) ++p;
+    }
+
+    return true;
+}
+
+// ---------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------
 int main(int argc, char *argv[]) {
@@ -1134,8 +1495,20 @@ int main(int argc, char *argv[]) {
                 std::cerr << " " << s;
             }
             std::cerr << "\n";
+        } else if (args.limitSamples > 0) {
+            std::cerr << "Info: Counting alleles for first " << args.limitSamples << " samples\n";
         } else {
             std::cerr << "Info: Counting alleles for ALL samples\n";
+        }
+
+        // Output mode info
+        if (args.outputFormat == OutputFormat::AGGREGATE) {
+            std::cerr << "Info: Output mode: aggregate (per-variant summaries)\n";
+        } else if (args.outputFormat == OutputFormat::BINARY) {
+            std::cerr << "Info: Output mode: binary\n";
+        }
+        if (args.gzipOutput) {
+            std::cerr << "Info: Output compression: gzip\n";
         }
     }
 
@@ -1144,8 +1517,14 @@ int main(int argc, char *argv[]) {
         if (!args.quiet) {
             std::cerr << "Info: Using mmap mode for file: " << args.inputFile << "\n";
         }
-        // Use multi-threaded version
-        success = countAllelesMmapMT(args.inputFile, args);
+        // Use unified function for special modes (aggregate, binary, gzip)
+        // or if limit-samples is set
+        if (args.outputFormat != OutputFormat::TEXT || args.gzipOutput || args.limitSamples > 0) {
+            success = countAllelesUnified(args.inputFile, args);
+        } else {
+            // Use multi-threaded version for default TEXT mode
+            success = countAllelesMmapMT(args.inputFile, args);
+        }
     } else {
         if (!args.quiet) {
             std::cerr << "Info: Using stdin streaming mode (single-threaded)\n";

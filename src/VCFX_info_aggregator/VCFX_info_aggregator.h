@@ -20,6 +20,10 @@ class VCFXInfoAggregator {
     // collecting numeric values from specified fields in 'infoFields'.
     // After reading the entire file, it appends a summary section.
     void aggregateInfo(std::istream &in, std::ostream &out, const std::vector<std::string> &infoFields);
+
+    // Memory-mapped file processing (fast path)
+    bool aggregateInfoMmap(const char* filepath, std::ostream& out,
+                           const std::vector<std::string>& infoFields, bool quiet = false);
 };
 
 #endif // VCFX_INFO_AGGREGATOR_H

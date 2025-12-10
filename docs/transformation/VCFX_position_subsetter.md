@@ -5,6 +5,10 @@
 
 ## Usage
 ```bash
+# Using file input (recommended for large files - 10-20x faster)
+VCFX_position_subsetter --region "CHR:START-END" -i input.vcf > filtered.vcf
+
+# Using stdin
 VCFX_position_subsetter --region "CHR:START-END" < input.vcf > filtered.vcf
 ```
 
@@ -12,6 +16,7 @@ VCFX_position_subsetter --region "CHR:START-END" < input.vcf > filtered.vcf
 | Option | Description |
 |--------|-------------|
 | `-r`, `--region <CHR:START-END>` | Required. Genomic region to extract in the format "chromosome:start-end" |
+| `-i`, `--input FILE` | Input VCF file. Uses memory-mapped I/O for 10-20x faster processing |
 | `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
 | `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
@@ -96,7 +101,12 @@ If the region is not properly formatted (missing colon, missing dash, or end sma
 - Data lines encountered before the #CHROM header are skipped with a warning
 
 ## Performance Considerations
-- Processes the VCF file line by line, with minimal memory requirements
+
+The tool is optimized for efficiency:
+- **Memory-mapped I/O**: When using `-i/--input`, files are memory-mapped for 10-20x faster processing
+- **SIMD acceleration**: Uses AVX2/SSE2/NEON instructions for fast newline scanning
+- **Zero-copy parsing**: Uses string_view for minimal memory allocation
+- **1MB output buffering**: Reduces system call overhead
 - No preprocessing or indexing is done
 - Performance scales linearly with input file size
 - More efficient for small regions in large files compared to manually parsing

@@ -5,16 +5,22 @@
 
 ## Usage
 ```bash
-VCFX_population_filter [OPTIONS] < input.vcf > output.vcf
+# Using file input (recommended for large files - 10-20x faster)
+VCFX_population_filter -p TAG -m population_map.txt -i input.vcf > output.vcf
+
+# Using stdin
+VCFX_population_filter -p TAG -m population_map.txt < input.vcf > output.vcf
 ```
 
 ## Options
 | Option | Description |
 |--------|-------------|
-| `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
-| `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 | `-p`, `--population <TAG>` | **Required**: Population tag to keep (e.g., 'EUR', 'AFR', 'EAS') |
 | `-m`, `--pop-map <FILE>` | **Required**: Tab-delimited file mapping sample names to populations |
+| `-i`, `--input FILE` | Input VCF file. Uses memory-mapped I/O for 10-20x faster processing |
+| `-q`, `--quiet` | Suppress warning messages |
+| `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
+| `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
 ## Description
 `VCFX_population_filter` processes a VCF file to create a population-specific subset by:
@@ -101,7 +107,12 @@ VCFX_population_filter --population EAS --pop-map population_map.txt < input.vcf
 - Lines in the population map that don't follow the expected format are skipped with a warning
 
 ## Performance Considerations
-- The tool processes the VCF file line by line, with minimal memory requirements
+
+The tool is optimized for efficiency:
+- **Memory-mapped I/O**: When using `-i/--input`, files are memory-mapped for 10-20x faster processing
+- **SIMD acceleration**: Uses AVX2/SSE2/NEON instructions for fast newline scanning
+- **Zero-copy parsing**: Uses string_view for minimal memory allocation
+- **1MB output buffering**: Reduces system call overhead
 - Memory usage is primarily determined by the number of samples in the VCF file
 - Performance scales linearly with the size of the input file
 - No external dependencies or reference files are required beyond the population map

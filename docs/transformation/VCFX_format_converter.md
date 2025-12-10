@@ -5,7 +5,13 @@
 
 ## Usage
 ```bash
-VCFX_format_converter [OPTIONS] < input.vcf > output.file
+# Using file input (recommended for large files - 10-20x faster)
+VCFX_format_converter --to-bed -i input.vcf > output.bed
+VCFX_format_converter --to-csv -i input.vcf > output.csv
+
+# Using stdin
+VCFX_format_converter --to-bed < input.vcf > output.bed
+VCFX_format_converter --to-csv < input.vcf > output.csv
 ```
 
 ## Options
@@ -13,7 +19,8 @@ VCFX_format_converter [OPTIONS] < input.vcf > output.file
 |--------|-------------|
 | `--to-bed` | Convert the input VCF file to BED format |
 | `--to-csv` | Convert the input VCF file to CSV format |
-| `--help`, `-h` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
+| `-i`, `--input FILE` | Input VCF file. Uses memory-mapped I/O for 10-20x faster processing |
+| `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
 | `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
 ## Description
@@ -95,7 +102,12 @@ The tool attempts to handle malformed input gracefully:
   - A header row only for CSV output
 
 ## Performance Considerations
-- The tool processes VCF files line by line, with minimal memory requirements
+
+The tool is optimized for efficiency:
+- **Memory-mapped I/O**: When using `-i/--input`, files are memory-mapped for 10-20x faster processing
+- **SIMD acceleration**: Uses AVX2/SSE2/NEON instructions for fast newline scanning
+- **Zero-copy parsing**: Uses string_view for minimal memory allocation
+- **1MB output buffering**: Reduces system call overhead
 - Performance scales linearly with input file size
 - No indexing is performed, allowing efficient streaming processing
 

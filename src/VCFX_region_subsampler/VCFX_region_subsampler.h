@@ -31,6 +31,9 @@ class VCFXRegionSubsampler {
     std::unordered_map<std::string, std::vector<Region>> regions;
 
     void processVCF(std::istream &in, std::ostream &out);
+
+    // Memory-mapped file processing (fast path)
+    bool processVCFMmap(const char* filepath, std::ostream& out, bool quiet = false);
 };
 
 #endif

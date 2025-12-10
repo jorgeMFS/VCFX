@@ -17,6 +17,10 @@ void convertVCFtoBED(std::istream &in, std::ostream &out);
 // Function to convert VCF to CSV
 void convertVCFtoCSV(std::istream &in, std::ostream &out);
 
+// Memory-mapped versions (fast path)
+bool convertVCFtoBEDMmap(const char* filepath, std::ostream& out);
+bool convertVCFtoCSVMmap(const char* filepath, std::ostream& out);
+
 // Function to display help message
 void printHelp();
 

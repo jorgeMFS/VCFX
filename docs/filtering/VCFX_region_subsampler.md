@@ -7,16 +7,22 @@
 ## Usage
 
 ```bash
-VCFX_region_subsampler --region-bed FILE < input.vcf > output.vcf
+# Using file input (recommended for large files - 10-20x faster)
+VCFX_region_subsampler --region-bed regions.bed -i input.vcf > output.vcf
+
+# Using stdin
+VCFX_region_subsampler --region-bed regions.bed < input.vcf > output.vcf
 ```
 
 ## Options
 
 | Option | Description |
 |--------|-------------|
-| `-h, --help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
+| `-b`, `--region-bed FILE` | BED file listing regions to keep |
+| `-i`, `--input FILE` | Input VCF file. Uses memory-mapped I/O for 10-20x faster processing |
+| `-q`, `--quiet` | Suppress warning messages |
+| `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
 | `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
-| `-b, --region-bed FILE` | BED file listing regions to keep |
 
 ## Description
 
@@ -114,6 +120,11 @@ The tool handles various error conditions:
 
 ## Performance Considerations
 
+The tool is optimized for efficiency:
+- **Memory-mapped I/O**: When using `-i/--input`, files are memory-mapped for 10-20x faster processing
+- **SIMD acceleration**: Uses AVX2/SSE2/NEON instructions for fast newline scanning
+- **Zero-copy parsing**: Uses string_view for minimal memory allocation
+- **1MB output buffering**: Reduces system call overhead
 - Uses binary search for region lookup
 - Merges overlapping intervals for efficiency
 - Processes input streamingly

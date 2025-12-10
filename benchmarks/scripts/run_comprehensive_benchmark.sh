@@ -178,12 +178,12 @@ benchmark "record_filter" "filtering" \
     "Filter PASS only (mmap)"
 
 benchmark "nonref_filter" "filtering" \
-    "$BUILD_DIR/VCFX_nonref_filter/VCFX_nonref_filter < $DATA_FILE" \
-    "Non-reference filter"
+    "$BUILD_DIR/VCFX_nonref_filter/VCFX_nonref_filter -i $DATA_FILE" \
+    "Non-reference filter (mmap)"
 
 benchmark "gl_filter" "filtering" \
-    "$BUILD_DIR/VCFX_gl_filter/VCFX_gl_filter --filter 'GQ>20' < $DATA_FILE" \
-    "GQ filter (GQ>20)"
+    "$BUILD_DIR/VCFX_gl_filter/VCFX_gl_filter --filter 'GQ>20' -i $DATA_FILE" \
+    "GQ filter (GQ>20) (mmap)"
 
 benchmark "allele_balance_filter" "filtering" \
     "$BUILD_DIR/VCFX_allele_balance_filter/VCFX_allele_balance_filter --min-ab 0.2 --max-ab 0.8 < $DATA_FILE" \
@@ -198,8 +198,8 @@ benchmark "phase_quality_filter" "filtering" \
     "Phase quality filter"
 
 benchmark "impact_filter" "filtering" \
-    "$BUILD_DIR/VCFX_impact_filter/VCFX_impact_filter --filter-impact HIGH < $DATA_FILE" \
-    "Impact filter (HIGH)"
+    "$BUILD_DIR/VCFX_impact_filter/VCFX_impact_filter --filter-impact HIGH -I $DATA_FILE" \
+    "Impact filter (HIGH) (mmap)"
 
 echo ""
 echo "=== Category 3: Analysis & Calculation Tools ==="
@@ -219,10 +219,11 @@ benchmark "hwe_tester" "analysis" \
     "$BUILD_DIR/VCFX_hwe_tester/VCFX_hwe_tester -i $DATA_FILE" \
     "HWE test (mmap)" $LONG_TIMEOUT
 
-# allele_counter: mmap via -i flag
+# allele_counter: mmap via -i flag, aggregate mode (-a) for efficient output
+# Aggregate mode reduces output from O(variants × samples) to O(variants)
 benchmark "allele_counter" "analysis" \
-    "$BUILD_DIR/VCFX_allele_counter/VCFX_allele_counter -i $DATA_FILE" \
-    "Count alleles (mmap)" $LONG_TIMEOUT
+    "$BUILD_DIR/VCFX_allele_counter/VCFX_allele_counter -a -i $DATA_FILE" \
+    "Count alleles (mmap, aggregate)" $LONG_TIMEOUT
 
 # allele_balance_calc: mmap via -i flag
 benchmark "allele_balance_calc" "analysis" \
@@ -251,10 +252,10 @@ benchmark "missing_detector" "qc" \
     "$BUILD_DIR/VCFX_missing_detector/VCFX_missing_detector -i $DATA_FILE" \
     "Detect missing (mmap)"
 
-# Phase checker may take time on large files
+# Phase checker: mmap via -i flag
 benchmark "phase_checker" "qc" \
-    "$BUILD_DIR/VCFX_phase_checker/VCFX_phase_checker < $DATA_FILE" \
-    "Check phasing" $LONG_TIMEOUT
+    "$BUILD_DIR/VCFX_phase_checker/VCFX_phase_checker -i $DATA_FILE" \
+    "Check phasing (mmap)" $LONG_TIMEOUT
 
 benchmark "outlier_detector" "qc" \
     "$BUILD_DIR/VCFX_outlier_detector/VCFX_outlier_detector < $DATA_FILE" \
@@ -308,20 +309,20 @@ benchmark "sv_handler" "transformation" \
 echo ""
 echo "=== Category 6: Extraction & Subsetting Tools ==="
 benchmark "sample_extractor" "extraction" \
-    "$BUILD_DIR/VCFX_sample_extractor/VCFX_sample_extractor --samples HG00096,HG00097,HG00099 < $DATA_FILE" \
-    "Extract samples"
+    "$BUILD_DIR/VCFX_sample_extractor/VCFX_sample_extractor --samples HG00096,HG00097,HG00099 -i $DATA_FILE" \
+    "Extract samples (mmap)"
 
 benchmark "field_extractor" "extraction" \
-    "$BUILD_DIR/VCFX_field_extractor/VCFX_field_extractor --fields CHROM,POS,REF,ALT < $DATA_FILE" \
-    "Extract fields"
+    "$BUILD_DIR/VCFX_field_extractor/VCFX_field_extractor --fields CHROM,POS,REF,ALT -i $DATA_FILE" \
+    "Extract fields (mmap)"
 
 benchmark "genotype_query" "extraction" \
-    "$BUILD_DIR/VCFX_genotype_query/VCFX_genotype_query --genotype-query '0/1' < $DATA_FILE" \
-    "Query genotypes"
+    "$BUILD_DIR/VCFX_genotype_query/VCFX_genotype_query --genotype-query '0/1' -i $DATA_FILE" \
+    "Query genotypes (mmap)"
 
 benchmark "position_subsetter" "extraction" \
-    "$BUILD_DIR/VCFX_position_subsetter/VCFX_position_subsetter --region 21:1-10000000 < $DATA_FILE" \
-    "Subset by region"
+    "$BUILD_DIR/VCFX_position_subsetter/VCFX_position_subsetter --region 21:1-10000000 -i $DATA_FILE" \
+    "Subset by region (mmap)"
 
 # af_subsetter: mmap via -i flag
 benchmark "af_subsetter" "extraction" \
@@ -335,17 +336,17 @@ benchmark "subsampler" "extraction" \
 echo ""
 echo "=== Category 7: Annotation & INFO Tools ==="
 benchmark "info_parser" "annotation" \
-    "$BUILD_DIR/VCFX_info_parser/VCFX_info_parser --info 'AC,AN,AF' < $DATA_FILE" \
-    "Parse INFO"
+    "$BUILD_DIR/VCFX_info_parser/VCFX_info_parser --info 'AC,AN,AF' -I $DATA_FILE" \
+    "Parse INFO (mmap)"
 
 benchmark "info_summarizer" "annotation" \
-    "$BUILD_DIR/VCFX_info_summarizer/VCFX_info_summarizer --info 'AC,AN,AF' < $DATA_FILE" \
-    "Summarize INFO"
+    "$BUILD_DIR/VCFX_info_summarizer/VCFX_info_summarizer --info 'AC,AN,AF' -I $DATA_FILE" \
+    "Summarize INFO (mmap)"
 
 # Info aggregator needs --aggregate-info argument
 benchmark "info_aggregator" "annotation" \
-    "$BUILD_DIR/VCFX_info_aggregator/VCFX_info_aggregator --aggregate-info 'AC,AN,AF' < $DATA_FILE" \
-    "Aggregate INFO"
+    "$BUILD_DIR/VCFX_info_aggregator/VCFX_info_aggregator --aggregate-info 'AC,AN,AF' -i $DATA_FILE" \
+    "Aggregate INFO (mmap)"
 
 # metadata_summarizer: mmap via -i flag
 benchmark "metadata_summarizer" "annotation" \
@@ -353,8 +354,8 @@ benchmark "metadata_summarizer" "annotation" \
     "Summarize metadata (mmap)"
 
 benchmark "annotation_extractor" "annotation" \
-    "$BUILD_DIR/VCFX_annotation_extractor/VCFX_annotation_extractor --annotation-extract 'AF' < $DATA_FILE" \
-    "Extract annotations"
+    "$BUILD_DIR/VCFX_annotation_extractor/VCFX_annotation_extractor --annotation-extract 'AF' -i $DATA_FILE" \
+    "Extract annotations (mmap)"
 
 echo ""
 echo "=== Category 8: Haplotype Tools ==="
@@ -399,8 +400,8 @@ if [ ! -f "$POP_MAP_FILE" ]; then
     }' > "$POP_MAP_FILE"
 fi
 benchmark "population_filter" "population" \
-    "$BUILD_DIR/VCFX_population_filter/VCFX_population_filter --population EUR --pop-map $POP_MAP_FILE < $DATA_FILE" \
-    "Filter by population"
+    "$BUILD_DIR/VCFX_population_filter/VCFX_population_filter --population EUR --pop-map $POP_MAP_FILE -i $DATA_FILE" \
+    "Filter by population (mmap)"
 
 echo ""
 echo "=== Category 10: File Management Tools ==="
@@ -431,14 +432,14 @@ if [ ! -f "$REGION_BED" ]; then
     echo -e "21\t0\t10000000\n21\t20000000\t30000000" > "$REGION_BED"
 fi
 benchmark "region_subsampler" "file_management" \
-    "$BUILD_DIR/VCFX_region_subsampler/VCFX_region_subsampler --region-bed $REGION_BED < $DATA_FILE" \
-    "Subsample by region"
+    "$BUILD_DIR/VCFX_region_subsampler/VCFX_region_subsampler --region-bed $REGION_BED -i $DATA_FILE" \
+    "Subsample by region (mmap)"
 
 echo ""
 echo "=== Category 11: Format Conversion ==="
 benchmark "format_converter_bed" "conversion" \
-    "$BUILD_DIR/VCFX_format_converter/VCFX_format_converter --to-bed < $DATA_FILE" \
-    "Convert to BED"
+    "$BUILD_DIR/VCFX_format_converter/VCFX_format_converter --to-bed -i $DATA_FILE" \
+    "Convert to BED (mmap)"
 
 # fasta_converter: mmap via -i flag - O(variants × samples)
 benchmark "fasta_converter" "conversion" \
@@ -453,11 +454,9 @@ benchmark "diff_tool" "comparison" \
     "Diff VCF files (mmap)"
 
 # concordance_checker: mmap via -i flag
-# Extract first two sample names from VCF header
-SAMPLE1=$(head -1000 "$DATA_FILE" | grep "^#CHROM" | cut -f10)
-SAMPLE2=$(head -1000 "$DATA_FILE" | grep "^#CHROM" | cut -f11)
+# Use first two samples from VCF - for 1000 Genomes data, these are HG00096 and HG00097
 benchmark "concordance_checker" "comparison" \
-    "$BUILD_DIR/VCFX_concordance_checker/VCFX_concordance_checker -i $DATA_FILE --samples \"$SAMPLE1,$SAMPLE2\"" \
+    "$BUILD_DIR/VCFX_concordance_checker/VCFX_concordance_checker -i $DATA_FILE -s \"HG00096 HG00097\"" \
     "Check concordance (mmap)"
 
 # Reference comparator needs reference FASTA

@@ -17,6 +17,11 @@ class VCFXPopulationFilter {
                            std::unordered_set<std::string> &samplesToInclude);
     void filterPopulation(std::istream &in, std::ostream &out, const std::unordered_set<std::string> &samplesToInclude,
                           const std::string &popTag);
+
+    // Memory-mapped file processing (fast path)
+    bool filterPopulationMmap(const char* filepath, std::ostream& out,
+                              const std::unordered_set<std::string>& samplesToInclude,
+                              const std::string& popTag, bool quiet = false);
 };
 
 #endif

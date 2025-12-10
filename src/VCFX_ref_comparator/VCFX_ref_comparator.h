@@ -14,6 +14,9 @@ class VCFXRefComparator {
     bool loadReference(const std::string &referenceFastaPath);
     void compareVCF(std::istream &vcfIn, std::ostream &vcfOut);
 
+    // Memory-mapped VCF processing (fast path)
+    bool compareVCFMmap(const char* filepath, std::ostream& out, bool quiet = false);
+
     // chromosome -> uppercase sequence
     std::unordered_map<std::string, std::string> referenceGenome;
 

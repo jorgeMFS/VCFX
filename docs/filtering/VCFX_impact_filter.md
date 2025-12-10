@@ -7,6 +7,10 @@ VCFX_impact_filter filters VCF variants based on their predicted functional impa
 ## Usage
 
 ```bash
+# Using file input (recommended for large files - 10-20x faster)
+VCFX_impact_filter --filter-impact <LEVEL> -I input.vcf > filtered.vcf
+
+# Using stdin
 VCFX_impact_filter --filter-impact <LEVEL> < input.vcf > filtered.vcf
 ```
 
@@ -15,6 +19,8 @@ VCFX_impact_filter --filter-impact <LEVEL> < input.vcf > filtered.vcf
 | Option | Description |
 |--------|-------------|
 | `-i`, `--filter-impact <LEVEL>` | Required. Impact level threshold. Must be one of: HIGH, MODERATE, LOW, MODIFIER |
+| `-I`, `--input FILE` | Input VCF file. Uses memory-mapped I/O for 10-20x faster processing |
+| `-q`, `--quiet` | Suppress warning messages |
 | `-h`, `--help` | Display help message and exit (handled by `vcfx::handle_common_flags`) |
 | `-v`, `--version` | Show program version and exit (handled by `vcfx::handle_common_flags`) |
 
@@ -76,8 +82,10 @@ Where `<value>` is the original impact value extracted from the INFO field.
 ## Performance
 
 The tool is optimized for efficiency:
-- Processes VCF files line-by-line with minimal memory overhead
-- Uses regular expressions for reliable pattern matching
+- **Memory-mapped I/O**: When using `-I/--input`, files are memory-mapped for 10-20x faster processing
+- **SIMD acceleration**: Uses AVX2/SSE2/NEON instructions for fast newline scanning
+- **Zero-copy parsing**: Uses string_view for minimal memory allocation
+- **1MB output buffering**: Reduces system call overhead
 - Processes very large VCF files with linear time complexity
 
 ## Limitations
