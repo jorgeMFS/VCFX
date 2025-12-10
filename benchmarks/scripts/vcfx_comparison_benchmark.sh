@@ -389,13 +389,15 @@ run_suite_tiny() {
         "$BUILD_DIR/VCFX_indexer/VCFX_indexer $data_file" "$timeout_sec"
 
     # -------------------------------------------------------------------------
-    # 9. Allele Counting (aggregate mode)
+    # 9. Allele Counting (aggregate mode with sample limit for practical benchmarking)
+    # Note: -l 100 limits to first 100 samples to keep benchmark time reasonable
+    # Full dataset (2504 samples x 427K variants) would take ~1 hour
     # -------------------------------------------------------------------------
-    echo "--- Allele Counting (aggregate mode) ---"
+    echo "--- Allele Counting (aggregate mode, 100 samples) ---"
     run_benchmark "allele_count" "vcfx_mmap" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
-        "$BUILD_DIR/VCFX_allele_counter/VCFX_allele_counter -a -q -i $data_file" "$timeout_sec"
+        "$BUILD_DIR/VCFX_allele_counter/VCFX_allele_counter -a -q -l 100 -i $data_file" "$timeout_sec"
     run_benchmark "allele_count" "vcfx_stdin" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
-        "$BUILD_DIR/VCFX_allele_counter/VCFX_allele_counter -a -q < $data_file" "$timeout_sec"
+        "$BUILD_DIR/VCFX_allele_counter/VCFX_allele_counter -a -q -l 100 < $data_file" "$timeout_sec"
 
     if $HAS_VCFTOOLS; then
         run_benchmark "allele_count" "vcftools" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
@@ -529,11 +531,13 @@ run_suite() {
         "$BUILD_DIR/VCFX_indexer/VCFX_indexer $data_file" "$timeout_sec"
 
     # -------------------------------------------------------------------------
-    # 9. Allele Counting (aggregate mode for practical benchmarking)
+    # 9. Allele Counting (aggregate mode with sample limit for practical benchmarking)
+    # Note: -l 100 limits to first 100 samples to keep benchmark time reasonable
+    # Full dataset (2504 samples x 427K variants) would take ~1 hour
     # -------------------------------------------------------------------------
-    echo "--- Allele Counting (aggregate mode) ---"
+    echo "--- Allele Counting (aggregate mode, 100 samples) ---"
     run_benchmark "allele_count" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
-        "$BUILD_DIR/VCFX_allele_counter/VCFX_allele_counter -a -q -i $data_file" "$timeout_sec"
+        "$BUILD_DIR/VCFX_allele_counter/VCFX_allele_counter -a -q -l 100 -i $data_file" "$timeout_sec"
 
     if $HAS_VCFTOOLS; then
         run_benchmark "allele_count" "vcftools" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \

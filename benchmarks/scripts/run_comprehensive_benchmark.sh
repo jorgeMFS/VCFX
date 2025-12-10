@@ -221,9 +221,10 @@ benchmark "hwe_tester" "analysis" \
 
 # allele_counter: mmap via -i flag, aggregate mode (-a) for efficient output
 # Aggregate mode reduces output from O(variants × samples) to O(variants)
+# Note: Use -l 100 to limit samples for benchmarking (full dataset = ~1B genotypes = ~1 hour)
 benchmark "allele_counter" "analysis" \
-    "$BUILD_DIR/VCFX_allele_counter/VCFX_allele_counter -a -i $DATA_FILE" \
-    "Count alleles (mmap, aggregate)" $LONG_TIMEOUT
+    "$BUILD_DIR/VCFX_allele_counter/VCFX_allele_counter -a -l 100 -i $DATA_FILE" \
+    "Count alleles (mmap, aggregate, 100 samples)" $LONG_TIMEOUT
 
 # allele_balance_calc: mmap via -i flag
 benchmark "allele_balance_calc" "analysis" \
