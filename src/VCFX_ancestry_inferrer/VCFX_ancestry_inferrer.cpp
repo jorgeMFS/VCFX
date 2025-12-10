@@ -35,6 +35,7 @@
 #include <sys/stat.h>
 #include <thread>
 #include <unistd.h>
+#include <unordered_map>
 #include <vector>
 
 // SIMD support
