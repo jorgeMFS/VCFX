@@ -372,10 +372,10 @@ benchmark "haplotype_extractor" "haplotype" \
 
 echo ""
 echo "=== Category 9: Ancestry Tools ==="
-# Ancestry inferrer needs population frequencies file
+# Ancestry inferrer needs population frequencies file - uses mmap via -i flag
 benchmark "ancestry_inferrer" "ancestry" \
-    "$BUILD_DIR/VCFX_ancestry_inferrer/VCFX_ancestry_inferrer --frequency $POP_FREQ_FILE < $DATA_FILE" \
-    "Infer ancestry"
+    "$BUILD_DIR/VCFX_ancestry_inferrer/VCFX_ancestry_inferrer -f $POP_FREQ_FILE -i $DATA_FILE" \
+    "Infer ancestry (mmap)" $LONG_TIMEOUT
 
 # Ancestry assigner needs population frequencies file
 benchmark "ancestry_assigner" "ancestry" \

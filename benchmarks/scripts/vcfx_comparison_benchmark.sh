@@ -404,6 +404,21 @@ run_suite_tiny() {
             "vcftools --vcf $data_file --counts --stdout 2>/dev/null" "$timeout_sec"
     fi
 
+    # -------------------------------------------------------------------------
+    # 10. Ancestry Inference (mmap via -i flag, requires population frequencies)
+    # Note: Uses test frequencies file for benchmarking
+    # -------------------------------------------------------------------------
+    echo "--- Ancestry Inference ---"
+    POP_FREQ="$ROOT_DIR/tests/data/ancestry_inferrer/population_freqs.txt"
+    if [ -f "$POP_FREQ" ]; then
+        run_benchmark "ancestry" "vcfx_mmap" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+            "$BUILD_DIR/VCFX_ancestry_inferrer/VCFX_ancestry_inferrer -q -f $POP_FREQ -i $data_file" "$timeout_sec"
+        run_benchmark "ancestry" "vcfx_stdin" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+            "$BUILD_DIR/VCFX_ancestry_inferrer/VCFX_ancestry_inferrer -q --frequency $POP_FREQ < $data_file" "$timeout_sec"
+    else
+        echo "  Skipping ancestry (no population frequencies file)"
+    fi
+
     echo ""
 }
 
@@ -542,6 +557,18 @@ run_suite() {
     if $HAS_VCFTOOLS; then
         run_benchmark "allele_count" "vcftools" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
             "vcftools --vcf $data_file --counts --stdout 2>/dev/null" "$timeout_sec"
+    fi
+
+    # -------------------------------------------------------------------------
+    # 10. Ancestry Inference (mmap via -i flag, requires population frequencies)
+    # -------------------------------------------------------------------------
+    echo "--- Ancestry Inference ---"
+    POP_FREQ="$ROOT_DIR/tests/data/ancestry_inferrer/population_freqs.txt"
+    if [ -f "$POP_FREQ" ]; then
+        run_benchmark "ancestry" "vcfx" "$dataset_name" "$data_file" "$file_size_mb" "$variants" "$samples" \
+            "$BUILD_DIR/VCFX_ancestry_inferrer/VCFX_ancestry_inferrer -q -f $POP_FREQ -i $data_file" "$timeout_sec"
+    else
+        echo "  Skipping ancestry (no population frequencies file)"
     fi
 
     echo ""
