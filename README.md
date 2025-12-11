@@ -86,7 +86,42 @@ pre-commit install
 
 ## Benchmarks
 
-Install the benchmark dependencies with conda as described in section 5 of this README. Then run:
+VCFX tools are optimized for high-throughput genomic analysis. Below are benchmark results on a **4.0 GB VCF file** (chromosome 21 from 1000 Genomes Phase 3, ~427K variants, 2,504 samples).
+
+### Performance Summary by Category
+
+| Category | Tools | Avg Time (s) | Min (s) | Max (s) |
+|----------|------:|-------------:|--------:|--------:|
+| Basic I/O & Validation | 4 | 2.2 | 0.10 | 8.5 |
+| Filtering | 8 | 7.6 | 0.10 | 14.4 |
+| Transformation | 7 | 6.6 | 0.09 | 20.0 |
+| Extraction & Subsetting | 6 | 10.6 | 0.11 | 14.1 |
+| Quality Control | 5 | 18.7 | 0.13 | 36.6 |
+| Annotation & INFO | 5 | 28.1 | 9.7 | 35.1 |
+| Analysis & Calculation | 8 | 40.4 | 8.2 | 147.3 |
+| Haplotype | 2 | 39.4 | 25.1 | 53.7 |
+| Ancestry | 2 | 20.3 | 0.11 | 40.6 |
+| File Management | 5 | 42.5 | 0.09 | 186.3 |
+| Format Conversion | 2 | 28.1 | 17.0 | 39.2 |
+| Comparison & Diff | 3 | 76.1 | 15.4 | 187.9 |
+| Advanced Analysis | 2 | 629.7 | 0.14 | 1259.2 |
+
+### Comparison with Standard Tools
+
+| Tool | Operation | Time (s) |
+|------|-----------|----------|
+| **VCFX** variant_counter | Count variants | 8.5 |
+| **VCFX** allele_freq_calc | Allele frequencies | 29.1 |
+| **VCFX** missing_detector | Missing data | 9.3 |
+| bcftools view | Parse VCF | 37.9 |
+| bcftools query | Extract fields | 2.2 |
+| bcftools filter | Filter variants | 19.4 |
+| vcftools --freq | Allele frequencies | 86.2 |
+| vcftools --missing | Missing data | 82.9 |
+
+VCFX achieves competitive or better performance than bcftools/vcftools for many common operations, with the advantage of modular single-purpose tools.
+
+### Running Benchmarks
 
 ```bash
 cd benchmarks
@@ -95,7 +130,8 @@ make tools-check
 make all
 ```
 
-The runtime summary will be written to `benchmarks/results.csv` and visualization notebooks are under `benchmarks/notebooks/`.
+Results are saved to `benchmarks/results/` and visualization notebooks are under `benchmarks/notebooks/`.
+
 ## Citation
 
 If you use VCFX in your research please cite:
